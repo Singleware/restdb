@@ -1,0 +1,48 @@
+{
+  "author": {
+    "name": "Silas B. Domingos",
+    "email": "hello@balmante.eti.br",
+    "url": "https://balmante.eti.br"
+  },
+  "name": "@singleware/restdb",
+  "description": "Singleware RestDB driver package.",
+  "license": "MIT",
+  "version": "1.0.2",
+  "main": "release/source/index.js",
+  "types": "release/types/index.d.ts",
+  "keywords": [
+    "rest api",
+    "rest api driver",
+    "rest data mapper",
+    "data mapper",
+    "async"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/singleware/restdb"
+  },
+  "engines": {
+    "node": ">=8"
+  },
+  "dependencies": {
+    "@singleware/class": "^1.1.12",
+    "@singleware/mapping": "^1.1.10"
+  },
+  "devDependencies": {
+    "@types/mongodb": "^3.1.9",
+    "@types/node": "^10.11.0",
+    "mongodb": "^3.1.6",
+    "prettier": "^1.14.3",
+    "typescript": "^2.9.2"
+  },
+  "prettier": {
+    "printWidth": 140,
+    "tabWidth": 2,
+    "singleQuote": true,
+    "semi": true
+  },
+  "scripts": {
+    "build": "npm run make",
+    "make": "tsc"
+  }
+}
