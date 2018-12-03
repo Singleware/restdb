@@ -11,7 +11,7 @@ import { Filters } from './filters';
  * Data driver class.
  */
 @Class.Describe()
-export class Driver implements Mapping.Driver {
+export class Driver extends Class.Null implements Mapping.Driver {
   /**
    * Api endpoint base URL.
    */

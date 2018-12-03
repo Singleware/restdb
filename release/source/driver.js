@@ -16,7 +16,7 @@ const filters_1 = require("./filters");
 /**
  * Data driver class.
  */
-let Driver = class Driver {
+let Driver = class Driver extends Class.Null {
     /**
      * Gets the path from the specified model type.
      * @param model Mode type.

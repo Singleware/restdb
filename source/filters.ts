@@ -9,7 +9,7 @@ import * as Mapping from '@singleware/mapping';
  * URL path filter class.
  */
 @Class.Describe()
-export class Filters {
+export class Filters extends Class.Null {
   /**
    * Magic path prefix.
    */

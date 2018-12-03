@@ -15,7 +15,7 @@ const Mapping = require("@singleware/mapping");
 /**
  * URL path filter class.
  */
-let Filters = class Filters {
+let Filters = class Filters extends Class.Null {
     /**
      * Build a URL path filter from the specified filter expression.
      * @param model Model type.

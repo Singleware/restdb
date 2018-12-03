@@ -7,7 +7,7 @@ import * as Mapping from '@singleware/mapping';
 /**
  * Data driver class.
  */
-export declare class Driver implements Mapping.Driver {
+export declare class Driver extends Class.Null implements Mapping.Driver {
     /**
      * Api endpoint base URL.
      */

@@ -7,7 +7,7 @@ import * as Mapping from '@singleware/mapping';
 /**
  * URL path filter class.
  */
-export declare class Filters {
+export declare class Filters extends Class.Null {
     /**
      * Magic path prefix.
      */
