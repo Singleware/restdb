@@ -43,7 +43,7 @@ let Filters = class Filters extends Class.Null {
                 case Mapping.Operator.BETWEEN:
                 case Mapping.Operator.CONTAIN:
                 case Mapping.Operator.NOT_CONTAIN:
-                    parts.push(`${schema.name}/${operation.operator}/${encodeURIComponent(operation.value.join(';'))}`);
+                    parts.push(`${schema.name}/${operation.operator}/${operation.value.map(item => encodeURIComponent(item)).join(';')}`);
                     break;
             }
         }
@@ -79,7 +79,7 @@ let Filters = class Filters extends Class.Null {
                     case Mapping.Operator.BETWEEN:
                     case Mapping.Operator.CONTAIN:
                     case Mapping.Operator.NOT_CONTAIN:
-                        filters[column] = { operator: operator, value: [...value.split(';').map(item => decodeURIComponent(item))] };
+                        filters[column] = { operator: operator, value: value.split(';').map(item => decodeURIComponent(item)) };
                         break;
                     default:
                         throw new Error(`Unsupported operator "${operator}"`);
