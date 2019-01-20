@@ -22,25 +22,25 @@ export declare class Driver extends Class.Null implements Mapping.Driver {
      * @returns Returns the path.
      * @throws Throws an error when the model type is not valid.
      */
-    private getPath;
+    private static getPath;
     /**
      * Extract all columns from the given entity list into a raw object.
      * @param entities Entities list.
      * @returns Returns the new generated list.
      */
-    private extractArray;
+    private static extractArray;
     /**
      * Extract all columns from the given entity into a raw object.
      * @param entity Entity data.
      * @returns Returns the new generated object.
      */
-    private extractObject;
+    private static extractObject;
     /**
      * Extract the value from the given entity into a raw value.
      * @param value Value to be extracted.
      * @returns Returns the new generated object.
      */
-    private extractValue;
+    private static extractValue;
     /**
      * Send an HTTP request.
      * @param method Request method.
@@ -61,7 +61,7 @@ export declare class Driver extends Class.Null implements Mapping.Driver {
      * @param entities Entity data list.
      * @returns Returns the list inserted entities.
      */
-    insert<T extends Mapping.Entity>(model: Class.Constructor<Mapping.Entity>, ...entities: T[]): Promise<string[]>;
+    insert<T extends Mapping.Entity>(model: Class.Constructor<Mapping.Entity>, entities: T[]): Promise<string[]>;
     /**
      * Find the corresponding entity from the API.
      * @param model Model type.
@@ -69,7 +69,7 @@ export declare class Driver extends Class.Null implements Mapping.Driver {
      * @param aggregate Joined columns.
      * @returns Returns the list of entities found.
      */
-    find<T extends Mapping.Entity>(model: Class.Constructor<T>, filter: Mapping.Expression, aggregate: Mapping.Aggregate[]): Promise<T[]>;
+    find<T extends Mapping.Entity>(model: Class.Constructor<T>, aggregation: Mapping.Aggregation[], filters: Mapping.Expression[]): Promise<T[]>;
     /**
      * Find the entity that corresponds to the specified entity id.
      * @param model Model type.
@@ -77,23 +77,23 @@ export declare class Driver extends Class.Null implements Mapping.Driver {
      * @param aggregate Joined columns.
      * @returns Returns a promise to get the found entity or undefined when the entity was not found.
      */
-    findById<T extends Mapping.Entity>(model: Class.Constructor<T>, value: any, aggregate: Mapping.Aggregate[]): Promise<T | undefined>;
+    findById<T extends Mapping.Entity>(model: Class.Constructor<T>, aggregation: Mapping.Aggregation[], id: any): Promise<T | undefined>;
     /**
      * Update all entities that corresponds to the specified filter.
      * @param model Model type.
-     * @param filter Filter expression.
      * @param entity Entity data to be updated.
+     * @param filter Filter expression.
      * @returns Returns the number of updated entities.
      */
-    update(model: Class.Constructor<Mapping.Entity>, filter: Mapping.Expression, entity: Mapping.Entity): Promise<number>;
+    update(model: Class.Constructor<Mapping.Entity>, entity: Mapping.Entity, filter: Mapping.Expression): Promise<number>;
     /**
      * Update the entity that corresponds to the specified entity id.
      * @param model Model type.
-     * @param value Entity id.
      * @param entity Entity data to be updated.
+     * @param id Entity id.s
      * @returns Returns a promise to get the true when the entity has been updated or false otherwise.
      */
-    updateById(model: Class.Constructor<Mapping.Entity>, value: any, entity: Mapping.Entity): Promise<boolean>;
+    updateById(model: Class.Constructor<Mapping.Entity>, entity: Mapping.Entity, id: any): Promise<boolean>;
     /**
      * Delete all entities that corresponds to the specified filter.
      * @param model Model type.
@@ -104,8 +104,8 @@ export declare class Driver extends Class.Null implements Mapping.Driver {
     /**
      * Delete the entity that corresponds to the specified entity id.
      * @param model Model type.
-     * @param value Entity id.
+     * @param id Entity id.
      * @return Returns a promise to get the true when the entity has been deleted or false otherwise.
      */
-    deleteById(model: Class.Constructor<Mapping.Entity>, value: any): Promise<boolean>;
+    deleteById(model: Class.Constructor<Mapping.Entity>, id: any): Promise<boolean>;
 }

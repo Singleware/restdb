@@ -6,6 +6,8 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+var Driver_1;
+"use strict";
 /**
  * Copyright (C) 2018 Silas B. Domingos
  * This source code is licensed under the MIT License as described in the file LICENSE.
@@ -16,14 +18,14 @@ const filters_1 = require("./filters");
 /**
  * Data driver class.
  */
-let Driver = class Driver extends Class.Null {
+let Driver = Driver_1 = class Driver extends Class.Null {
     /**
      * Gets the path from the specified model type.
      * @param model Mode type.
      * @returns Returns the path.
      * @throws Throws an error when the model type is not valid.
      */
-    getPath(model) {
+    static getPath(model) {
         const name = Mapping.Schema.getStorage(model);
         if (!name) {
             throw new Error(`There is no path for the specified model type.`);
@@ -35,7 +37,7 @@ let Driver = class Driver extends Class.Null {
      * @param entities Entities list.
      * @returns Returns the new generated list.
      */
-    extractArray(entities) {
+    static extractArray(entities) {
         const newer = [];
         for (const entity of entities) {
             newer.push(this.extractValue(entity));
@@ -47,7 +49,7 @@ let Driver = class Driver extends Class.Null {
      * @param entity Entity data.
      * @returns Returns the new generated object.
      */
-    extractObject(entity) {
+    static extractObject(entity) {
         const newer = {};
         for (const column in entity) {
             newer[column] = this.extractValue(entity[column]);
@@ -59,7 +61,7 @@ let Driver = class Driver extends Class.Null {
      * @param value Value to be extracted.
      * @returns Returns the new generated object.
      */
-    extractValue(value) {
+    static extractValue(value) {
         if (value instanceof Array) {
             return this.extractArray(value);
         }
@@ -81,7 +83,7 @@ let Driver = class Driver extends Class.Null {
             options.headers.append('X-API-Key', this.apiKey);
         }
         if (body) {
-            options.body = JSON.stringify(this.extractObject(body));
+            options.body = JSON.stringify(Driver_1.extractObject(body));
         }
         return await fetch(`${this.apiUrl}/${path}`, options);
     }
@@ -100,10 +102,10 @@ let Driver = class Driver extends Class.Null {
      * @param entities Entity data list.
      * @returns Returns the list inserted entities.
      */
-    async insert(model, ...entities) {
+    async insert(model, entities) {
         const list = [];
         for (const entity of entities) {
-            const response = await this.request('POST', this.getPath(model), entity);
+            const response = await this.request('POST', Driver_1.getPath(model), entity);
             if (response.status === 201) {
                 list.push((await response.json()).id);
             }
@@ -117,9 +119,9 @@ let Driver = class Driver extends Class.Null {
      * @param aggregate Joined columns.
      * @returns Returns the list of entities found.
      */
-    async find(model, filter, aggregate) {
-        const filters = filters_1.Filters.toURL(model, filter);
-        const response = await this.request('GET', `${this.getPath(model)}${filters}`);
+    async find(model, aggregation, filters) {
+        const urlFilter = filters_1.Filters.toURL(model, filters[0]);
+        const response = await this.request('GET', `${Driver_1.getPath(model)}${urlFilter}`);
         return response.status === 200 ? await response.json() : [];
     }
     /**
@@ -129,31 +131,31 @@ let Driver = class Driver extends Class.Null {
      * @param aggregate Joined columns.
      * @returns Returns a promise to get the found entity or undefined when the entity was not found.
      */
-    async findById(model, value, aggregate) {
-        const response = await this.request('GET', `${this.getPath(model)}/${value}`);
+    async findById(model, aggregation, id) {
+        const response = await this.request('GET', `${Driver_1.getPath(model)}/${id}`);
         return response.status === 200 ? await response.json() : void 0;
     }
     /**
      * Update all entities that corresponds to the specified filter.
      * @param model Model type.
-     * @param filter Filter expression.
      * @param entity Entity data to be updated.
+     * @param filter Filter expression.
      * @returns Returns the number of updated entities.
      */
-    async update(model, filter, entity) {
-        const filters = filters_1.Filters.toURL(model, filter);
-        const response = await this.request('PATCH', `${this.getPath(model)}/${filters}`, entity);
+    async update(model, entity, filter) {
+        const urlFilter = filters_1.Filters.toURL(model, filter);
+        const response = await this.request('PATCH', `${Driver_1.getPath(model)}/${urlFilter}`, entity);
         return response.status === 200 || response.status === 204 ? parseInt((await response.json()).total) : 0;
     }
     /**
      * Update the entity that corresponds to the specified entity id.
      * @param model Model type.
-     * @param value Entity id.
      * @param entity Entity data to be updated.
+     * @param id Entity id.s
      * @returns Returns a promise to get the true when the entity has been updated or false otherwise.
      */
-    async updateById(model, value, entity) {
-        const response = await this.request('PATCH', `${this.getPath(model)}/${value}`, entity);
+    async updateById(model, entity, id) {
+        const response = await this.request('PATCH', `${Driver_1.getPath(model)}/${id}`, entity);
         return response.status === 200 || response.status === 204;
     }
     /**
@@ -163,18 +165,18 @@ let Driver = class Driver extends Class.Null {
      * @return Returns the number of deleted entities.
      */
     async delete(model, filter) {
-        const filters = filters_1.Filters.toURL(model, filter);
-        const response = await this.request('DELETE', `${this.getPath(model)}/${filters}`);
+        const urlFilter = filters_1.Filters.toURL(model, filter);
+        const response = await this.request('DELETE', `${Driver_1.getPath(model)}/${urlFilter}`);
         return response.status === 200 || response.status === 204 ? parseInt((await response.json()).total) : 0;
     }
     /**
      * Delete the entity that corresponds to the specified entity id.
      * @param model Model type.
-     * @param value Entity id.
+     * @param id Entity id.
      * @return Returns a promise to get the true when the entity has been deleted or false otherwise.
      */
-    async deleteById(model, value) {
-        const response = await this.request('DELETE', `${this.getPath(model)}/${value}`);
+    async deleteById(model, id) {
+        const response = await this.request('DELETE', `${Driver_1.getPath(model)}/${id}`);
         return response.status === 200 || response.status === 204;
     }
 };
@@ -184,18 +186,6 @@ __decorate([
 __decorate([
     Class.Private()
 ], Driver.prototype, "apiKey", void 0);
-__decorate([
-    Class.Private()
-], Driver.prototype, "getPath", null);
-__decorate([
-    Class.Private()
-], Driver.prototype, "extractArray", null);
-__decorate([
-    Class.Private()
-], Driver.prototype, "extractObject", null);
-__decorate([
-    Class.Private()
-], Driver.prototype, "extractValue", null);
 __decorate([
     Class.Private()
 ], Driver.prototype, "request", null);
@@ -223,7 +213,19 @@ __decorate([
 __decorate([
     Class.Public()
 ], Driver.prototype, "deleteById", null);
-Driver = __decorate([
+__decorate([
+    Class.Private()
+], Driver, "getPath", null);
+__decorate([
+    Class.Private()
+], Driver, "extractArray", null);
+__decorate([
+    Class.Private()
+], Driver, "extractObject", null);
+__decorate([
+    Class.Private()
+], Driver, "extractValue", null);
+Driver = Driver_1 = __decorate([
     Class.Describe()
 ], Driver);
 exports.Driver = Driver;

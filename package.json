@@ -7,7 +7,7 @@
   "name": "@singleware/restdb",
   "description": "Singleware RestDB driver package.",
   "license": "MIT",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "main": "release/source/index.js",
   "types": "release/types/index.d.ts",
   "keywords": [
@@ -24,13 +24,13 @@
     "node": ">=10"
   },
   "dependencies": {
-    "@singleware/class": "^1.1.14",
-    "@singleware/mapping": "^1.1.27"
+    "@singleware/class": "^1.1.19",
+    "@singleware/mapping": "^1.1.30"
   },
   "devDependencies": {
-    "@types/mongodb": "^3.1.16",
-    "mongodb": "^3.1.10",
-    "prettier": "^1.15.3",
+    "@types/mongodb": "^3.1.19",
+    "mongodb": "^3.1.12",
+    "prettier": "^1.16.0",
     "typescript": "^2.9.2"
   },
   "prettier": {

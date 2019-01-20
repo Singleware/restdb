@@ -31,7 +31,7 @@ export class Driver extends Class.Null implements Mapping.Driver {
    * @throws Throws an error when the model type is not valid.
    */
   @Class.Private()
-  private getPath(model: Class.Constructor<Mapping.Entity>): string {
+  private static getPath(model: Class.Constructor<Mapping.Entity>): string {
     const name = Mapping.Schema.getStorage(model);
     if (!name) {
       throw new Error(`There is no path for the specified model type.`);
@@ -45,7 +45,7 @@ export class Driver extends Class.Null implements Mapping.Driver {
    * @returns Returns the new generated list.
    */
   @Class.Private()
-  private extractArray(entities: any[]): any[] {
+  private static extractArray(entities: any[]): any[] {
     const newer = [];
     for (const entity of entities) {
       newer.push(this.extractValue(entity));
@@ -59,7 +59,7 @@ export class Driver extends Class.Null implements Mapping.Driver {
    * @returns Returns the new generated object.
    */
   @Class.Private()
-  private extractObject(entity: Mapping.Entity): Mapping.Entity {
+  private static extractObject(entity: Mapping.Entity): Mapping.Entity {
     const newer = <Mapping.Entity>{};
     for (const column in entity) {
       newer[column] = this.extractValue(entity[column]);
@@ -73,7 +73,7 @@ export class Driver extends Class.Null implements Mapping.Driver {
    * @returns Returns the new generated object.
    */
   @Class.Private()
-  private extractValue(value: any): any {
+  private static extractValue(value: any): any {
     if (value instanceof Array) {
       return this.extractArray(value);
     } else if (value instanceof Object) {
@@ -96,7 +96,7 @@ export class Driver extends Class.Null implements Mapping.Driver {
       options.headers.append('X-API-Key', this.apiKey);
     }
     if (body) {
-      options.body = JSON.stringify(this.extractObject(body));
+      options.body = JSON.stringify(Driver.extractObject(body));
     }
     return await fetch(`${this.apiUrl}/${path}`, options);
   }
@@ -119,10 +119,10 @@ export class Driver extends Class.Null implements Mapping.Driver {
    * @returns Returns the list inserted entities.
    */
   @Class.Public()
-  public async insert<T extends Mapping.Entity>(model: Class.Constructor<Mapping.Entity>, ...entities: T[]): Promise<string[]> {
+  public async insert<T extends Mapping.Entity>(model: Class.Constructor<Mapping.Entity>, entities: T[]): Promise<string[]> {
     const list = [];
     for (const entity of entities) {
-      const response = await this.request('POST', this.getPath(model), entity);
+      const response = await this.request('POST', Driver.getPath(model), entity);
       if (response.status === 201) {
         list.push((await response.json()).id);
       }
@@ -140,11 +140,11 @@ export class Driver extends Class.Null implements Mapping.Driver {
   @Class.Public()
   public async find<T extends Mapping.Entity>(
     model: Class.Constructor<T>,
-    filter: Mapping.Expression,
-    aggregate: Mapping.Aggregate[]
+    aggregation: Mapping.Aggregation[],
+    filters: Mapping.Expression[]
   ): Promise<T[]> {
-    const filters = Filters.toURL(model, filter);
-    const response = await this.request('GET', `${this.getPath(model)}${filters}`);
+    const urlFilter = Filters.toURL(model, filters[0]);
+    const response = await this.request('GET', `${Driver.getPath(model)}${urlFilter}`);
     return response.status === 200 ? await response.json() : [];
   }
 
@@ -158,37 +158,37 @@ export class Driver extends Class.Null implements Mapping.Driver {
   @Class.Public()
   public async findById<T extends Mapping.Entity>(
     model: Class.Constructor<T>,
-    value: any,
-    aggregate: Mapping.Aggregate[]
+    aggregation: Mapping.Aggregation[],
+    id: any
   ): Promise<T | undefined> {
-    const response = await this.request('GET', `${this.getPath(model)}/${value}`);
+    const response = await this.request('GET', `${Driver.getPath(model)}/${id}`);
     return response.status === 200 ? await response.json() : void 0;
   }
 
   /**
    * Update all entities that corresponds to the specified filter.
    * @param model Model type.
-   * @param filter Filter expression.
    * @param entity Entity data to be updated.
+   * @param filter Filter expression.
    * @returns Returns the number of updated entities.
    */
   @Class.Public()
-  public async update(model: Class.Constructor<Mapping.Entity>, filter: Mapping.Expression, entity: Mapping.Entity): Promise<number> {
-    const filters = Filters.toURL(model, filter);
-    const response = await this.request('PATCH', `${this.getPath(model)}/${filters}`, entity);
+  public async update(model: Class.Constructor<Mapping.Entity>, entity: Mapping.Entity, filter: Mapping.Expression): Promise<number> {
+    const urlFilter = Filters.toURL(model, filter);
+    const response = await this.request('PATCH', `${Driver.getPath(model)}/${urlFilter}`, entity);
     return response.status === 200 || response.status === 204 ? parseInt((await response.json()).total) : 0;
   }
 
   /**
    * Update the entity that corresponds to the specified entity id.
    * @param model Model type.
-   * @param value Entity id.
    * @param entity Entity data to be updated.
+   * @param id Entity id.s
    * @returns Returns a promise to get the true when the entity has been updated or false otherwise.
    */
   @Class.Public()
-  public async updateById(model: Class.Constructor<Mapping.Entity>, value: any, entity: Mapping.Entity): Promise<boolean> {
-    const response = await this.request('PATCH', `${this.getPath(model)}/${value}`, entity);
+  public async updateById(model: Class.Constructor<Mapping.Entity>, entity: Mapping.Entity, id: any): Promise<boolean> {
+    const response = await this.request('PATCH', `${Driver.getPath(model)}/${id}`, entity);
     return response.status === 200 || response.status === 204;
   }
 
@@ -200,20 +200,20 @@ export class Driver extends Class.Null implements Mapping.Driver {
    */
   @Class.Public()
   public async delete(model: Class.Constructor<Mapping.Entity>, filter: Mapping.Expression): Promise<number> {
-    const filters = Filters.toURL(model, filter);
-    const response = await this.request('DELETE', `${this.getPath(model)}/${filters}`);
+    const urlFilter = Filters.toURL(model, filter);
+    const response = await this.request('DELETE', `${Driver.getPath(model)}/${urlFilter}`);
     return response.status === 200 || response.status === 204 ? parseInt((await response.json()).total) : 0;
   }
 
   /**
    * Delete the entity that corresponds to the specified entity id.
    * @param model Model type.
-   * @param value Entity id.
+   * @param id Entity id.
    * @return Returns a promise to get the true when the entity has been deleted or false otherwise.
    */
   @Class.Public()
-  public async deleteById(model: Class.Constructor<Mapping.Entity>, value: any): Promise<boolean> {
-    const response = await this.request('DELETE', `${this.getPath(model)}/${value}`);
+  public async deleteById(model: Class.Constructor<Mapping.Entity>, id: any): Promise<boolean> {
+    const response = await this.request('DELETE', `${Driver.getPath(model)}/${id}`);
     return response.status === 200 || response.status === 204;
   }
 }
