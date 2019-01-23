@@ -19,7 +19,7 @@ export declare class Filters extends Class.Null {
      * @returns Returns the generated URL path filter.
      * @throws Throws an error when there is a nonexistent column in the specified filter.
      */
-    static toURL(model: Class.Constructor<Mapping.Entity>, filter: Mapping.Expression): string;
+    static toURL(model: Mapping.Types.Model, filter: Mapping.Statements.Filter): string;
     /**
      * Builds a filter expression from the specified URL path filter.
      * @param model Model type.
@@ -27,5 +27,5 @@ export declare class Filters extends Class.Null {
      * @returns Returns the generated filter expression.
      * @throws Throws an error when there is a nonexistent column or unsupported operator in the specified filter.
      */
-    static fromURL(model: Class.Constructor<Mapping.Entity>, path: string): Mapping.Entity;
+    static fromURL(model: Mapping.Types.Model, path: string): Mapping.Types.Entity;
 }

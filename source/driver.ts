@@ -4,6 +4,7 @@
  */
 import * as Class from '@singleware/class';
 import * as Mapping from '@singleware/mapping';
+import * as Path from '@singleware/path';
 
 import { Filters } from './filters';
 
@@ -25,28 +26,38 @@ export class Driver extends Class.Null implements Mapping.Driver {
   private apiKey?: string;
 
   /**
-   * Gets the path from the specified model type.
+   * Api extra path.
+   */
+  @Class.Private()
+  private extraPath?: string;
+
+  /**
+   * Gets a new request path based on the specified model type.
    * @param model Mode type.
-   * @returns Returns the path.
+   * @param complement Path complement.
+   * @returns Returns the generated path.
    * @throws Throws an error when the model type is not valid.
    */
   @Class.Private()
-  private static getPath(model: Class.Constructor<Mapping.Entity>): string {
-    const name = Mapping.Schema.getStorage(model);
-    if (!name) {
-      throw new Error(`There is no path for the specified model type.`);
+  private getPath(model: Mapping.Types.Model, complement?: string): string {
+    const path = Mapping.Schema.getStorage(model);
+    if (!path) {
+      throw new Error(`There is no path for the specified model entity.`);
     }
-    return name;
+    if (this.extraPath) {
+      return Path.normalize(`${path}/${this.extraPath.replace('%0', complement || '')}`);
+    }
+    return path;
   }
 
   /**
-   * Extract all columns from the given entity list into a raw object.
+   * Extract all properties from the given entity list into a raw object list.
    * @param entities Entities list.
    * @returns Returns the new generated list.
    */
   @Class.Private()
   private static extractArray(entities: any[]): any[] {
-    const newer = [];
+    const newer = <Mapping.Types.Entity[]>[];
     for (const entity of entities) {
       newer.push(this.extractValue(entity));
     }
@@ -54,13 +65,13 @@ export class Driver extends Class.Null implements Mapping.Driver {
   }
 
   /**
-   * Extract all columns from the given entity into a raw object.
+   * Extract all properties from the given entity into a raw object map.
    * @param entity Entity data.
    * @returns Returns the new generated object.
    */
   @Class.Private()
-  private static extractObject(entity: Mapping.Entity): Mapping.Entity {
-    const newer = <Mapping.Entity>{};
+  private static extractObject(entity: Mapping.Types.Entity): Mapping.Types.Entity {
+    const newer = <Mapping.Types.Entity>{};
     for (const column in entity) {
       newer[column] = this.extractValue(entity[column]);
     }
@@ -90,8 +101,8 @@ export class Driver extends Class.Null implements Mapping.Driver {
    * @returns Returns a promise to get the HTTP response.
    */
   @Class.Private()
-  private async request(method: string, path: string, body?: Mapping.Entity): Promise<Response> {
-    const options = <Mapping.Entity>{ method: method, headers: new Headers() };
+  private async request(method: string, path: string, body?: Mapping.Types.Entity): Promise<Response> {
+    const options = <Mapping.Types.Entity>{ method: method, headers: new Headers() };
     if (this.apiKey) {
       options.headers.append('X-API-Key', this.apiKey);
     }
@@ -113,16 +124,28 @@ export class Driver extends Class.Null implements Mapping.Driver {
   }
 
   /**
+   * Set a temporary path for the next request.
+   * Use: %0 to set the complementary path string.
+   * @param path Path to be set.
+   * @returns Returns the own instance.
+   */
+  @Class.Public()
+  public usePath(path: string): Driver {
+    this.extraPath = path;
+    return this;
+  }
+
+  /**
    * Insert the specified entity into the API.
    * @param model Model type.
    * @param entities Entity data list.
    * @returns Returns the list inserted entities.
    */
   @Class.Public()
-  public async insert<T extends Mapping.Entity>(model: Class.Constructor<Mapping.Entity>, entities: T[]): Promise<string[]> {
+  public async insert<T extends Mapping.Types.Entity>(model: Mapping.Types.Model, entities: T[]): Promise<string[]> {
     const list = [];
     for (const entity of entities) {
-      const response = await this.request('POST', Driver.getPath(model), entity);
+      const response = await this.request('POST', this.getPath(model), entity);
       if (response.status === 201) {
         list.push((await response.json()).id);
       }
@@ -134,17 +157,19 @@ export class Driver extends Class.Null implements Mapping.Driver {
    * Find the corresponding entity from the API.
    * @param model Model type.
    * @param filter Filter expression.
-   * @param aggregate Joined columns.
+   * @param joins Joined columns.
    * @returns Returns the list of entities found.
    */
   @Class.Public()
-  public async find<T extends Mapping.Entity>(
-    model: Class.Constructor<T>,
-    aggregation: Mapping.Aggregation[],
-    filters: Mapping.Expression[]
+  public async find<T extends Mapping.Types.Entity>(
+    model: Mapping.Types.Model<T>,
+    joins: Mapping.Statements.Join[],
+    filters: Mapping.Statements.Filter[],
+    sort?: Mapping.Statements.Sort,
+    limit?: Mapping.Statements.Limit
   ): Promise<T[]> {
     const urlFilter = Filters.toURL(model, filters[0]);
-    const response = await this.request('GET', `${Driver.getPath(model)}${urlFilter}`);
+    const response = await this.request('GET', this.getPath(model, urlFilter));
     return response.status === 200 ? await response.json() : [];
   }
 
@@ -156,12 +181,12 @@ export class Driver extends Class.Null implements Mapping.Driver {
    * @returns Returns a promise to get the found entity or undefined when the entity was not found.
    */
   @Class.Public()
-  public async findById<T extends Mapping.Entity>(
-    model: Class.Constructor<T>,
-    aggregation: Mapping.Aggregation[],
+  public async findById<T extends Mapping.Types.Entity>(
+    model: Mapping.Types.Model<T>,
+    joins: Mapping.Statements.Join[],
     id: any
   ): Promise<T | undefined> {
-    const response = await this.request('GET', `${Driver.getPath(model)}/${id}`);
+    const response = await this.request('GET', this.getPath(model, id));
     return response.status === 200 ? await response.json() : void 0;
   }
 
@@ -173,9 +198,9 @@ export class Driver extends Class.Null implements Mapping.Driver {
    * @returns Returns the number of updated entities.
    */
   @Class.Public()
-  public async update(model: Class.Constructor<Mapping.Entity>, entity: Mapping.Entity, filter: Mapping.Expression): Promise<number> {
+  public async update(model: Mapping.Types.Model, entity: Mapping.Types.Entity, filter: Mapping.Statements.Filter): Promise<number> {
     const urlFilter = Filters.toURL(model, filter);
-    const response = await this.request('PATCH', `${Driver.getPath(model)}/${urlFilter}`, entity);
+    const response = await this.request('PATCH', this.getPath(model, urlFilter), entity);
     return response.status === 200 || response.status === 204 ? parseInt((await response.json()).total) : 0;
   }
 
@@ -187,8 +212,8 @@ export class Driver extends Class.Null implements Mapping.Driver {
    * @returns Returns a promise to get the true when the entity has been updated or false otherwise.
    */
   @Class.Public()
-  public async updateById(model: Class.Constructor<Mapping.Entity>, entity: Mapping.Entity, id: any): Promise<boolean> {
-    const response = await this.request('PATCH', `${Driver.getPath(model)}/${id}`, entity);
+  public async updateById(model: Mapping.Types.Model, entity: Mapping.Types.Entity, id: any): Promise<boolean> {
+    const response = await this.request('PATCH', this.getPath(model, id), entity);
     return response.status === 200 || response.status === 204;
   }
 
@@ -199,9 +224,9 @@ export class Driver extends Class.Null implements Mapping.Driver {
    * @return Returns the number of deleted entities.
    */
   @Class.Public()
-  public async delete(model: Class.Constructor<Mapping.Entity>, filter: Mapping.Expression): Promise<number> {
+  public async delete(model: Mapping.Types.Model, filter: Mapping.Statements.Filter): Promise<number> {
     const urlFilter = Filters.toURL(model, filter);
-    const response = await this.request('DELETE', `${Driver.getPath(model)}/${urlFilter}`);
+    const response = await this.request('DELETE', this.getPath(model, urlFilter));
     return response.status === 200 || response.status === 204 ? parseInt((await response.json()).total) : 0;
   }
 
@@ -212,8 +237,8 @@ export class Driver extends Class.Null implements Mapping.Driver {
    * @return Returns a promise to get the true when the entity has been deleted or false otherwise.
    */
   @Class.Public()
-  public async deleteById(model: Class.Constructor<Mapping.Entity>, id: any): Promise<boolean> {
-    const response = await this.request('DELETE', `${Driver.getPath(model)}/${id}`);
+  public async deleteById(model: Mapping.Types.Model, id: any): Promise<boolean> {
+    const response = await this.request('DELETE', this.getPath(model, id));
     return response.status === 200 || response.status === 204;
   }
 }

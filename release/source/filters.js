@@ -27,23 +27,25 @@ let Filters = class Filters extends Class.Null {
         let parts = [];
         for (const name in filter) {
             const operation = filter[name];
-            const schema = Mapping.Schema.getColumn(model, name);
+            const schema = Mapping.Schema.getRealColumn(model, name);
             if (!schema) {
                 throw new Error(`Column '${name}' does not exists.`);
             }
+            const path = `${schema.name}/${operation.operator}`;
             switch (operation.operator) {
-                case Mapping.Operator.LESS:
-                case Mapping.Operator.LESS_OR_EQUAL:
-                case Mapping.Operator.EQUAL:
-                case Mapping.Operator.NOT_EQUAL:
-                case Mapping.Operator.GREATER_OR_EQUAL:
-                case Mapping.Operator.GREATER:
-                    parts.push(`${schema.name}/${operation.operator}/${encodeURIComponent(operation.value)}`);
+                case Mapping.Statements.Operator.REGEX:
+                case Mapping.Statements.Operator.LESS:
+                case Mapping.Statements.Operator.LESS_OR_EQUAL:
+                case Mapping.Statements.Operator.EQUAL:
+                case Mapping.Statements.Operator.NOT_EQUAL:
+                case Mapping.Statements.Operator.GREATER_OR_EQUAL:
+                case Mapping.Statements.Operator.GREATER:
+                    parts.push(`${path}/${encodeURIComponent(operation.value)}`);
                     break;
-                case Mapping.Operator.BETWEEN:
-                case Mapping.Operator.CONTAIN:
-                case Mapping.Operator.NOT_CONTAIN:
-                    parts.push(`${schema.name}/${operation.operator}/${operation.value.map(item => encodeURIComponent(item)).join(';')}`);
+                case Mapping.Statements.Operator.BETWEEN:
+                case Mapping.Statements.Operator.CONTAIN:
+                case Mapping.Statements.Operator.NOT_CONTAIN:
+                    parts.push(`${path}/${operation.value.map(item => encodeURIComponent(item)).join(';')}`);
                     break;
             }
         }
@@ -64,21 +66,22 @@ let Filters = class Filters extends Class.Null {
                 const column = parts.pop();
                 const operator = parseInt(parts.pop());
                 const value = parts.pop();
-                if (!Mapping.Schema.getColumn(model, column)) {
+                if (!Mapping.Schema.getRealColumn(model, column)) {
                     throw new Error(`Column '${column}' does not exists.`);
                 }
                 switch (operator) {
-                    case Mapping.Operator.LESS:
-                    case Mapping.Operator.LESS_OR_EQUAL:
-                    case Mapping.Operator.EQUAL:
-                    case Mapping.Operator.NOT_EQUAL:
-                    case Mapping.Operator.GREATER_OR_EQUAL:
-                    case Mapping.Operator.GREATER:
+                    case Mapping.Statements.Operator.REGEX:
+                    case Mapping.Statements.Operator.LESS:
+                    case Mapping.Statements.Operator.LESS_OR_EQUAL:
+                    case Mapping.Statements.Operator.EQUAL:
+                    case Mapping.Statements.Operator.NOT_EQUAL:
+                    case Mapping.Statements.Operator.GREATER_OR_EQUAL:
+                    case Mapping.Statements.Operator.GREATER:
                         filters[column] = { operator: operator, value: decodeURIComponent(value) };
                         break;
-                    case Mapping.Operator.BETWEEN:
-                    case Mapping.Operator.CONTAIN:
-                    case Mapping.Operator.NOT_CONTAIN:
+                    case Mapping.Statements.Operator.BETWEEN:
+                    case Mapping.Statements.Operator.CONTAIN:
+                    case Mapping.Statements.Operator.NOT_CONTAIN:
                         filters[column] = { operator: operator, value: value.split(';').map(item => decodeURIComponent(item)) };
                         break;
                     default:

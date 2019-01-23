@@ -14,26 +14,31 @@ var Driver_1;
  */
 const Class = require("@singleware/class");
 const Mapping = require("@singleware/mapping");
+const Path = require("@singleware/path");
 const filters_1 = require("./filters");
 /**
  * Data driver class.
  */
 let Driver = Driver_1 = class Driver extends Class.Null {
     /**
-     * Gets the path from the specified model type.
+     * Gets a new request path based on the specified model type.
      * @param model Mode type.
-     * @returns Returns the path.
+     * @param complement Path complement.
+     * @returns Returns the generated path.
      * @throws Throws an error when the model type is not valid.
      */
-    static getPath(model) {
-        const name = Mapping.Schema.getStorage(model);
-        if (!name) {
-            throw new Error(`There is no path for the specified model type.`);
+    getPath(model, complement) {
+        const path = Mapping.Schema.getStorage(model);
+        if (!path) {
+            throw new Error(`There is no path for the specified model entity.`);
         }
-        return name;
+        if (this.extraPath) {
+            return Path.normalize(`${path}/${this.extraPath.replace('%0', complement || '')}`);
+        }
+        return path;
     }
     /**
-     * Extract all columns from the given entity list into a raw object.
+     * Extract all properties from the given entity list into a raw object list.
      * @param entities Entities list.
      * @returns Returns the new generated list.
      */
@@ -45,7 +50,7 @@ let Driver = Driver_1 = class Driver extends Class.Null {
         return newer;
     }
     /**
-     * Extract all columns from the given entity into a raw object.
+     * Extract all properties from the given entity into a raw object map.
      * @param entity Entity data.
      * @returns Returns the new generated object.
      */
@@ -97,6 +102,16 @@ let Driver = Driver_1 = class Driver extends Class.Null {
         this.apiKey = key;
     }
     /**
+     * Set a temporary path for the next request.
+     * Use: %0 to set the complementary path string.
+     * @param path Path to be set.
+     * @returns Returns the own instance.
+     */
+    usePath(path) {
+        this.extraPath = path;
+        return this;
+    }
+    /**
      * Insert the specified entity into the API.
      * @param model Model type.
      * @param entities Entity data list.
@@ -105,7 +120,7 @@ let Driver = Driver_1 = class Driver extends Class.Null {
     async insert(model, entities) {
         const list = [];
         for (const entity of entities) {
-            const response = await this.request('POST', Driver_1.getPath(model), entity);
+            const response = await this.request('POST', this.getPath(model), entity);
             if (response.status === 201) {
                 list.push((await response.json()).id);
             }
@@ -116,12 +131,12 @@ let Driver = Driver_1 = class Driver extends Class.Null {
      * Find the corresponding entity from the API.
      * @param model Model type.
      * @param filter Filter expression.
-     * @param aggregate Joined columns.
+     * @param joins Joined columns.
      * @returns Returns the list of entities found.
      */
-    async find(model, aggregation, filters) {
+    async find(model, joins, filters, sort, limit) {
         const urlFilter = filters_1.Filters.toURL(model, filters[0]);
-        const response = await this.request('GET', `${Driver_1.getPath(model)}${urlFilter}`);
+        const response = await this.request('GET', this.getPath(model, urlFilter));
         return response.status === 200 ? await response.json() : [];
     }
     /**
@@ -131,8 +146,8 @@ let Driver = Driver_1 = class Driver extends Class.Null {
      * @param aggregate Joined columns.
      * @returns Returns a promise to get the found entity or undefined when the entity was not found.
      */
-    async findById(model, aggregation, id) {
-        const response = await this.request('GET', `${Driver_1.getPath(model)}/${id}`);
+    async findById(model, joins, id) {
+        const response = await this.request('GET', this.getPath(model, id));
         return response.status === 200 ? await response.json() : void 0;
     }
     /**
@@ -144,7 +159,7 @@ let Driver = Driver_1 = class Driver extends Class.Null {
      */
     async update(model, entity, filter) {
         const urlFilter = filters_1.Filters.toURL(model, filter);
-        const response = await this.request('PATCH', `${Driver_1.getPath(model)}/${urlFilter}`, entity);
+        const response = await this.request('PATCH', this.getPath(model, urlFilter), entity);
         return response.status === 200 || response.status === 204 ? parseInt((await response.json()).total) : 0;
     }
     /**
@@ -155,7 +170,7 @@ let Driver = Driver_1 = class Driver extends Class.Null {
      * @returns Returns a promise to get the true when the entity has been updated or false otherwise.
      */
     async updateById(model, entity, id) {
-        const response = await this.request('PATCH', `${Driver_1.getPath(model)}/${id}`, entity);
+        const response = await this.request('PATCH', this.getPath(model, id), entity);
         return response.status === 200 || response.status === 204;
     }
     /**
@@ -166,7 +181,7 @@ let Driver = Driver_1 = class Driver extends Class.Null {
      */
     async delete(model, filter) {
         const urlFilter = filters_1.Filters.toURL(model, filter);
-        const response = await this.request('DELETE', `${Driver_1.getPath(model)}/${urlFilter}`);
+        const response = await this.request('DELETE', this.getPath(model, urlFilter));
         return response.status === 200 || response.status === 204 ? parseInt((await response.json()).total) : 0;
     }
     /**
@@ -176,7 +191,7 @@ let Driver = Driver_1 = class Driver extends Class.Null {
      * @return Returns a promise to get the true when the entity has been deleted or false otherwise.
      */
     async deleteById(model, id) {
-        const response = await this.request('DELETE', `${Driver_1.getPath(model)}/${id}`);
+        const response = await this.request('DELETE', this.getPath(model, id));
         return response.status === 200 || response.status === 204;
     }
 };
@@ -188,10 +203,19 @@ __decorate([
 ], Driver.prototype, "apiKey", void 0);
 __decorate([
     Class.Private()
+], Driver.prototype, "extraPath", void 0);
+__decorate([
+    Class.Private()
+], Driver.prototype, "getPath", null);
+__decorate([
+    Class.Private()
 ], Driver.prototype, "request", null);
 __decorate([
     Class.Public()
 ], Driver.prototype, "connect", null);
+__decorate([
+    Class.Public()
+], Driver.prototype, "usePath", null);
 __decorate([
     Class.Public()
 ], Driver.prototype, "insert", null);
@@ -213,9 +237,6 @@ __decorate([
 __decorate([
     Class.Public()
 ], Driver.prototype, "deleteById", null);
-__decorate([
-    Class.Private()
-], Driver, "getPath", null);
 __decorate([
     Class.Private()
 ], Driver, "extractArray", null);

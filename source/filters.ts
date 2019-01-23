@@ -24,27 +24,29 @@ export class Filters extends Class.Null {
    * @throws Throws an error when there is a nonexistent column in the specified filter.
    */
   @Class.Public()
-  public static toURL(model: Class.Constructor<Mapping.Entity>, filter: Mapping.Expression): string {
+  public static toURL(model: Mapping.Types.Model, filter: Mapping.Statements.Filter): string {
     let parts = [];
     for (const name in filter) {
       const operation = filter[name];
-      const schema = Mapping.Schema.getColumn(model, name);
+      const schema = Mapping.Schema.getRealColumn(model, name);
       if (!schema) {
         throw new Error(`Column '${name}' does not exists.`);
       }
+      const path = `${schema.name}/${operation.operator}`;
       switch (operation.operator) {
-        case Mapping.Operator.LESS:
-        case Mapping.Operator.LESS_OR_EQUAL:
-        case Mapping.Operator.EQUAL:
-        case Mapping.Operator.NOT_EQUAL:
-        case Mapping.Operator.GREATER_OR_EQUAL:
-        case Mapping.Operator.GREATER:
-          parts.push(`${schema.name}/${operation.operator}/${encodeURIComponent(operation.value)}`);
+        case Mapping.Statements.Operator.REGEX:
+        case Mapping.Statements.Operator.LESS:
+        case Mapping.Statements.Operator.LESS_OR_EQUAL:
+        case Mapping.Statements.Operator.EQUAL:
+        case Mapping.Statements.Operator.NOT_EQUAL:
+        case Mapping.Statements.Operator.GREATER_OR_EQUAL:
+        case Mapping.Statements.Operator.GREATER:
+          parts.push(`${path}/${encodeURIComponent(operation.value)}`);
           break;
-        case Mapping.Operator.BETWEEN:
-        case Mapping.Operator.CONTAIN:
-        case Mapping.Operator.NOT_CONTAIN:
-          parts.push(`${schema.name}/${operation.operator}/${(<string[]>operation.value).map(item => encodeURIComponent(item)).join(';')}`);
+        case Mapping.Statements.Operator.BETWEEN:
+        case Mapping.Statements.Operator.CONTAIN:
+        case Mapping.Statements.Operator.NOT_CONTAIN:
+          parts.push(`${path}/${(<string[]>operation.value).map(item => encodeURIComponent(item)).join(';')}`);
           break;
       }
     }
@@ -59,29 +61,30 @@ export class Filters extends Class.Null {
    * @throws Throws an error when there is a nonexistent column or unsupported operator in the specified filter.
    */
   @Class.Public()
-  public static fromURL(model: Class.Constructor<Mapping.Entity>, path: string) {
-    const filters = <Mapping.Entity>{};
+  public static fromURL(model: Mapping.Types.Model, path: string) {
+    const filters = <Mapping.Types.Entity>{};
     const parts = path.split('/').reverse();
     if (parts.pop() === this.PREFIX) {
       while (parts.length) {
         const column = <string>parts.pop();
         const operator = parseInt(<string>parts.pop());
         const value = <string>parts.pop();
-        if (!Mapping.Schema.getColumn(model, column)) {
+        if (!Mapping.Schema.getRealColumn(model, column)) {
           throw new Error(`Column '${column}' does not exists.`);
         }
         switch (operator) {
-          case Mapping.Operator.LESS:
-          case Mapping.Operator.LESS_OR_EQUAL:
-          case Mapping.Operator.EQUAL:
-          case Mapping.Operator.NOT_EQUAL:
-          case Mapping.Operator.GREATER_OR_EQUAL:
-          case Mapping.Operator.GREATER:
+          case Mapping.Statements.Operator.REGEX:
+          case Mapping.Statements.Operator.LESS:
+          case Mapping.Statements.Operator.LESS_OR_EQUAL:
+          case Mapping.Statements.Operator.EQUAL:
+          case Mapping.Statements.Operator.NOT_EQUAL:
+          case Mapping.Statements.Operator.GREATER_OR_EQUAL:
+          case Mapping.Statements.Operator.GREATER:
             filters[column] = { operator: operator, value: decodeURIComponent(value) };
             break;
-          case Mapping.Operator.BETWEEN:
-          case Mapping.Operator.CONTAIN:
-          case Mapping.Operator.NOT_CONTAIN:
+          case Mapping.Statements.Operator.BETWEEN:
+          case Mapping.Statements.Operator.CONTAIN:
+          case Mapping.Statements.Operator.NOT_CONTAIN:
             filters[column] = { operator: operator, value: value.split(';').map(item => decodeURIComponent(item)) };
             break;
           default:
