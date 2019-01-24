@@ -6,7 +6,7 @@ import * as Class from '@singleware/class';
 import * as Mapping from '@singleware/mapping';
 import * as Path from '@singleware/path';
 
-import { Filters } from './filters';
+import { Search } from './search';
 
 /**
  * Data driver class.
@@ -26,10 +26,10 @@ export class Driver extends Class.Null implements Mapping.Driver {
   private apiKey?: string;
 
   /**
-   * Api extra path.
+   * Api temporary path.
    */
   @Class.Private()
-  private extraPath?: string;
+  private apiPath?: string;
 
   /**
    * Gets a new request path based on the specified model type.
@@ -40,18 +40,18 @@ export class Driver extends Class.Null implements Mapping.Driver {
    */
   @Class.Private()
   private getPath(model: Mapping.Types.Model, complement?: string): string {
-    const path = Mapping.Schema.getStorage(model);
+    let path = Mapping.Schema.getStorage(model);
     if (!path) {
       throw new Error(`There is no path for the specified model entity.`);
-    }
-    if (this.extraPath) {
-      return Path.normalize(`${path}/${this.extraPath.replace('%0', complement || '')}`);
+    } else if (this.apiPath) {
+      path += `/${Path.normalize(this.apiPath.replace('%0', complement || ''))}`;
+      this.apiPath = void 0;
     }
     return path;
   }
 
   /**
-   * Extract all properties from the given entity list into a raw object list.
+   * Extract all properties from the given entity list into a raw object array.
    * @param entities Entities list.
    * @returns Returns the new generated list.
    */
@@ -70,7 +70,7 @@ export class Driver extends Class.Null implements Mapping.Driver {
    * @returns Returns the new generated object.
    */
   @Class.Private()
-  private static extractObject(entity: Mapping.Types.Entity): Mapping.Types.Entity {
+  private static extractMap(entity: Mapping.Types.Entity): Mapping.Types.Entity {
     const newer = <Mapping.Types.Entity>{};
     for (const column in entity) {
       newer[column] = this.extractValue(entity[column]);
@@ -88,7 +88,7 @@ export class Driver extends Class.Null implements Mapping.Driver {
     if (value instanceof Array) {
       return this.extractArray(value);
     } else if (value instanceof Object) {
-      return this.extractObject(value);
+      return this.extractMap(value);
     }
     return value;
   }
@@ -107,7 +107,7 @@ export class Driver extends Class.Null implements Mapping.Driver {
       options.headers.append('X-API-Key', this.apiKey);
     }
     if (body) {
-      options.body = JSON.stringify(Driver.extractObject(body));
+      options.body = JSON.stringify(Driver.extractMap(body));
     }
     return await fetch(`${this.apiUrl}/${path}`, options);
   }
@@ -124,6 +124,17 @@ export class Driver extends Class.Null implements Mapping.Driver {
   }
 
   /**
+   * Sets the new API key for subsequent requests.
+   * @param key New API key.
+   * @returns Returns the own instance.
+   */
+  @Class.Public()
+  public useKey(path: string): Driver {
+    this.apiKey = path;
+    return this;
+  }
+
+  /**
    * Set a temporary path for the next request.
    * Use: %0 to set the complementary path string.
    * @param path Path to be set.
@@ -131,7 +142,7 @@ export class Driver extends Class.Null implements Mapping.Driver {
    */
   @Class.Public()
   public usePath(path: string): Driver {
-    this.extraPath = path;
+    this.apiPath = path;
     return this;
   }
 
@@ -156,8 +167,10 @@ export class Driver extends Class.Null implements Mapping.Driver {
   /**
    * Find the corresponding entity from the API.
    * @param model Model type.
-   * @param filter Filter expression.
-   * @param joins Joined columns.
+   * @param joins List of junctions (Not supported).
+   * @param filters List of filters.
+   * @param sort Sorting fields.
+   * @param limit Result limits.
    * @returns Returns the list of entities found.
    */
   @Class.Public()
@@ -168,8 +181,8 @@ export class Driver extends Class.Null implements Mapping.Driver {
     sort?: Mapping.Statements.Sort,
     limit?: Mapping.Statements.Limit
   ): Promise<T[]> {
-    const urlFilter = Filters.toURL(model, filters[0]);
-    const response = await this.request('GET', this.getPath(model, urlFilter));
+    const query = Search.toURL(model, filters, sort, limit);
+    const response = await this.request('GET', this.getPath(model, query));
     return response.status === 200 ? await response.json() : [];
   }
 
@@ -199,8 +212,8 @@ export class Driver extends Class.Null implements Mapping.Driver {
    */
   @Class.Public()
   public async update(model: Mapping.Types.Model, entity: Mapping.Types.Entity, filter: Mapping.Statements.Filter): Promise<number> {
-    const urlFilter = Filters.toURL(model, filter);
-    const response = await this.request('PATCH', this.getPath(model, urlFilter), entity);
+    const query = Search.toURL(model, [filter]);
+    const response = await this.request('PATCH', this.getPath(model, query), entity);
     return response.status === 200 || response.status === 204 ? parseInt((await response.json()).total) : 0;
   }
 
@@ -225,8 +238,8 @@ export class Driver extends Class.Null implements Mapping.Driver {
    */
   @Class.Public()
   public async delete(model: Mapping.Types.Model, filter: Mapping.Statements.Filter): Promise<number> {
-    const urlFilter = Filters.toURL(model, filter);
-    const response = await this.request('DELETE', this.getPath(model, urlFilter));
+    const query = Search.toURL(model, [filter]);
+    const response = await this.request('DELETE', this.getPath(model, query));
     return response.status === 200 || response.status === 204 ? parseInt((await response.json()).total) : 0;
   }
 

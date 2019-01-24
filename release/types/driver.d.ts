@@ -17,9 +17,9 @@ export declare class Driver extends Class.Null implements Mapping.Driver {
      */
     private apiKey?;
     /**
-     * Api extra path.
+     * Api temporary path.
      */
-    private extraPath?;
+    private apiPath?;
     /**
      * Gets a new request path based on the specified model type.
      * @param model Mode type.
@@ -29,7 +29,7 @@ export declare class Driver extends Class.Null implements Mapping.Driver {
      */
     private getPath;
     /**
-     * Extract all properties from the given entity list into a raw object list.
+     * Extract all properties from the given entity list into a raw object array.
      * @param entities Entities list.
      * @returns Returns the new generated list.
      */
@@ -39,7 +39,7 @@ export declare class Driver extends Class.Null implements Mapping.Driver {
      * @param entity Entity data.
      * @returns Returns the new generated object.
      */
-    private static extractObject;
+    private static extractMap;
     /**
      * Extract the value from the given entity into a raw value.
      * @param value Value to be extracted.
@@ -61,6 +61,12 @@ export declare class Driver extends Class.Null implements Mapping.Driver {
      */
     connect(url: string, key?: string): Promise<void>;
     /**
+     * Sets the new API key for subsequent requests.
+     * @param key New API key.
+     * @returns Returns the own instance.
+     */
+    useKey(path: string): Driver;
+    /**
      * Set a temporary path for the next request.
      * Use: %0 to set the complementary path string.
      * @param path Path to be set.
@@ -77,8 +83,10 @@ export declare class Driver extends Class.Null implements Mapping.Driver {
     /**
      * Find the corresponding entity from the API.
      * @param model Model type.
-     * @param filter Filter expression.
-     * @param joins Joined columns.
+     * @param joins List of junctions (Not supported).
+     * @param filters List of filters.
+     * @param sort Sorting fields.
+     * @param limit Result limits.
      * @returns Returns the list of entities found.
      */
     find<T extends Mapping.Types.Entity>(model: Mapping.Types.Model<T>, joins: Mapping.Statements.Join[], filters: Mapping.Statements.Filter[], sort?: Mapping.Statements.Sort, limit?: Mapping.Statements.Limit): Promise<T[]>;

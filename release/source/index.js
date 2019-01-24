@@ -6,5 +6,5 @@ Object.defineProperty(exports, "__esModule", { value: true });
  */
 var driver_1 = require("./driver");
 exports.Driver = driver_1.Driver;
-var filters_1 = require("./filters");
-exports.Filters = filters_1.Filters;
+var search_1 = require("./search");
+exports.Search = search_1.Search;
