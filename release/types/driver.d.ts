@@ -67,47 +67,47 @@ export declare class Driver extends Class.Null implements Mapping.Driver {
      */
     useKey(path: string): Driver;
     /**
-     * Set a temporary path for the next request.
+     * Sets a temporary path for the next request.
      * Use: %0 to set the complementary path string.
      * @param path Path to be set.
      * @returns Returns the own instance.
      */
     usePath(path: string): Driver;
     /**
-     * Insert the specified entity into the API.
+     * Insert the specified entity into the API by a POST request.
      * @param model Model type.
-     * @param entities Entity data list.
+     * @param entities Entity list.
      * @returns Returns the list inserted entities.
      */
     insert<T extends Mapping.Types.Entity>(model: Mapping.Types.Model, entities: T[]): Promise<string[]>;
     /**
-     * Find the corresponding entity from the API.
+     * Find the corresponding entity from the API by a GET request.
      * @param model Model type.
-     * @param joins List of junctions (Not supported).
-     * @param filters List of filters.
+     * @param joins List of joins (Not supported).
+     * @param filter Fields filter.
      * @param sort Sorting fields.
      * @param limit Result limits.
-     * @returns Returns the list of entities found.
+     * @returns Returns a promise to get the list of entities found.
      */
-    find<T extends Mapping.Types.Entity>(model: Mapping.Types.Model<T>, joins: Mapping.Statements.Join[], filters: Mapping.Statements.Filter[], sort?: Mapping.Statements.Sort, limit?: Mapping.Statements.Limit): Promise<T[]>;
+    find<T extends Mapping.Types.Entity>(model: Mapping.Types.Model<T>, joins: Mapping.Statements.Join[], filter: Mapping.Statements.Filter, sort?: Mapping.Statements.Sort, limit?: Mapping.Statements.Limit): Promise<T[]>;
     /**
-     * Find the entity that corresponds to the specified entity id.
+     * Find the entity that corresponds to the specified entity id by a GET request.
      * @param model Model type.
-     * @param value Entity id value.
-     * @param aggregate Joined columns.
+     * @param joins Joined columns (Not supported).
+     * @param id Entity id.
      * @returns Returns a promise to get the found entity or undefined when the entity was not found.
      */
     findById<T extends Mapping.Types.Entity>(model: Mapping.Types.Model<T>, joins: Mapping.Statements.Join[], id: any): Promise<T | undefined>;
     /**
-     * Update all entities that corresponds to the specified filter.
+     * Update all entities that corresponds to the specified filter by a PATCH request.
      * @param model Model type.
      * @param entity Entity data to be updated.
      * @param filter Filter expression.
-     * @returns Returns the number of updated entities.
+     * @returns Returns a promise to get the number of updated entities.
      */
     update(model: Mapping.Types.Model, entity: Mapping.Types.Entity, filter: Mapping.Statements.Filter): Promise<number>;
     /**
-     * Update the entity that corresponds to the specified entity id.
+     * Update the entity that corresponds to the specified entity id by a PATCH request.
      * @param model Model type.
      * @param entity Entity data to be updated.
      * @param id Entity id.s
@@ -115,14 +115,14 @@ export declare class Driver extends Class.Null implements Mapping.Driver {
      */
     updateById(model: Mapping.Types.Model, entity: Mapping.Types.Entity, id: any): Promise<boolean>;
     /**
-     * Delete all entities that corresponds to the specified filter.
+     * Delete all entities that corresponds to the specified filter by a DELETE request.
      * @param model Model type.
      * @param filter Filter columns.
-     * @return Returns the number of deleted entities.
+     * @return Returns a promise to get the number of deleted entities.
      */
     delete(model: Mapping.Types.Model, filter: Mapping.Statements.Filter): Promise<number>;
     /**
-     * Delete the entity that corresponds to the specified entity id.
+     * Delete the entity that corresponds to the specified entity id by a DELETE request.
      * @param model Model type.
      * @param id Entity id.
      * @return Returns a promise to get the true when the entity has been deleted or false otherwise.

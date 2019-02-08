@@ -112,7 +112,7 @@ let Driver = Driver_1 = class Driver extends Class.Null {
         return this;
     }
     /**
-     * Set a temporary path for the next request.
+     * Sets a temporary path for the next request.
      * Use: %0 to set the complementary path string.
      * @param path Path to be set.
      * @returns Returns the own instance.
@@ -122,9 +122,9 @@ let Driver = Driver_1 = class Driver extends Class.Null {
         return this;
     }
     /**
-     * Insert the specified entity into the API.
+     * Insert the specified entity into the API by a POST request.
      * @param model Model type.
-     * @param entities Entity data list.
+     * @param entities Entity list.
      * @returns Returns the list inserted entities.
      */
     async insert(model, entities) {
@@ -138,24 +138,24 @@ let Driver = Driver_1 = class Driver extends Class.Null {
         return list;
     }
     /**
-     * Find the corresponding entity from the API.
+     * Find the corresponding entity from the API by a GET request.
      * @param model Model type.
-     * @param joins List of junctions (Not supported).
-     * @param filters List of filters.
+     * @param joins List of joins (Not supported).
+     * @param filter Fields filter.
      * @param sort Sorting fields.
      * @param limit Result limits.
-     * @returns Returns the list of entities found.
+     * @returns Returns a promise to get the list of entities found.
      */
-    async find(model, joins, filters, sort, limit) {
-        const query = search_1.Search.toURL(model, filters, sort, limit);
+    async find(model, joins, filter, sort, limit) {
+        const query = search_1.Search.toURL(model, [filter], sort, limit);
         const response = await this.request('GET', this.getPath(model, query));
         return response.status === 200 ? await response.json() : [];
     }
     /**
-     * Find the entity that corresponds to the specified entity id.
+     * Find the entity that corresponds to the specified entity id by a GET request.
      * @param model Model type.
-     * @param value Entity id value.
-     * @param aggregate Joined columns.
+     * @param joins Joined columns (Not supported).
+     * @param id Entity id.
      * @returns Returns a promise to get the found entity or undefined when the entity was not found.
      */
     async findById(model, joins, id) {
@@ -163,11 +163,11 @@ let Driver = Driver_1 = class Driver extends Class.Null {
         return response.status === 200 ? await response.json() : void 0;
     }
     /**
-     * Update all entities that corresponds to the specified filter.
+     * Update all entities that corresponds to the specified filter by a PATCH request.
      * @param model Model type.
      * @param entity Entity data to be updated.
      * @param filter Filter expression.
-     * @returns Returns the number of updated entities.
+     * @returns Returns a promise to get the number of updated entities.
      */
     async update(model, entity, filter) {
         const query = search_1.Search.toURL(model, [filter]);
@@ -175,7 +175,7 @@ let Driver = Driver_1 = class Driver extends Class.Null {
         return response.status === 200 || response.status === 204 ? parseInt((await response.json()).total) : 0;
     }
     /**
-     * Update the entity that corresponds to the specified entity id.
+     * Update the entity that corresponds to the specified entity id by a PATCH request.
      * @param model Model type.
      * @param entity Entity data to be updated.
      * @param id Entity id.s
@@ -186,10 +186,10 @@ let Driver = Driver_1 = class Driver extends Class.Null {
         return response.status === 200 || response.status === 204;
     }
     /**
-     * Delete all entities that corresponds to the specified filter.
+     * Delete all entities that corresponds to the specified filter by a DELETE request.
      * @param model Model type.
      * @param filter Filter columns.
-     * @return Returns the number of deleted entities.
+     * @return Returns a promise to get the number of deleted entities.
      */
     async delete(model, filter) {
         const query = search_1.Search.toURL(model, [filter]);
@@ -197,7 +197,7 @@ let Driver = Driver_1 = class Driver extends Class.Null {
         return response.status === 200 || response.status === 204 ? parseInt((await response.json()).total) : 0;
     }
     /**
-     * Delete the entity that corresponds to the specified entity id.
+     * Delete the entity that corresponds to the specified entity id by a DELETE request.
      * @param model Model type.
      * @param id Entity id.
      * @return Returns a promise to get the true when the entity has been deleted or false otherwise.
