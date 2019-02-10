@@ -21,11 +21,11 @@ let Search = Search_1 = class Search extends Class.Null {
     /**
      * Serializes the specified filter object according to the specified data model.
      * @param model Model type.
+     * @param queries Query parameters list.
      * @param filter Filter statement.
-     * @returns Returns a string that represents the serialized filter.
      * @throws Throws an exception when the specified column does not exists in the provided data model.
      */
-    static serializeFilter(model, filter) {
+    static serializeFilter(model, queries, filter) {
         let parts = [];
         for (const name in filter) {
             const schema = Mapping.Schema.getRealColumn(model, name);
@@ -51,7 +51,9 @@ let Search = Search_1 = class Search extends Class.Null {
                     break;
             }
         }
-        return parts.length ? `${Search_1.FilterPrefix}/${parts.join(';')}` : ``;
+        if (parts.length) {
+            queries.push(`${Search_1.FilterPrefix}/${parts.join(';')}`);
+        }
     }
     /**
      * Unserializes the specified filter string according to the specified data model.
@@ -93,11 +95,11 @@ let Search = Search_1 = class Search extends Class.Null {
     /**
      * Serializes the specified sort object according to the specified data model.
      * @param model Model type.
+     * @param queries Query parameters list.
      * @param sort Sorting order.
-     * @returns Returns a string that represent the serialized sorting order.
      * @throws Throws an exception when the specified column does not exists in the provided data model.
      */
-    static serializeSort(model, sort) {
+    static serializeSort(model, queries, sort) {
         let parts = [];
         for (const name in sort) {
             const schema = Mapping.Schema.getRealColumn(model, name);
@@ -106,7 +108,9 @@ let Search = Search_1 = class Search extends Class.Null {
             }
             parts.push(`${schema.name}:${sort[name]}`);
         }
-        return parts.length ? `${Search_1.SortPrefix}/${parts.join(';')}` : ``;
+        if (parts.length) {
+            queries.push(`${Search_1.SortPrefix}/${parts.join(';')}`);
+        }
     }
     /**
      * Unserializes the specified sort string according to the specified data model.
@@ -137,11 +141,11 @@ let Search = Search_1 = class Search extends Class.Null {
     }
     /**
      * Serializes the specified limit object.
+     * @param queries Query parameters list.
      * @param limit Limit object.
-     * @returns Returns a string that represents the specified limit object.
      */
-    static serializeLimit(limit) {
-        return `${Search_1.LimitPrefix}/${limit.start || 0};${limit.count || 0}`;
+    static serializeLimit(queries, limit) {
+        queries.push(`${Search_1.LimitPrefix}/${limit.start || 0};${limit.count || 0}`);
     }
     /**
      * Unserializes the specified limit string.
@@ -165,15 +169,15 @@ let Search = Search_1 = class Search extends Class.Null {
      * @throws Throws an error when there is a nonexistent column in the specified filter.
      */
     static toURL(model, filters, sort, limit) {
-        let statements = [];
+        const statements = [];
         for (const filter of filters) {
-            statements.push(Search_1.serializeFilter(model, filter));
+            Search_1.serializeFilter(model, statements, filter);
         }
         if (sort) {
-            statements.push(Search_1.serializeSort(model, sort));
+            Search_1.serializeSort(model, statements, sort);
         }
         if (limit) {
-            statements.push(Search_1.serializeLimit(limit));
+            Search_1.serializeLimit(statements, limit);
         }
         return statements.length ? `/${this.QueryPrefix}/${statements.join('/')}` : ``;
     }

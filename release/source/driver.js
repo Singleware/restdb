@@ -36,7 +36,10 @@ let Driver = Driver_1 = class Driver extends Class.Null {
             path += `/${Path.normalize(this.apiPath.replace('%0', complement || ''))}`;
             this.apiPath = void 0;
         }
-        return path;
+        else if (complement) {
+            path += `/${complement}`;
+        }
+        return Path.normalize(path);
     }
     /**
      * Extract all properties from the given entity list into a raw object array.

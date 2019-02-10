@@ -28,8 +28,8 @@ export declare class Search extends Class.Null {
     /**
      * Serializes the specified filter object according to the specified data model.
      * @param model Model type.
+     * @param queries Query parameters list.
      * @param filter Filter statement.
-     * @returns Returns a string that represents the serialized filter.
      * @throws Throws an exception when the specified column does not exists in the provided data model.
      */
     private static serializeFilter;
@@ -44,8 +44,8 @@ export declare class Search extends Class.Null {
     /**
      * Serializes the specified sort object according to the specified data model.
      * @param model Model type.
+     * @param queries Query parameters list.
      * @param sort Sorting order.
-     * @returns Returns a string that represent the serialized sorting order.
      * @throws Throws an exception when the specified column does not exists in the provided data model.
      */
     private static serializeSort;
@@ -59,8 +59,8 @@ export declare class Search extends Class.Null {
     private static unserializeSort;
     /**
      * Serializes the specified limit object.
+     * @param queries Query parameters list.
      * @param limit Limit object.
-     * @returns Returns a string that represents the specified limit object.
      */
     private static serializeLimit;
     /**

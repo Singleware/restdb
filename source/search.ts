@@ -39,12 +39,12 @@ export class Search extends Class.Null {
   /**
    * Serializes the specified filter object according to the specified data model.
    * @param model Model type.
+   * @param queries Query parameters list.
    * @param filter Filter statement.
-   * @returns Returns a string that represents the serialized filter.
    * @throws Throws an exception when the specified column does not exists in the provided data model.
    */
   @Class.Private()
-  private static serializeFilter(model: Mapping.Types.Model, filter: Mapping.Statements.Filter): string {
+  private static serializeFilter(model: Mapping.Types.Model, queries: any[], filter: Mapping.Statements.Filter): void {
     let parts = [];
     for (const name in filter) {
       const schema = Mapping.Schema.getRealColumn(model, name);
@@ -70,7 +70,9 @@ export class Search extends Class.Null {
           break;
       }
     }
-    return parts.length ? `${Search.FilterPrefix}/${parts.join(';')}` : ``;
+    if (parts.length) {
+      queries.push(`${Search.FilterPrefix}/${parts.join(';')}`);
+    }
   }
 
   /**
@@ -115,12 +117,12 @@ export class Search extends Class.Null {
   /**
    * Serializes the specified sort object according to the specified data model.
    * @param model Model type.
+   * @param queries Query parameters list.
    * @param sort Sorting order.
-   * @returns Returns a string that represent the serialized sorting order.
    * @throws Throws an exception when the specified column does not exists in the provided data model.
    */
   @Class.Private()
-  private static serializeSort(model: Mapping.Types.Model, sort: Mapping.Statements.Sort): string {
+  private static serializeSort(model: Mapping.Types.Model, queries: any[], sort: Mapping.Statements.Sort): void {
     let parts = [];
     for (const name in sort) {
       const schema = Mapping.Schema.getRealColumn(model, name);
@@ -129,7 +131,9 @@ export class Search extends Class.Null {
       }
       parts.push(`${schema.name}:${sort[name]}`);
     }
-    return parts.length ? `${Search.SortPrefix}/${parts.join(';')}` : ``;
+    if (parts.length) {
+      queries.push(`${Search.SortPrefix}/${parts.join(';')}`);
+    }
   }
 
   /**
@@ -163,12 +167,12 @@ export class Search extends Class.Null {
 
   /**
    * Serializes the specified limit object.
+   * @param queries Query parameters list.
    * @param limit Limit object.
-   * @returns Returns a string that represents the specified limit object.
    */
   @Class.Private()
-  private static serializeLimit(limit: Mapping.Statements.Limit): string {
-    return `${Search.LimitPrefix}/${limit.start || 0};${limit.count || 0}`;
+  private static serializeLimit(queries: any[], limit: Mapping.Statements.Limit): void {
+    queries.push(`${Search.LimitPrefix}/${limit.start || 0};${limit.count || 0}`);
   }
 
   /**
@@ -201,15 +205,15 @@ export class Search extends Class.Null {
     sort?: Mapping.Statements.Sort,
     limit?: Mapping.Statements.Limit
   ): string {
-    let statements = [];
+    const statements = <any[]>[];
     for (const filter of filters) {
-      statements.push(Search.serializeFilter(model, filter));
+      Search.serializeFilter(model, statements, filter);
     }
     if (sort) {
-      statements.push(Search.serializeSort(model, sort));
+      Search.serializeSort(model, statements, sort);
     }
     if (limit) {
-      statements.push(Search.serializeLimit(limit));
+      Search.serializeLimit(statements, limit);
     }
     return statements.length ? `/${this.QueryPrefix}/${statements.join('/')}` : ``;
   }

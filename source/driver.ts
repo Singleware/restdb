@@ -46,8 +46,10 @@ export class Driver extends Class.Null implements Mapping.Driver {
     } else if (this.apiPath) {
       path += `/${Path.normalize(this.apiPath.replace('%0', complement || ''))}`;
       this.apiPath = void 0;
+    } else if (complement) {
+      path += `/${complement}`;
     }
-    return path;
+    return Path.normalize(path);
   }
 
   /**

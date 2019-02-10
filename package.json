@@ -7,14 +7,14 @@
   "name": "@singleware/restdb",
   "description": "Singleware RestDB driver package.",
   "license": "MIT",
-  "version": "1.0.9",
+  "version": "1.0.13",
   "main": "release/source/index.js",
   "types": "release/types/index.d.ts",
   "keywords": [
     "rest api",
-    "rest api driver",
-    "rest api mapper",
-    "async api mapper"
+    "rest driver",
+    "rest mapper",
+    "async restdb client"
   ],
   "repository": {
     "type": "git",
@@ -26,7 +26,7 @@
   "dependencies": {
     "@singleware/class": "^1.1.19",
     "@singleware/mapping": "^1.1.43",
-    "@singleware/path": "github:singleware/path"
+    "@singleware/path": "^1.0.5"
   },
   "devDependencies": {
     "@types/mongodb": "^3.1.19",
