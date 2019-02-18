@@ -3,9 +3,13 @@
  * This source code is licensed under the MIT License as described in the file LICENSE.
  */
 import * as Class from '@singleware/class';
+import * as Observable from '@singleware/observable';
 import * as Mapping from '@singleware/mapping';
 import * as Path from '@singleware/path';
 
+import { Entity } from './entity';
+import { Request } from './request';
+import { Response } from './response';
 import { Search } from './search';
 
 /**
@@ -14,22 +18,139 @@ import { Search } from './search';
 @Class.Describe()
 export class Driver extends Class.Null implements Mapping.Driver {
   /**
-   * Api endpoint base URL.
+   * URL base for any endpoint.
    */
   @Class.Private()
   private apiUrl?: string;
 
   /**
-   * Api key for authenticated requests.
+   * Key for authenticated requests.
    */
   @Class.Private()
   private apiKey?: string;
 
   /**
-   * Api temporary path.
+   * Temporary path for the next request.
    */
   @Class.Private()
   private apiPath?: string;
+
+  /**
+   * Last error response.
+   */
+  @Class.Private()
+  private apiErrorResponse?: Response;
+
+  /**
+   * Subject to notify any API error.
+   */
+  @Class.Private()
+  private apiErrorSubject = new Observable.Subject<Response>();
+
+  /**
+   * Call an HTTP request using native browser methods (frontend).
+   * @param method Request method.
+   * @param path Request path.
+   * @param headers Request headers.
+   * @param content Request content.
+   * @returns Returns a promise to get the request response.
+   */
+  @Class.Private()
+  private async frontCall(method: string, path: string, headers: Mapping.Types.Entity, content?: Mapping.Types.Entity): Promise<Response> {
+    const response = await fetch(`${this.apiUrl}/${path}`, {
+      method: method,
+      headers: new Headers(headers),
+      body: content ? JSON.stringify(content) : void 0
+    });
+    const body = await response.text();
+    return <Response>{
+      request: <Request>{
+        url: response.url,
+        body: content
+      },
+      statusCode: response.status,
+      statusText: response.statusText,
+      body: body.length > 0 ? JSON.parse(body) : void 0
+    };
+  }
+
+  /**
+   * Call an HTTP request using native nodejs methods. (backend)
+   * @param method Request method.
+   * @param path Request path.
+   * @param headers Request headers.
+   * @param content Request content.
+   * @returns Returns a promise to get the request response.
+   */
+  @Class.Private()
+  private async backCall(method: string, path: string, headers: Mapping.Types.Entity, content?: Mapping.Types.Entity): Promise<Response> {
+    const url = new URL(`${this.apiUrl}/${path}`);
+    const client = require(url.protocol);
+    let data: string | undefined;
+    if (content) {
+      data = JSON.stringify(content);
+      headers['Content-Length'] = data.length;
+    }
+    return new Promise<any>(
+      (resolve: (value: any) => void, reject: (value: any) => void): void => {
+        const request = client.request(
+          {
+            method: method,
+            headers: headers,
+            protocol: url.protocol,
+            port: url.port,
+            host: url.hostname,
+            path: url.pathname
+          },
+          (response: any): void => {
+            let body = '';
+            response.setEncoding('utf8');
+            response.on('error', (error: string) => {
+              reject(error);
+            });
+            response.on('data', (data: string) => {
+              body += data;
+            });
+            response.on('end', () => {
+              resolve({
+                request: {
+                  url: response.url,
+                  body: content
+                },
+                statusCode: response.statusCode,
+                statusText: response.statusText,
+                body: body.length > 0 ? JSON.parse(body) : void 0
+              });
+            });
+          }
+        );
+        if (data) {
+          request.write(data);
+          request.end();
+        }
+      }
+    );
+  }
+
+  /**
+   * Send an HTTP request.
+   * @param method Request method.
+   * @param path Request path.
+   * @param body Request body.
+   * @returns Returns a promise to get the request response.
+   */
+  @Class.Private()
+  private request(method: string, path: string, body?: Mapping.Types.Entity): Promise<Response> {
+    const headers = <Mapping.Types.Entity>{};
+    const content = body ? Entity.extractMap(body) : void 0;
+    if (this.apiKey) {
+      headers['X-API-Key'] = this.apiKey;
+    }
+    if (typeof window !== typeof void 0) {
+      return this.frontCall(method, path, headers, content);
+    }
+    return this.backCall(method, path, headers, content);
+  }
 
   /**
    * Gets a new request path based on the specified model type.
@@ -53,76 +174,19 @@ export class Driver extends Class.Null implements Mapping.Driver {
   }
 
   /**
-   * Extract all properties from the given entity list into a raw object array.
-   * @param entities Entities list.
-   * @returns Returns the new generated list.
-   */
-  @Class.Private()
-  private static extractArray(entities: any[]): any[] {
-    const newer = <Mapping.Types.Entity[]>[];
-    for (const entity of entities) {
-      newer.push(this.extractValue(entity));
-    }
-    return newer;
-  }
-
-  /**
-   * Extract all properties from the given entity into a raw object map.
-   * @param entity Entity data.
-   * @returns Returns the new generated object.
-   */
-  @Class.Private()
-  private static extractMap(entity: Mapping.Types.Entity): Mapping.Types.Entity {
-    const newer = <Mapping.Types.Entity>{};
-    for (const column in entity) {
-      newer[column] = this.extractValue(entity[column]);
-    }
-    return newer;
-  }
-
-  /**
-   * Extract the value from the given entity into a raw value.
-   * @param value Value to be extracted.
-   * @returns Returns the new generated object.
-   */
-  @Class.Private()
-  private static extractValue(value: any): any {
-    if (value instanceof Array) {
-      return this.extractArray(value);
-    } else if (value instanceof Object) {
-      return this.extractMap(value);
-    }
-    return value;
-  }
-
-  /**
-   * Send an HTTP request.
-   * @param method Request method.
-   * @param path Request path.
-   * @param body Request body.
-   * @returns Returns a promise to get the HTTP response.
-   */
-  @Class.Private()
-  private async request(method: string, path: string, body?: Mapping.Types.Entity): Promise<Response> {
-    const options = <Mapping.Types.Entity>{ method: method, headers: new Headers() };
-    if (this.apiKey) {
-      options.headers.append('X-API-Key', this.apiKey);
-    }
-    if (body) {
-      options.body = JSON.stringify(Driver.extractMap(body));
-    }
-    return await fetch(`${this.apiUrl}/${path}`, options);
-  }
-
-  /**
-   * Connect to the API.
-   * @param url Api URL.
-   * @param key Api key.
+   * Gets the error subject.
    */
   @Class.Public()
-  public async connect(url: string, key?: string): Promise<void> {
-    this.apiUrl = url;
-    this.apiKey = key;
+  public get onErrors(): Observable.Subject<Response> {
+    return this.apiErrorSubject;
+  }
+
+  /**
+   * Gets the last error response.
+   */
+  @Class.Public()
+  public get lastError(): Response | undefined {
+    return this.apiErrorResponse;
   }
 
   /**
@@ -149,25 +213,42 @@ export class Driver extends Class.Null implements Mapping.Driver {
   }
 
   /**
-   * Insert the specified entity into the API by a POST request.
+   * Connect to the API.
+   * @param url Api URL.
+   * @param key Api key.
+   */
+  @Class.Public()
+  public async connect(url: string, key?: string): Promise<void> {
+    this.apiUrl = url;
+    this.apiKey = key;
+  }
+
+  /**
+   * Insert the specified entity by POST request.
    * @param model Model type.
    * @param entities Entity list.
-   * @returns Returns the list inserted entities.
+   * @returns Returns a promise to get the id list of all inserted entities.
    */
   @Class.Public()
   public async insert<T extends Mapping.Types.Entity>(model: Mapping.Types.Model, entities: T[]): Promise<string[]> {
     const list = [];
     for (const entity of entities) {
       const response = await this.request('POST', this.getPath(model), entity);
-      if (response.status === 201) {
-        list.push((await response.json()).id);
+      if (response.statusCode === 201) {
+        if (!(response.body instanceof Object) || typeof (<Mapping.Types.Entity>response.body).id !== 'string') {
+          throw new Error(`The body must be an object containing the inserted result id.`);
+        }
+        list.push(response.body.id);
+      } else {
+        this.apiErrorResponse = response;
+        await this.apiErrorSubject.notifyAll(response);
       }
     }
     return list;
   }
 
   /**
-   * Find the corresponding entity from the API by a GET request.
+   * Search for the corresponding entities by GET request.
    * @param model Model type.
    * @param joins List of joins (Not supported).
    * @param filter Fields filter.
@@ -183,13 +264,20 @@ export class Driver extends Class.Null implements Mapping.Driver {
     sort?: Mapping.Statements.Sort,
     limit?: Mapping.Statements.Limit
   ): Promise<T[]> {
-    const query = Search.toURL(model, [filter], sort, limit);
-    const response = await this.request('GET', this.getPath(model, query));
-    return response.status === 200 ? await response.json() : [];
+    const response = await this.request('GET', this.getPath(model, Search.toURL(model, [filter], sort, limit)));
+    if (response.statusCode === 200) {
+      if (!(response.body instanceof Array)) {
+        throw new Error(`The body must be an array containing the search results.`);
+      }
+      return <T[]>response.body;
+    }
+    this.apiErrorResponse = response;
+    await this.apiErrorSubject.notifyAll(response);
+    return [];
   }
 
   /**
-   * Find the entity that corresponds to the specified entity id by a GET request.
+   * Find the entity that corresponds to the specified entity id by GET request.
    * @param model Model type.
    * @param joins Joined columns (Not supported).
    * @param id Entity id.
@@ -202,51 +290,77 @@ export class Driver extends Class.Null implements Mapping.Driver {
     id: any
   ): Promise<T | undefined> {
     const response = await this.request('GET', this.getPath(model, id));
-    return response.status === 200 ? await response.json() : void 0;
+    if (response.statusCode === 200) {
+      return <T>response.body;
+    }
+    this.apiErrorResponse = response;
+    await this.apiErrorSubject.notifyAll(response);
+    return void 0;
   }
 
   /**
-   * Update all entities that corresponds to the specified filter by a PATCH request.
+   * Update all entities that corresponds to the specified filter by PATCH request.
    * @param model Model type.
-   * @param entity Entity data to be updated.
-   * @param filter Filter expression.
+   * @param entity Entity data.
+   * @param filter Fields filter.
    * @returns Returns a promise to get the number of updated entities.
+   * @throws Throws an error when the response doesn't have the object with the total of updated results.
    */
   @Class.Public()
   public async update(model: Mapping.Types.Model, entity: Mapping.Types.Entity, filter: Mapping.Statements.Filter): Promise<number> {
-    const query = Search.toURL(model, [filter]);
-    const response = await this.request('PATCH', this.getPath(model, query), entity);
-    return response.status === 200 || response.status === 204 ? parseInt((await response.json()).total) : 0;
+    const response = await this.request('PATCH', this.getPath(model, Search.toURL(model, [filter])), entity);
+    if (response.statusCode === 200) {
+      if (!(response.body instanceof Object) || typeof (<Mapping.Types.Entity>response.body).total !== 'number') {
+        throw new Error(`The body must be an object containing the total of updated results.`);
+      }
+      return (<Mapping.Types.Entity>response.body).total;
+    }
+    this.apiErrorResponse = response;
+    await this.apiErrorSubject.notifyAll(response);
+    return 0;
   }
 
   /**
-   * Update the entity that corresponds to the specified entity id by a PATCH request.
+   * Update an entity that corresponds to the specified entity id by PATCH request.
    * @param model Model type.
-   * @param entity Entity data to be updated.
-   * @param id Entity id.s
+   * @param entity Entity data.
+   * @param id Entity id.
    * @returns Returns a promise to get the true when the entity has been updated or false otherwise.
    */
   @Class.Public()
   public async updateById(model: Mapping.Types.Model, entity: Mapping.Types.Entity, id: any): Promise<boolean> {
     const response = await this.request('PATCH', this.getPath(model, id), entity);
-    return response.status === 200 || response.status === 204;
+    if (response.statusCode === 200 || response.statusCode === 204) {
+      return true;
+    }
+    this.apiErrorResponse = response;
+    await this.apiErrorSubject.notifyAll(response);
+    return false;
   }
 
   /**
-   * Delete all entities that corresponds to the specified filter by a DELETE request.
+   * Delete all entities that corresponds to the specified filter by DELETE request.
    * @param model Model type.
-   * @param filter Filter columns.
+   * @param filter Fields filter.
    * @return Returns a promise to get the number of deleted entities.
+   * @throws Throws an error when the response doesn't have the object with the total of deleted results.
    */
   @Class.Public()
   public async delete(model: Mapping.Types.Model, filter: Mapping.Statements.Filter): Promise<number> {
-    const query = Search.toURL(model, [filter]);
-    const response = await this.request('DELETE', this.getPath(model, query));
-    return response.status === 200 || response.status === 204 ? parseInt((await response.json()).total) : 0;
+    const response = await this.request('DELETE', this.getPath(model, Search.toURL(model, [filter])));
+    if (response.statusCode === 200) {
+      if (!(response.body instanceof Object) || typeof (<Mapping.Types.Entity>response.body).total !== 'number') {
+        throw new Error(`The body must be an object containing the total of deleted results.`);
+      }
+      return (<Mapping.Types.Entity>response.body).total;
+    }
+    this.apiErrorResponse = response;
+    await this.apiErrorSubject.notifyAll(response);
+    return 0;
   }
 
   /**
-   * Delete the entity that corresponds to the specified entity id by a DELETE request.
+   * Delete an entity that corresponds to the specified id by DELETE request.
    * @param model Model type.
    * @param id Entity id.
    * @return Returns a promise to get the true when the entity has been deleted or false otherwise.
@@ -254,6 +368,11 @@ export class Driver extends Class.Null implements Mapping.Driver {
   @Class.Public()
   public async deleteById(model: Mapping.Types.Model, id: any): Promise<boolean> {
     const response = await this.request('DELETE', this.getPath(model, id));
-    return response.status === 200 || response.status === 204;
+    if (response.statusCode === 200 || response.statusCode === 204) {
+      return true;
+    }
+    this.apiErrorResponse = response;
+    await this.apiErrorSubject.notifyAll(response);
+    return false;
   }
 }

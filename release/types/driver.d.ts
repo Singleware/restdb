@@ -3,23 +3,59 @@
  * This source code is licensed under the MIT License as described in the file LICENSE.
  */
 import * as Class from '@singleware/class';
+import * as Observable from '@singleware/observable';
 import * as Mapping from '@singleware/mapping';
+import { Response } from './response';
 /**
  * Data driver class.
  */
 export declare class Driver extends Class.Null implements Mapping.Driver {
     /**
-     * Api endpoint base URL.
+     * URL base for any endpoint.
      */
     private apiUrl?;
     /**
-     * Api key for authenticated requests.
+     * Key for authenticated requests.
      */
     private apiKey?;
     /**
-     * Api temporary path.
+     * Temporary path for the next request.
      */
     private apiPath?;
+    /**
+     * Last error response.
+     */
+    private apiErrorResponse?;
+    /**
+     * Subject to notify any API error.
+     */
+    private apiErrorSubject;
+    /**
+     * Call an HTTP request using native browser methods (frontend).
+     * @param method Request method.
+     * @param path Request path.
+     * @param headers Request headers.
+     * @param content Request content.
+     * @returns Returns a promise to get the request response.
+     */
+    private frontCall;
+    /**
+     * Call an HTTP request using native nodejs methods. (backend)
+     * @param method Request method.
+     * @param path Request path.
+     * @param headers Request headers.
+     * @param content Request content.
+     * @returns Returns a promise to get the request response.
+     */
+    private backCall;
+    /**
+     * Send an HTTP request.
+     * @param method Request method.
+     * @param path Request path.
+     * @param body Request body.
+     * @returns Returns a promise to get the request response.
+     */
+    private request;
     /**
      * Gets a new request path based on the specified model type.
      * @param model Mode type.
@@ -29,37 +65,13 @@ export declare class Driver extends Class.Null implements Mapping.Driver {
      */
     private getPath;
     /**
-     * Extract all properties from the given entity list into a raw object array.
-     * @param entities Entities list.
-     * @returns Returns the new generated list.
+     * Gets the error subject.
      */
-    private static extractArray;
+    readonly onErrors: Observable.Subject<Response>;
     /**
-     * Extract all properties from the given entity into a raw object map.
-     * @param entity Entity data.
-     * @returns Returns the new generated object.
+     * Gets the last error response.
      */
-    private static extractMap;
-    /**
-     * Extract the value from the given entity into a raw value.
-     * @param value Value to be extracted.
-     * @returns Returns the new generated object.
-     */
-    private static extractValue;
-    /**
-     * Send an HTTP request.
-     * @param method Request method.
-     * @param path Request path.
-     * @param body Request body.
-     * @returns Returns a promise to get the HTTP response.
-     */
-    private request;
-    /**
-     * Connect to the API.
-     * @param url Api URL.
-     * @param key Api key.
-     */
-    connect(url: string, key?: string): Promise<void>;
+    readonly lastError: Response | undefined;
     /**
      * Sets the new API key for subsequent requests.
      * @param key New API key.
@@ -74,14 +86,20 @@ export declare class Driver extends Class.Null implements Mapping.Driver {
      */
     usePath(path: string): Driver;
     /**
-     * Insert the specified entity into the API by a POST request.
+     * Connect to the API.
+     * @param url Api URL.
+     * @param key Api key.
+     */
+    connect(url: string, key?: string): Promise<void>;
+    /**
+     * Insert the specified entity by POST request.
      * @param model Model type.
      * @param entities Entity list.
-     * @returns Returns the list inserted entities.
+     * @returns Returns a promise to get the id list of all inserted entities.
      */
     insert<T extends Mapping.Types.Entity>(model: Mapping.Types.Model, entities: T[]): Promise<string[]>;
     /**
-     * Find the corresponding entity from the API by a GET request.
+     * Search for the corresponding entities by GET request.
      * @param model Model type.
      * @param joins List of joins (Not supported).
      * @param filter Fields filter.
@@ -91,7 +109,7 @@ export declare class Driver extends Class.Null implements Mapping.Driver {
      */
     find<T extends Mapping.Types.Entity>(model: Mapping.Types.Model<T>, joins: Mapping.Statements.Join[], filter: Mapping.Statements.Filter, sort?: Mapping.Statements.Sort, limit?: Mapping.Statements.Limit): Promise<T[]>;
     /**
-     * Find the entity that corresponds to the specified entity id by a GET request.
+     * Find the entity that corresponds to the specified entity id by GET request.
      * @param model Model type.
      * @param joins Joined columns (Not supported).
      * @param id Entity id.
@@ -99,30 +117,32 @@ export declare class Driver extends Class.Null implements Mapping.Driver {
      */
     findById<T extends Mapping.Types.Entity>(model: Mapping.Types.Model<T>, joins: Mapping.Statements.Join[], id: any): Promise<T | undefined>;
     /**
-     * Update all entities that corresponds to the specified filter by a PATCH request.
+     * Update all entities that corresponds to the specified filter by PATCH request.
      * @param model Model type.
-     * @param entity Entity data to be updated.
-     * @param filter Filter expression.
+     * @param entity Entity data.
+     * @param filter Fields filter.
      * @returns Returns a promise to get the number of updated entities.
+     * @throws Throws an error when the response doesn't have the object with the total of updated results.
      */
     update(model: Mapping.Types.Model, entity: Mapping.Types.Entity, filter: Mapping.Statements.Filter): Promise<number>;
     /**
-     * Update the entity that corresponds to the specified entity id by a PATCH request.
+     * Update an entity that corresponds to the specified entity id by PATCH request.
      * @param model Model type.
-     * @param entity Entity data to be updated.
-     * @param id Entity id.s
+     * @param entity Entity data.
+     * @param id Entity id.
      * @returns Returns a promise to get the true when the entity has been updated or false otherwise.
      */
     updateById(model: Mapping.Types.Model, entity: Mapping.Types.Entity, id: any): Promise<boolean>;
     /**
-     * Delete all entities that corresponds to the specified filter by a DELETE request.
+     * Delete all entities that corresponds to the specified filter by DELETE request.
      * @param model Model type.
-     * @param filter Filter columns.
+     * @param filter Fields filter.
      * @return Returns a promise to get the number of deleted entities.
+     * @throws Throws an error when the response doesn't have the object with the total of deleted results.
      */
     delete(model: Mapping.Types.Model, filter: Mapping.Statements.Filter): Promise<number>;
     /**
-     * Delete the entity that corresponds to the specified entity id by a DELETE request.
+     * Delete an entity that corresponds to the specified id by DELETE request.
      * @param model Model type.
      * @param id Entity id.
      * @return Returns a promise to get the true when the entity has been deleted or false otherwise.

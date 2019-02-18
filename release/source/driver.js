@@ -6,20 +6,124 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var Driver_1;
-"use strict";
 /**
  * Copyright (C) 2018 Silas B. Domingos
  * This source code is licensed under the MIT License as described in the file LICENSE.
  */
 const Class = require("@singleware/class");
+const Observable = require("@singleware/observable");
 const Mapping = require("@singleware/mapping");
 const Path = require("@singleware/path");
+const entity_1 = require("./entity");
 const search_1 = require("./search");
 /**
  * Data driver class.
  */
-let Driver = Driver_1 = class Driver extends Class.Null {
+let Driver = class Driver extends Class.Null {
+    /**
+     * Data driver class.
+     */
+    constructor() {
+        super(...arguments);
+        /**
+         * Subject to notify any API error.
+         */
+        this.apiErrorSubject = new Observable.Subject();
+    }
+    /**
+     * Call an HTTP request using native browser methods (frontend).
+     * @param method Request method.
+     * @param path Request path.
+     * @param headers Request headers.
+     * @param content Request content.
+     * @returns Returns a promise to get the request response.
+     */
+    async frontCall(method, path, headers, content) {
+        const response = await fetch(`${this.apiUrl}/${path}`, {
+            method: method,
+            headers: new Headers(headers),
+            body: content ? JSON.stringify(content) : void 0
+        });
+        const body = await response.text();
+        return {
+            request: {
+                url: response.url,
+                body: content
+            },
+            statusCode: response.status,
+            statusText: response.statusText,
+            body: body.length > 0 ? JSON.parse(body) : void 0
+        };
+    }
+    /**
+     * Call an HTTP request using native nodejs methods. (backend)
+     * @param method Request method.
+     * @param path Request path.
+     * @param headers Request headers.
+     * @param content Request content.
+     * @returns Returns a promise to get the request response.
+     */
+    async backCall(method, path, headers, content) {
+        const url = new URL(`${this.apiUrl}/${path}`);
+        const client = require(url.protocol);
+        let data;
+        if (content) {
+            data = JSON.stringify(content);
+            headers['Content-Length'] = data.length;
+        }
+        return new Promise((resolve, reject) => {
+            const request = client.request({
+                method: method,
+                headers: headers,
+                protocol: url.protocol,
+                port: url.port,
+                host: url.hostname,
+                path: url.pathname
+            }, (response) => {
+                let body = '';
+                response.setEncoding('utf8');
+                response.on('error', (error) => {
+                    reject(error);
+                });
+                response.on('data', (data) => {
+                    body += data;
+                });
+                response.on('end', () => {
+                    resolve({
+                        request: {
+                            url: response.url,
+                            body: content
+                        },
+                        statusCode: response.statusCode,
+                        statusText: response.statusText,
+                        body: body.length > 0 ? JSON.parse(body) : void 0
+                    });
+                });
+            });
+            if (data) {
+                request.write(data);
+                request.end();
+            }
+        });
+    }
+    /**
+     * Send an HTTP request.
+     * @param method Request method.
+     * @param path Request path.
+     * @param body Request body.
+     * @returns Returns a promise to get the request response.
+     */
+    request(method, path, body) {
+        const headers = {};
+        const content = body ? entity_1.Entity.extractMap(body) : void 0;
+        if (this.apiKey) {
+            headers['X-API-Key'] = this.apiKey;
+        }
+        if (typeof window !== typeof void 0) {
+            return this.frontCall(method, path, headers, content);
+        }
+        return this.backCall(method, path, headers, content);
+    }
     /**
      * Gets a new request path based on the specified model type.
      * @param model Mode type.
@@ -42,68 +146,16 @@ let Driver = Driver_1 = class Driver extends Class.Null {
         return Path.normalize(path);
     }
     /**
-     * Extract all properties from the given entity list into a raw object array.
-     * @param entities Entities list.
-     * @returns Returns the new generated list.
+     * Gets the error subject.
      */
-    static extractArray(entities) {
-        const newer = [];
-        for (const entity of entities) {
-            newer.push(this.extractValue(entity));
-        }
-        return newer;
+    get onErrors() {
+        return this.apiErrorSubject;
     }
     /**
-     * Extract all properties from the given entity into a raw object map.
-     * @param entity Entity data.
-     * @returns Returns the new generated object.
+     * Gets the last error response.
      */
-    static extractMap(entity) {
-        const newer = {};
-        for (const column in entity) {
-            newer[column] = this.extractValue(entity[column]);
-        }
-        return newer;
-    }
-    /**
-     * Extract the value from the given entity into a raw value.
-     * @param value Value to be extracted.
-     * @returns Returns the new generated object.
-     */
-    static extractValue(value) {
-        if (value instanceof Array) {
-            return this.extractArray(value);
-        }
-        else if (value instanceof Object) {
-            return this.extractMap(value);
-        }
-        return value;
-    }
-    /**
-     * Send an HTTP request.
-     * @param method Request method.
-     * @param path Request path.
-     * @param body Request body.
-     * @returns Returns a promise to get the HTTP response.
-     */
-    async request(method, path, body) {
-        const options = { method: method, headers: new Headers() };
-        if (this.apiKey) {
-            options.headers.append('X-API-Key', this.apiKey);
-        }
-        if (body) {
-            options.body = JSON.stringify(Driver_1.extractMap(body));
-        }
-        return await fetch(`${this.apiUrl}/${path}`, options);
-    }
-    /**
-     * Connect to the API.
-     * @param url Api URL.
-     * @param key Api key.
-     */
-    async connect(url, key) {
-        this.apiUrl = url;
-        this.apiKey = key;
+    get lastError() {
+        return this.apiErrorResponse;
     }
     /**
      * Sets the new API key for subsequent requests.
@@ -125,23 +177,39 @@ let Driver = Driver_1 = class Driver extends Class.Null {
         return this;
     }
     /**
-     * Insert the specified entity into the API by a POST request.
+     * Connect to the API.
+     * @param url Api URL.
+     * @param key Api key.
+     */
+    async connect(url, key) {
+        this.apiUrl = url;
+        this.apiKey = key;
+    }
+    /**
+     * Insert the specified entity by POST request.
      * @param model Model type.
      * @param entities Entity list.
-     * @returns Returns the list inserted entities.
+     * @returns Returns a promise to get the id list of all inserted entities.
      */
     async insert(model, entities) {
         const list = [];
         for (const entity of entities) {
             const response = await this.request('POST', this.getPath(model), entity);
-            if (response.status === 201) {
-                list.push((await response.json()).id);
+            if (response.statusCode === 201) {
+                if (!(response.body instanceof Object) || typeof response.body.id !== 'string') {
+                    throw new Error(`The body must be an object containing the inserted result id.`);
+                }
+                list.push(response.body.id);
+            }
+            else {
+                this.apiErrorResponse = response;
+                await this.apiErrorSubject.notifyAll(response);
             }
         }
         return list;
     }
     /**
-     * Find the corresponding entity from the API by a GET request.
+     * Search for the corresponding entities by GET request.
      * @param model Model type.
      * @param joins List of joins (Not supported).
      * @param filter Fields filter.
@@ -150,12 +218,19 @@ let Driver = Driver_1 = class Driver extends Class.Null {
      * @returns Returns a promise to get the list of entities found.
      */
     async find(model, joins, filter, sort, limit) {
-        const query = search_1.Search.toURL(model, [filter], sort, limit);
-        const response = await this.request('GET', this.getPath(model, query));
-        return response.status === 200 ? await response.json() : [];
+        const response = await this.request('GET', this.getPath(model, search_1.Search.toURL(model, [filter], sort, limit)));
+        if (response.statusCode === 200) {
+            if (!(response.body instanceof Array)) {
+                throw new Error(`The body must be an array containing the search results.`);
+            }
+            return response.body;
+        }
+        this.apiErrorResponse = response;
+        await this.apiErrorSubject.notifyAll(response);
+        return [];
     }
     /**
-     * Find the entity that corresponds to the specified entity id by a GET request.
+     * Find the entity that corresponds to the specified entity id by GET request.
      * @param model Model type.
      * @param joins Joined columns (Not supported).
      * @param id Entity id.
@@ -163,51 +238,82 @@ let Driver = Driver_1 = class Driver extends Class.Null {
      */
     async findById(model, joins, id) {
         const response = await this.request('GET', this.getPath(model, id));
-        return response.status === 200 ? await response.json() : void 0;
+        if (response.statusCode === 200) {
+            return response.body;
+        }
+        this.apiErrorResponse = response;
+        await this.apiErrorSubject.notifyAll(response);
+        return void 0;
     }
     /**
-     * Update all entities that corresponds to the specified filter by a PATCH request.
+     * Update all entities that corresponds to the specified filter by PATCH request.
      * @param model Model type.
-     * @param entity Entity data to be updated.
-     * @param filter Filter expression.
+     * @param entity Entity data.
+     * @param filter Fields filter.
      * @returns Returns a promise to get the number of updated entities.
+     * @throws Throws an error when the response doesn't have the object with the total of updated results.
      */
     async update(model, entity, filter) {
-        const query = search_1.Search.toURL(model, [filter]);
-        const response = await this.request('PATCH', this.getPath(model, query), entity);
-        return response.status === 200 || response.status === 204 ? parseInt((await response.json()).total) : 0;
+        const response = await this.request('PATCH', this.getPath(model, search_1.Search.toURL(model, [filter])), entity);
+        if (response.statusCode === 200) {
+            if (!(response.body instanceof Object) || typeof response.body.total !== 'number') {
+                throw new Error(`The body must be an object containing the total of updated results.`);
+            }
+            return response.body.total;
+        }
+        this.apiErrorResponse = response;
+        await this.apiErrorSubject.notifyAll(response);
+        return 0;
     }
     /**
-     * Update the entity that corresponds to the specified entity id by a PATCH request.
+     * Update an entity that corresponds to the specified entity id by PATCH request.
      * @param model Model type.
-     * @param entity Entity data to be updated.
-     * @param id Entity id.s
+     * @param entity Entity data.
+     * @param id Entity id.
      * @returns Returns a promise to get the true when the entity has been updated or false otherwise.
      */
     async updateById(model, entity, id) {
         const response = await this.request('PATCH', this.getPath(model, id), entity);
-        return response.status === 200 || response.status === 204;
+        if (response.statusCode === 200 || response.statusCode === 204) {
+            return true;
+        }
+        this.apiErrorResponse = response;
+        await this.apiErrorSubject.notifyAll(response);
+        return false;
     }
     /**
-     * Delete all entities that corresponds to the specified filter by a DELETE request.
+     * Delete all entities that corresponds to the specified filter by DELETE request.
      * @param model Model type.
-     * @param filter Filter columns.
+     * @param filter Fields filter.
      * @return Returns a promise to get the number of deleted entities.
+     * @throws Throws an error when the response doesn't have the object with the total of deleted results.
      */
     async delete(model, filter) {
-        const query = search_1.Search.toURL(model, [filter]);
-        const response = await this.request('DELETE', this.getPath(model, query));
-        return response.status === 200 || response.status === 204 ? parseInt((await response.json()).total) : 0;
+        const response = await this.request('DELETE', this.getPath(model, search_1.Search.toURL(model, [filter])));
+        if (response.statusCode === 200) {
+            if (!(response.body instanceof Object) || typeof response.body.total !== 'number') {
+                throw new Error(`The body must be an object containing the total of deleted results.`);
+            }
+            return response.body.total;
+        }
+        this.apiErrorResponse = response;
+        await this.apiErrorSubject.notifyAll(response);
+        return 0;
     }
     /**
-     * Delete the entity that corresponds to the specified entity id by a DELETE request.
+     * Delete an entity that corresponds to the specified id by DELETE request.
      * @param model Model type.
      * @param id Entity id.
      * @return Returns a promise to get the true when the entity has been deleted or false otherwise.
      */
     async deleteById(model, id) {
         const response = await this.request('DELETE', this.getPath(model, id));
-        return response.status === 200 || response.status === 204;
+        if (response.statusCode === 200 || response.statusCode === 204) {
+            return true;
+        }
+        this.apiErrorResponse = response;
+        await this.apiErrorSubject.notifyAll(response);
+        return false;
     }
 };
 __decorate([
@@ -221,19 +327,37 @@ __decorate([
 ], Driver.prototype, "apiPath", void 0);
 __decorate([
     Class.Private()
-], Driver.prototype, "getPath", null);
+], Driver.prototype, "apiErrorResponse", void 0);
+__decorate([
+    Class.Private()
+], Driver.prototype, "apiErrorSubject", void 0);
+__decorate([
+    Class.Private()
+], Driver.prototype, "frontCall", null);
+__decorate([
+    Class.Private()
+], Driver.prototype, "backCall", null);
 __decorate([
     Class.Private()
 ], Driver.prototype, "request", null);
 __decorate([
+    Class.Private()
+], Driver.prototype, "getPath", null);
+__decorate([
     Class.Public()
-], Driver.prototype, "connect", null);
+], Driver.prototype, "onErrors", null);
+__decorate([
+    Class.Public()
+], Driver.prototype, "lastError", null);
 __decorate([
     Class.Public()
 ], Driver.prototype, "useKey", null);
 __decorate([
     Class.Public()
 ], Driver.prototype, "usePath", null);
+__decorate([
+    Class.Public()
+], Driver.prototype, "connect", null);
 __decorate([
     Class.Public()
 ], Driver.prototype, "insert", null);
@@ -255,16 +379,7 @@ __decorate([
 __decorate([
     Class.Public()
 ], Driver.prototype, "deleteById", null);
-__decorate([
-    Class.Private()
-], Driver, "extractArray", null);
-__decorate([
-    Class.Private()
-], Driver, "extractMap", null);
-__decorate([
-    Class.Private()
-], Driver, "extractValue", null);
-Driver = Driver_1 = __decorate([
+Driver = __decorate([
     Class.Describe()
 ], Driver);
 exports.Driver = Driver;
