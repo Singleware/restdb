@@ -84,7 +84,7 @@ let Search = Search_1 = class Search extends Class.Null {
                 case Mapping.Statements.Operator.BETWEEN:
                 case Mapping.Statements.Operator.CONTAIN:
                 case Mapping.Statements.Operator.NOT_CONTAIN:
-                    newer[name] = { operator: code, value: value.split(':').map(value => decodeURIComponent(value)) };
+                    newer[name] = { operator: code, value: value.split(',').map(value => decodeURIComponent(value)) };
                     break;
                 default:
                     throw new Error(`Unsupported filter operator code "${code}"`);
