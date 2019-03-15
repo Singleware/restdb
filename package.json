@@ -7,7 +7,7 @@
   "name": "@singleware/restdb",
   "description": "Singleware RestDB driver package.",
   "license": "MIT",
-  "version": "1.0.22",
+  "version": "1.0.23",
   "main": "release/source/index.js",
   "types": "release/types/index.d.ts",
   "keywords": [
@@ -25,7 +25,7 @@
   },
   "dependencies": {
     "@singleware/class": "^1.1.19",
-    "@singleware/mapping": "^1.1.48",
+    "@singleware/mapping": "^1.2.0",
     "@singleware/observable": "^1.0.21",
     "@singleware/path": "^1.0.5",
     "@types/node": "^11.11.3"
@@ -41,8 +41,9 @@
     "semi": true
   },
   "scripts": {
-    "build": "npm run make && npm run update",
-    "make": "tsc",
+    "build": "npm run make-source && npm run make-examples",
+    "make-source": "npx tsc -p ./source && npm run update",
+    "make-examples": "npx tsc -p ./examples",
     "update": "cp -Rf ./source/*.d.ts ./release/types"
   }
 }

@@ -6,12 +6,9 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-/**
- * Copyright (C) 2018 Silas B. Domingos
+/*
+ * Copyright (C) 2018-2019 Silas B. Domingos
  * This source code is licensed under the MIT License as described in the file LICENSE.
- *
- * The proposal of this example is to show how to use a simple entity CRUD with mapper
- * package.
  */
 const Class = require("@singleware/class");
 const Mapping = require("@singleware/mapping");
@@ -61,7 +58,7 @@ let UserMapper = class UserMapper extends Mapping.Mapper {
      * @returns Returns the id of new user.
      */
     async create() {
-        return await this.insert({ firstName: 'First 1', lastName: 'Last 1' });
+        return await this.insert('*', { firstName: 'First 1', lastName: 'Last 1' });
     }
     /**
      * Change the test user.
@@ -69,7 +66,7 @@ let UserMapper = class UserMapper extends Mapping.Mapper {
      * @returns Returns the number of updated users.
      */
     async change(id) {
-        return await this.update({ id: { operator: Mapping.Statements.Operator.EQUAL, value: id } }, { firstName: 'Changed!' });
+        return await this.update('*', { id: { operator: Mapping.Statements.Operator.EQUAL, value: id } }, { firstName: 'Changed!' });
     }
     /**
      * Read the test user.
@@ -77,7 +74,7 @@ let UserMapper = class UserMapper extends Mapping.Mapper {
      * @requires Returns the list of users found.
      */
     async read(id) {
-        return await this.find({ id: { operator: Mapping.Statements.Operator.EQUAL, value: id } });
+        return await this.find('*', { id: { operator: Mapping.Statements.Operator.EQUAL, value: id } });
     }
     /**
      * Remove the test user.
