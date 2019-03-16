@@ -28,10 +28,7 @@ let Search = Search_1 = class Search extends Class.Null {
     static serializeFilter(model, queries, filter) {
         let parts = [];
         for (const name in filter) {
-            const schema = Mapping.Schema.getRealColumn(model, name);
-            if (!schema) {
-                throw new Error(`Column '${name}' does not exists.`);
-            }
+            const schema = Mapping.Schema.getRealColumn(model, name, Mapping.Types.View.ALL);
             const operation = filter[name];
             const expression = `${schema.name}:${operation.operator}`;
             switch (operation.operator) {
@@ -67,10 +64,8 @@ let Search = Search_1 = class Search extends Class.Null {
         const fields = filter.split(';');
         for (const field of fields) {
             const [name, operator, value] = field.split(':', 3);
-            if (!Mapping.Schema.getRealColumn(model, name)) {
-                throw new Error(`Column '${name}' does not exists.`);
-            }
             const code = parseInt(operator);
+            const schema = Mapping.Schema.getRealColumn(model, name, Mapping.Types.View.ALL);
             switch (code) {
                 case Mapping.Statements.Operator.REGEX:
                 case Mapping.Statements.Operator.LESS:
@@ -79,12 +74,12 @@ let Search = Search_1 = class Search extends Class.Null {
                 case Mapping.Statements.Operator.NOT_EQUAL:
                 case Mapping.Statements.Operator.GREATER_OR_EQUAL:
                 case Mapping.Statements.Operator.GREATER:
-                    newer[name] = { operator: code, value: decodeURIComponent(value) };
+                    newer[schema.name] = { operator: code, value: decodeURIComponent(value) };
                     break;
                 case Mapping.Statements.Operator.BETWEEN:
                 case Mapping.Statements.Operator.CONTAIN:
                 case Mapping.Statements.Operator.NOT_CONTAIN:
-                    newer[name] = { operator: code, value: value.split(',').map(value => decodeURIComponent(value)) };
+                    newer[schema.name] = { operator: code, value: value.split(',').map(value => decodeURIComponent(value)) };
                     break;
                 default:
                     throw new Error(`Unsupported filter operator code "${code}"`);
@@ -102,10 +97,7 @@ let Search = Search_1 = class Search extends Class.Null {
     static serializeSort(model, queries, sort) {
         let parts = [];
         for (const name in sort) {
-            const schema = Mapping.Schema.getRealColumn(model, name);
-            if (!schema) {
-                throw new Error(`Column '${name}' does not exists.`);
-            }
+            const schema = Mapping.Schema.getRealColumn(model, name, Mapping.Types.View.ALL);
             parts.push(`${schema.name}:${sort[name]}`);
         }
         if (parts.length) {
@@ -124,14 +116,12 @@ let Search = Search_1 = class Search extends Class.Null {
         const fields = sort.split(';');
         for (const field of fields) {
             const [name, order] = field.split(':', 2);
-            if (!Mapping.Schema.getRealColumn(model, name)) {
-                throw new Error(`Column '${name}' does not exists.`);
-            }
             const code = parseInt(order);
+            const schema = Mapping.Schema.getRealColumn(model, name, Mapping.Types.View.ALL);
             switch (code) {
                 case Mapping.Statements.Order.ASCENDING:
                 case Mapping.Statements.Order.DESCENDING:
-                    newer[name] = code;
+                    newer[schema.name] = code;
                     break;
                 default:
                     throw new Error(`Unsupported sorting order code "${code}"`);
