@@ -9,6 +9,10 @@ import * as Mapping from '@singleware/mapping';
  */
 export interface Query {
   /**
+   * List of views.
+   */
+  views: string[];
+  /**
    * List of filters.
    */
   filters: Mapping.Statements.Filter[];

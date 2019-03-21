@@ -6,8 +6,6 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var Search_1;
-"use strict";
 /*
  * Copyright (C) 2018-2019 Silas B. Domingos
  * This source code is licensed under the MIT License as described in the file LICENSE.
@@ -17,18 +15,34 @@ const Mapping = require("@singleware/mapping");
 /**
  * Search helper class.
  */
-let Search = Search_1 = class Search extends Class.Null {
+let Search = class Search extends Class.Null {
     /**
-     * Serializes the specified filter object according to the specified data model.
+     * Packs the specified view modes.
+     * @param queries Query parameters list.
+     * @param views View modes.
+     */
+    static packViews(queries, views) {
+        queries.push(`${this.ViewsPrefix}/${views.join(';')}`);
+    }
+    /**
+     * Unpacks the specified view modes string.
+     * @param views View modes string.
+     * @returns Returns the generated list of view modes.
+     */
+    static unpackViews(views) {
+        return views.split(';');
+    }
+    /**
+     * Packs the specified filters entity according to the given data model.
      * @param model Model type.
      * @param queries Query parameters list.
-     * @param filter Filter statement.
+     * @param filter Filters entity.
      * @throws Throws an exception when the specified column does not exists in the provided data model.
      */
-    static serializeFilter(model, queries, filter) {
+    static packFilters(model, queries, filter) {
         let parts = [];
         for (const name in filter) {
-            const schema = Mapping.Schema.getRealColumn(model, name, Mapping.Types.View.ALL);
+            const schema = Mapping.Schema.getRealColumn(model, name);
             const operation = filter[name];
             const expression = `${schema.name}:${operation.operator}`;
             switch (operation.operator) {
@@ -44,28 +58,28 @@ let Search = Search_1 = class Search extends Class.Null {
                 case Mapping.Statements.Operator.BETWEEN:
                 case Mapping.Statements.Operator.CONTAIN:
                 case Mapping.Statements.Operator.NOT_CONTAIN:
-                    parts.push(`${expression}:${[...operation.value].map(item => encodeURIComponent(item)).join(',')}`);
+                    parts.push(`${expression}:${[...operation.value].map(item => encodeURIComponent(item)).join('|')}`);
                     break;
             }
         }
         if (parts.length) {
-            queries.push(`${Search_1.FilterPrefix}/${parts.join(';')}`);
+            queries.push(`${this.FilterPrefix}/${parts.join(';')}`);
         }
     }
     /**
-     * Unserializes the specified filter string according to the specified data model.
+     * Unpacks the specified filters string according to the specified data model.
      * @param model Model type.
-     * @param filter Filter string.
+     * @param filter Filters string.
      * @returns Returns the generated filter object.
      * @throws Throws an exception when the specified column does not exists in the provided data model.
      */
-    static unserializeFilter(model, filter) {
+    static unpackFilters(model, filter) {
         const newer = {};
         const fields = filter.split(';');
         for (const field of fields) {
             const [name, operator, value] = field.split(':', 3);
             const code = parseInt(operator);
-            const schema = Mapping.Schema.getRealColumn(model, name, Mapping.Types.View.ALL);
+            const schema = Mapping.Schema.getRealColumn(model, name);
             switch (code) {
                 case Mapping.Statements.Operator.REGEX:
                 case Mapping.Statements.Operator.LESS:
@@ -79,7 +93,7 @@ let Search = Search_1 = class Search extends Class.Null {
                 case Mapping.Statements.Operator.BETWEEN:
                 case Mapping.Statements.Operator.CONTAIN:
                 case Mapping.Statements.Operator.NOT_CONTAIN:
-                    newer[schema.name] = { operator: code, value: value.split(',').map(value => decodeURIComponent(value)) };
+                    newer[schema.name] = { operator: code, value: value.split('|').map(value => decodeURIComponent(value)) };
                     break;
                 default:
                     throw new Error(`Unsupported filter operator code "${code}"`);
@@ -88,36 +102,36 @@ let Search = Search_1 = class Search extends Class.Null {
         return newer;
     }
     /**
-     * Serializes the specified sort object according to the specified data model.
+     * Packs the specified sort object according to the specified data model.
      * @param model Model type.
      * @param queries Query parameters list.
      * @param sort Sorting order.
      * @throws Throws an exception when the specified column does not exists in the provided data model.
      */
-    static serializeSort(model, queries, sort) {
+    static packSort(model, queries, sort) {
         let parts = [];
         for (const name in sort) {
-            const schema = Mapping.Schema.getRealColumn(model, name, Mapping.Types.View.ALL);
+            const schema = Mapping.Schema.getRealColumn(model, name);
             parts.push(`${schema.name}:${sort[name]}`);
         }
         if (parts.length) {
-            queries.push(`${Search_1.SortPrefix}/${parts.join(';')}`);
+            queries.push(`${this.SortPrefix}/${parts.join(';')}`);
         }
     }
     /**
-     * Unserializes the specified sort string according to the specified data model.
+     * Unpacks the specified sort string according to the specified data model.
      * @param model Model type.
      * @param sort Sort string.
      * @returns Returns the generated sort object.
      * @throws Throws an exception when the specified column does not exists in the provided data model.
      */
-    static unserializeSort(model, sort) {
+    static unpackSort(model, sort) {
         const newer = {};
         const fields = sort.split(';');
         for (const field of fields) {
             const [name, order] = field.split(':', 2);
             const code = parseInt(order);
-            const schema = Mapping.Schema.getRealColumn(model, name, Mapping.Types.View.ALL);
+            const schema = Mapping.Schema.getRealColumn(model, name);
             switch (code) {
                 case Mapping.Statements.Order.ASCENDING:
                 case Mapping.Statements.Order.DESCENDING:
@@ -130,19 +144,19 @@ let Search = Search_1 = class Search extends Class.Null {
         return newer;
     }
     /**
-     * Serializes the specified limit object.
+     * Packs the specified limit object.
      * @param queries Query parameters list.
      * @param limit Limit object.
      */
-    static serializeLimit(queries, limit) {
-        queries.push(`${Search_1.LimitPrefix}/${limit.start || 0};${limit.count || 0}`);
+    static packLimit(queries, limit) {
+        queries.push(`${this.LimitPrefix}/${limit.start || 0};${limit.count || 0}`);
     }
     /**
-     * Unserializes the specified limit string.
+     * Unpacks the specified limit string.
      * @param limit Limit string.
      * @returns Returns the generated limit object.
      */
-    static unserializeLimit(limit) {
+    static unpackLimit(limit) {
         const [start, count] = limit.split(';', 2);
         return {
             start: parseInt(start),
@@ -152,24 +166,28 @@ let Search = Search_1 = class Search extends Class.Null {
     /**
      * Build a query URL from the specified parameters.
      * @param model Model type.
-     * @param filters List of filters.
+     * @param views View modes.
+     * @param filters Filter fields.
      * @param sort Sorting fields.
      * @param limit Result limits.
      * @returns Returns the generated URL path filter.
      * @throws Throws an error when there is a nonexistent column in the specified filter.
      */
-    static toURL(model, filters, sort, limit) {
-        const statements = [];
-        for (const filter of filters) {
-            Search_1.serializeFilter(model, statements, filter);
+    static toURL(model, views, filters, sort, limit) {
+        const queries = [];
+        if (views.length) {
+            this.packViews(queries, views);
+        }
+        if (filters) {
+            this.packFilters(model, queries, filters);
         }
         if (sort) {
-            Search_1.serializeSort(model, statements, sort);
+            this.packSort(model, queries, sort);
         }
         if (limit) {
-            Search_1.serializeLimit(statements, limit);
+            this.packLimit(queries, limit);
         }
-        return statements.length ? `/${this.QueryPrefix}/${statements.join('/')}` : ``;
+        return queries.length ? `/${this.QueryPrefix}/${queries.join('/')}` : ``;
     }
     /**
      * Builds a query object from the specified query URL.
@@ -179,20 +197,28 @@ let Search = Search_1 = class Search extends Class.Null {
      * @throws Throws an error when there is a nonexistent column or unsupported data in the specified URL.
      */
     static fromURL(model, url) {
-        const result = { filters: [], sort: void 0, limit: void 0 };
+        const result = {
+            views: [],
+            filters: [],
+            sort: void 0,
+            limit: void 0
+        };
         const parts = url.split('/').reverse();
         if (parts.pop() === this.QueryPrefix) {
             while (parts.length) {
                 const data = parts.pop();
                 switch (data) {
+                    case this.ViewsPrefix:
+                        result.views = this.unpackViews(parts.pop() || '');
+                        break;
                     case this.FilterPrefix:
-                        result.filters.push(Search_1.unserializeFilter(model, parts.pop() || ''));
+                        result.filters.push(this.unpackFilters(model, parts.pop() || ''));
                         break;
                     case this.SortPrefix:
-                        result.sort = Search_1.unserializeSort(model, parts.pop() || '');
+                        result.sort = this.unpackSort(model, parts.pop() || '');
                         break;
                     case this.LimitPrefix:
-                        result.limit = Search_1.unserializeLimit(parts.pop() || '');
+                        result.limit = this.unpackLimit(parts.pop() || '');
                         break;
                     default:
                         throw new Error(`Unsupported serialized data type "${data}"`);
@@ -206,6 +232,10 @@ let Search = Search_1 = class Search extends Class.Null {
  * Magic query prefix.
  */
 Search.QueryPrefix = 'query';
+/**
+ * Magic views prefix.
+ */
+Search.ViewsPrefix = 'v';
 /**
  * Magic filter prefix.
  */
@@ -223,6 +253,9 @@ __decorate([
 ], Search, "QueryPrefix", void 0);
 __decorate([
     Class.Private()
+], Search, "ViewsPrefix", void 0);
+__decorate([
+    Class.Private()
 ], Search, "FilterPrefix", void 0);
 __decorate([
     Class.Private()
@@ -232,29 +265,35 @@ __decorate([
 ], Search, "LimitPrefix", void 0);
 __decorate([
     Class.Private()
-], Search, "serializeFilter", null);
+], Search, "packViews", null);
 __decorate([
     Class.Private()
-], Search, "unserializeFilter", null);
+], Search, "unpackViews", null);
 __decorate([
     Class.Private()
-], Search, "serializeSort", null);
+], Search, "packFilters", null);
 __decorate([
     Class.Private()
-], Search, "unserializeSort", null);
+], Search, "unpackFilters", null);
 __decorate([
     Class.Private()
-], Search, "serializeLimit", null);
+], Search, "packSort", null);
 __decorate([
     Class.Private()
-], Search, "unserializeLimit", null);
+], Search, "unpackSort", null);
+__decorate([
+    Class.Private()
+], Search, "packLimit", null);
+__decorate([
+    Class.Private()
+], Search, "unpackLimit", null);
 __decorate([
     Class.Public()
 ], Search, "toURL", null);
 __decorate([
     Class.Public()
 ], Search, "fromURL", null);
-Search = Search_1 = __decorate([
+Search = __decorate([
     Class.Describe()
 ], Search);
 exports.Search = Search;

@@ -15,10 +15,6 @@ export interface Route {
    */
   model: Mapping.Types.Model;
   /**
-   * View name.
-   */
-  view?: string;
-  /**
    * Query data.
    */
   query?: string | Query;

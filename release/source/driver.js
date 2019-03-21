@@ -136,14 +136,13 @@ let Driver = class Driver extends Class.Null {
     getPath(route) {
         const path = {
             model: Path.normalize(Mapping.Schema.getStorage(route.model)),
-            view: Path.normalize(route.view || ''),
             query: route.query || '',
             id: route.id || ''
         };
         if (this.apiPath) {
-            return this.apiPath.replace(/{model}|{id}|{view}|{query}/g, (match) => path[match]);
+            return this.apiPath.replace(/{model}|{id}|{query}/g, (match) => path[match]);
         }
-        return Path.normalize(`${path.model}/${path.id}/${path.view}/${path.query}`);
+        return Path.normalize(`${path.model}/${path.id}/${path.query}`);
     }
     /**
      * Gets the error subject.
@@ -197,13 +196,13 @@ let Driver = class Driver extends Class.Null {
     /**
      * Insert the specified entity using the POST request.
      * @param model Model type.
-     * @param view View mode.
+     * @param views View modes.
      * @param entities Entity list.
      * @returns Returns a promise to get the id list of all inserted entities.
      */
-    async insert(model, view, entities) {
+    async insert(model, views, entities) {
         const list = [];
-        const path = this.getPath({ model: model, view: view });
+        const path = this.getPath({ model: model, query: search_1.Search.toURL(model, views) });
         for (const entity of entities) {
             const response = await this.request('POST', path, entity);
             if (response.statusCode !== 201) {
@@ -222,14 +221,14 @@ let Driver = class Driver extends Class.Null {
     /**
      * Search for all entities that corresponds to the specified filters using the GET request.
      * @param model Model type.
-     * @param view View mode.
+     * @param views View modes.
      * @param filter Fields filter.
      * @param sort Sorting fields.
      * @param limit Result limits.
      * @returns Returns a promise to get the list of entities found.
      */
-    async find(model, view, filter, sort, limit) {
-        const path = this.getPath({ model: model, view: view, query: search_1.Search.toURL(model, [filter], sort, limit) });
+    async find(model, views, filter, sort, limit) {
+        const path = this.getPath({ model: model, query: search_1.Search.toURL(model, views, filter, sort, limit) });
         const response = await this.request('GET', path);
         if (response.statusCode !== 200) {
             this.errorResponse = response;
@@ -246,12 +245,12 @@ let Driver = class Driver extends Class.Null {
     /**
      * Find the entity that corresponds to the specified entity id using the GET request.
      * @param model Model type.
-     * @param view View mode.
+     * @param views View modes.
      * @param id Entity id.
      * @returns Returns a promise to get the found entity or undefined when the entity was not found.
      */
-    async findById(model, view, id) {
-        const path = this.getPath({ model: model, view: view, id: id });
+    async findById(model, views, id) {
+        const path = this.getPath({ model: model, id: id, query: search_1.Search.toURL(model, views) });
         const response = await this.request('GET', path);
         if (response.statusCode !== 200) {
             this.errorResponse = response;
@@ -265,14 +264,14 @@ let Driver = class Driver extends Class.Null {
     /**
      * Update all entities that corresponds to the specified filter using the PATCH request.
      * @param model Model type.
-     * @param view View mode.
+     * @param views View modes.
      * @param filter Fields filter.
      * @param entity Entity data.
      * @returns Returns a promise to get the number of updated entities.
      * @throws Throws an error when the response doesn't have the object with the total of updated results.
      */
-    async update(model, view, filter, entity) {
-        const path = this.getPath({ model: model, view: view, query: search_1.Search.toURL(model, [filter]) });
+    async update(model, views, filter, entity) {
+        const path = this.getPath({ model: model, query: search_1.Search.toURL(model, views, filter) });
         const response = await this.request('PATCH', path, entity);
         if (response.statusCode !== 200) {
             this.errorResponse = response;
@@ -289,13 +288,13 @@ let Driver = class Driver extends Class.Null {
     /**
      * Update the entity that corresponds to the specified entity id using the PATCH request.
      * @param model Model type.
-     * @param view View mode.
+     * @param views View modes.
      * @param id Entity id.
      * @param entity Entity data.
      * @returns Returns a promise to get the true when the entity has been updated or false otherwise.
      */
-    async updateById(model, view, id, entity) {
-        const path = this.getPath({ model: model, view: view, id: id });
+    async updateById(model, views, id, entity) {
+        const path = this.getPath({ model: model, id: id, query: search_1.Search.toURL(model, views) });
         const response = await this.request('PATCH', path, entity);
         if (response.statusCode !== 200 && response.statusCode !== 204) {
             this.errorResponse = response;
@@ -314,7 +313,7 @@ let Driver = class Driver extends Class.Null {
      * @throws Throws an error when the response doesn't have the object with the total of deleted results.
      */
     async delete(model, filter) {
-        const path = this.getPath({ model: model, query: search_1.Search.toURL(model, [filter]) });
+        const path = this.getPath({ model: model, query: search_1.Search.toURL(model, [], filter) });
         const response = await this.request('DELETE', path);
         if (response.statusCode !== 200) {
             this.errorResponse = response;

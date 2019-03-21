@@ -168,14 +168,13 @@ export class Driver extends Class.Null implements Mapping.Driver {
   private getPath(route: Route): string {
     const path = <Mapping.Types.Entity>{
       model: Path.normalize(Mapping.Schema.getStorage(route.model)),
-      view: Path.normalize(route.view || ''),
       query: route.query || '',
       id: route.id || ''
     };
     if (this.apiPath) {
-      return this.apiPath.replace(/{model}|{id}|{view}|{query}/g, (match: string) => path[match]);
+      return this.apiPath.replace(/{model}|{id}|{query}/g, (match: string) => path[match]);
     }
-    return Path.normalize(`${path.model}/${path.id}/${path.view}/${path.query}`);
+    return Path.normalize(`${path.model}/${path.id}/${path.query}`);
   }
 
   /**
@@ -242,14 +241,14 @@ export class Driver extends Class.Null implements Mapping.Driver {
   /**
    * Insert the specified entity using the POST request.
    * @param model Model type.
-   * @param view View mode.
+   * @param views View modes.
    * @param entities Entity list.
    * @returns Returns a promise to get the id list of all inserted entities.
    */
   @Class.Public()
-  public async insert<T extends Mapping.Types.Entity>(model: Mapping.Types.Model, view: string, entities: T[]): Promise<string[]> {
+  public async insert<T extends Mapping.Types.Entity>(model: Mapping.Types.Model, views: string[], entities: T[]): Promise<string[]> {
     const list = [];
-    const path = this.getPath({ model: model, view: view });
+    const path = this.getPath({ model: model, query: Search.toURL(model, views) });
     for (const entity of entities) {
       const response = await this.request('POST', path, entity);
       if (response.statusCode !== 201) {
@@ -267,7 +266,7 @@ export class Driver extends Class.Null implements Mapping.Driver {
   /**
    * Search for all entities that corresponds to the specified filters using the GET request.
    * @param model Model type.
-   * @param view View mode.
+   * @param views View modes.
    * @param filter Fields filter.
    * @param sort Sorting fields.
    * @param limit Result limits.
@@ -276,12 +275,12 @@ export class Driver extends Class.Null implements Mapping.Driver {
   @Class.Public()
   public async find<T extends Mapping.Types.Entity>(
     model: Mapping.Types.Model<T>,
-    view: string,
+    views: string[],
     filter: Mapping.Statements.Filter,
     sort?: Mapping.Statements.Sort,
     limit?: Mapping.Statements.Limit
   ): Promise<T[]> {
-    const path = this.getPath({ model: model, view: view, query: Search.toURL(model, [filter], sort, limit) });
+    const path = this.getPath({ model: model, query: Search.toURL(model, views, filter, sort, limit) });
     const response = await this.request('GET', path);
     if (response.statusCode !== 200) {
       this.errorResponse = response;
@@ -297,13 +296,13 @@ export class Driver extends Class.Null implements Mapping.Driver {
   /**
    * Find the entity that corresponds to the specified entity id using the GET request.
    * @param model Model type.
-   * @param view View mode.
+   * @param views View modes.
    * @param id Entity id.
    * @returns Returns a promise to get the found entity or undefined when the entity was not found.
    */
   @Class.Public()
-  public async findById<T extends Mapping.Types.Entity>(model: Mapping.Types.Model<T>, view: string, id: any): Promise<T | undefined> {
-    const path = this.getPath({ model: model, view: view, id: id });
+  public async findById<T extends Mapping.Types.Entity>(model: Mapping.Types.Model<T>, views: string[], id: any): Promise<T | undefined> {
+    const path = this.getPath({ model: model, id: id, query: Search.toURL(model, views) });
     const response = await this.request('GET', path);
     if (response.statusCode !== 200) {
       this.errorResponse = response;
@@ -317,20 +316,15 @@ export class Driver extends Class.Null implements Mapping.Driver {
   /**
    * Update all entities that corresponds to the specified filter using the PATCH request.
    * @param model Model type.
-   * @param view View mode.
+   * @param views View modes.
    * @param filter Fields filter.
    * @param entity Entity data.
    * @returns Returns a promise to get the number of updated entities.
    * @throws Throws an error when the response doesn't have the object with the total of updated results.
    */
   @Class.Public()
-  public async update(
-    model: Mapping.Types.Model,
-    view: string,
-    filter: Mapping.Statements.Filter,
-    entity: Mapping.Types.Entity
-  ): Promise<number> {
-    const path = this.getPath({ model: model, view: view, query: Search.toURL(model, [filter]) });
+  public async update(model: Mapping.Types.Model, views: string[], filter: Mapping.Statements.Filter, entity: Mapping.Types.Entity): Promise<number> {
+    const path = this.getPath({ model: model, query: Search.toURL(model, views, filter) });
     const response = await this.request('PATCH', path, entity);
     if (response.statusCode !== 200) {
       this.errorResponse = response;
@@ -346,14 +340,14 @@ export class Driver extends Class.Null implements Mapping.Driver {
   /**
    * Update the entity that corresponds to the specified entity id using the PATCH request.
    * @param model Model type.
-   * @param view View mode.
+   * @param views View modes.
    * @param id Entity id.
    * @param entity Entity data.
    * @returns Returns a promise to get the true when the entity has been updated or false otherwise.
    */
   @Class.Public()
-  public async updateById(model: Mapping.Types.Model, view: string, id: any, entity: Mapping.Types.Entity): Promise<boolean> {
-    const path = this.getPath({ model: model, view: view, id: id });
+  public async updateById(model: Mapping.Types.Model, views: string[], id: any, entity: Mapping.Types.Entity): Promise<boolean> {
+    const path = this.getPath({ model: model, id: id, query: Search.toURL(model, views) });
     const response = await this.request('PATCH', path, entity);
     if (response.statusCode !== 200 && response.statusCode !== 204) {
       this.errorResponse = response;
@@ -373,7 +367,7 @@ export class Driver extends Class.Null implements Mapping.Driver {
    */
   @Class.Public()
   public async delete(model: Mapping.Types.Model, filter: Mapping.Statements.Filter): Promise<number> {
-    const path = this.getPath({ model: model, query: Search.toURL(model, [filter]) });
+    const path = this.getPath({ model: model, query: Search.toURL(model, [], filter) });
     const response = await this.request('DELETE', path);
     if (response.statusCode !== 200) {
       this.errorResponse = response;

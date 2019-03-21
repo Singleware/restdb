@@ -98,48 +98,48 @@ export declare class Driver extends Class.Null implements Mapping.Driver {
     /**
      * Insert the specified entity using the POST request.
      * @param model Model type.
-     * @param view View mode.
+     * @param views View modes.
      * @param entities Entity list.
      * @returns Returns a promise to get the id list of all inserted entities.
      */
-    insert<T extends Mapping.Types.Entity>(model: Mapping.Types.Model, view: string, entities: T[]): Promise<string[]>;
+    insert<T extends Mapping.Types.Entity>(model: Mapping.Types.Model, views: string[], entities: T[]): Promise<string[]>;
     /**
      * Search for all entities that corresponds to the specified filters using the GET request.
      * @param model Model type.
-     * @param view View mode.
+     * @param views View modes.
      * @param filter Fields filter.
      * @param sort Sorting fields.
      * @param limit Result limits.
      * @returns Returns a promise to get the list of entities found.
      */
-    find<T extends Mapping.Types.Entity>(model: Mapping.Types.Model<T>, view: string, filter: Mapping.Statements.Filter, sort?: Mapping.Statements.Sort, limit?: Mapping.Statements.Limit): Promise<T[]>;
+    find<T extends Mapping.Types.Entity>(model: Mapping.Types.Model<T>, views: string[], filter: Mapping.Statements.Filter, sort?: Mapping.Statements.Sort, limit?: Mapping.Statements.Limit): Promise<T[]>;
     /**
      * Find the entity that corresponds to the specified entity id using the GET request.
      * @param model Model type.
-     * @param view View mode.
+     * @param views View modes.
      * @param id Entity id.
      * @returns Returns a promise to get the found entity or undefined when the entity was not found.
      */
-    findById<T extends Mapping.Types.Entity>(model: Mapping.Types.Model<T>, view: string, id: any): Promise<T | undefined>;
+    findById<T extends Mapping.Types.Entity>(model: Mapping.Types.Model<T>, views: string[], id: any): Promise<T | undefined>;
     /**
      * Update all entities that corresponds to the specified filter using the PATCH request.
      * @param model Model type.
-     * @param view View mode.
+     * @param views View modes.
      * @param filter Fields filter.
      * @param entity Entity data.
      * @returns Returns a promise to get the number of updated entities.
      * @throws Throws an error when the response doesn't have the object with the total of updated results.
      */
-    update(model: Mapping.Types.Model, view: string, filter: Mapping.Statements.Filter, entity: Mapping.Types.Entity): Promise<number>;
+    update(model: Mapping.Types.Model, views: string[], filter: Mapping.Statements.Filter, entity: Mapping.Types.Entity): Promise<number>;
     /**
      * Update the entity that corresponds to the specified entity id using the PATCH request.
      * @param model Model type.
-     * @param view View mode.
+     * @param views View modes.
      * @param id Entity id.
      * @param entity Entity data.
      * @returns Returns a promise to get the true when the entity has been updated or false otherwise.
      */
-    updateById(model: Mapping.Types.Model, view: string, id: any, entity: Mapping.Types.Entity): Promise<boolean>;
+    updateById(model: Mapping.Types.Model, views: string[], id: any, entity: Mapping.Types.Entity): Promise<boolean>;
     /**
      * Delete all entities that corresponds to the specified filter using the DELETE request.
      * @param model Model type.

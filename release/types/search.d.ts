@@ -10,6 +10,10 @@ export declare class Search extends Class.Null {
      */
     private static QueryPrefix;
     /**
+     * Magic views prefix.
+     */
+    private static ViewsPrefix;
+    /**
      * Magic filter prefix.
      */
     private static FilterPrefix;
@@ -22,59 +26,72 @@ export declare class Search extends Class.Null {
      */
     private static LimitPrefix;
     /**
-     * Serializes the specified filter object according to the specified data model.
+     * Packs the specified view modes.
+     * @param queries Query parameters list.
+     * @param views View modes.
+     */
+    private static packViews;
+    /**
+     * Unpacks the specified view modes string.
+     * @param views View modes string.
+     * @returns Returns the generated list of view modes.
+     */
+    private static unpackViews;
+    /**
+     * Packs the specified filters entity according to the given data model.
      * @param model Model type.
      * @param queries Query parameters list.
-     * @param filter Filter statement.
+     * @param filter Filters entity.
      * @throws Throws an exception when the specified column does not exists in the provided data model.
      */
-    private static serializeFilter;
+    private static packFilters;
     /**
-     * Unserializes the specified filter string according to the specified data model.
+     * Unpacks the specified filters string according to the specified data model.
      * @param model Model type.
-     * @param filter Filter string.
+     * @param filter Filters string.
      * @returns Returns the generated filter object.
      * @throws Throws an exception when the specified column does not exists in the provided data model.
      */
-    private static unserializeFilter;
+    private static unpackFilters;
     /**
-     * Serializes the specified sort object according to the specified data model.
+     * Packs the specified sort object according to the specified data model.
      * @param model Model type.
      * @param queries Query parameters list.
      * @param sort Sorting order.
      * @throws Throws an exception when the specified column does not exists in the provided data model.
      */
-    private static serializeSort;
+    private static packSort;
     /**
-     * Unserializes the specified sort string according to the specified data model.
+     * Unpacks the specified sort string according to the specified data model.
      * @param model Model type.
      * @param sort Sort string.
      * @returns Returns the generated sort object.
      * @throws Throws an exception when the specified column does not exists in the provided data model.
      */
-    private static unserializeSort;
+    private static unpackSort;
     /**
-     * Serializes the specified limit object.
+     * Packs the specified limit object.
      * @param queries Query parameters list.
      * @param limit Limit object.
      */
-    private static serializeLimit;
+    private static packLimit;
     /**
-     * Unserializes the specified limit string.
+     * Unpacks the specified limit string.
      * @param limit Limit string.
      * @returns Returns the generated limit object.
      */
-    private static unserializeLimit;
+    private static unpackLimit;
     /**
      * Build a query URL from the specified parameters.
      * @param model Model type.
-     * @param filters List of filters.
+     * @param views View modes.
+     * @param filters Filter fields.
      * @param sort Sorting fields.
      * @param limit Result limits.
      * @returns Returns the generated URL path filter.
      * @throws Throws an error when there is a nonexistent column in the specified filter.
      */
-    static toURL(model: Mapping.Types.Model, filters: Mapping.Statements.Filter[], sort?: Mapping.Statements.Sort, limit?: Mapping.Statements.Limit): string;
+    static toURL(model: Mapping.Types.Model, views: string[], filters?: Mapping.Statements.Filter, sort?: Mapping.Statements.Sort, limit?: Mapping.Statements.Limit): string;
     /**
      * Builds a query object from the specified query URL.
      * @param model Model type.
