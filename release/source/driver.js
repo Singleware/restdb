@@ -142,7 +142,18 @@ let Driver = class Driver extends Class.Null {
         if (this.apiPath) {
             return this.apiPath.replace(/{model}|{id}|{query}/g, (match) => path[match]);
         }
-        return Path.normalize(`${path.model}/${path.id}/${path.query}`);
+        else if (route.id && route.query) {
+            return `${path.model}/${path.id}/${path.query}`;
+        }
+        else if (route.id) {
+            return `${path.model}/${path.id}`;
+        }
+        else if (route.query) {
+            return `${path.model}/${path.query}`;
+        }
+        else {
+            return path.model;
+        }
     }
     /**
      * Gets the error subject.

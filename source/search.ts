@@ -49,7 +49,10 @@ export class Search extends Class.Null {
    */
   @Class.Private()
   private static packViews(queries: any[], views: string[]): void {
-    queries.push(`${this.ViewsPrefix}/${views.join(';')}`);
+    const list = views.filter(view => view !== Mapping.Types.View.ALL);
+    if (list.length > 0) {
+      queries.push(`${this.ViewsPrefix}/${list.join(';')}`);
+    }
   }
 
   /**

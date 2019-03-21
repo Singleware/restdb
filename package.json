@@ -7,7 +7,7 @@
   "name": "@singleware/restdb",
   "description": "Singleware RestDB driver package.",
   "license": "MIT",
-  "version": "1.0.29",
+  "version": "1.0.30",
   "main": "release/source/index.js",
   "types": "release/types/index.d.ts",
   "keywords": [

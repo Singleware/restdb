@@ -22,7 +22,10 @@ let Search = class Search extends Class.Null {
      * @param views View modes.
      */
     static packViews(queries, views) {
-        queries.push(`${this.ViewsPrefix}/${views.join(';')}`);
+        const list = views.filter(view => view !== Mapping.Types.View.ALL);
+        if (list.length > 0) {
+            queries.push(`${this.ViewsPrefix}/${list.join(';')}`);
+        }
     }
     /**
      * Unpacks the specified view modes string.

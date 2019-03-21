@@ -173,8 +173,15 @@ export class Driver extends Class.Null implements Mapping.Driver {
     };
     if (this.apiPath) {
       return this.apiPath.replace(/{model}|{id}|{query}/g, (match: string) => path[match]);
+    } else if (route.id && route.query) {
+      return `${path.model}/${path.id}/${path.query}`;
+    } else if (route.id) {
+      return `${path.model}/${path.id}`;
+    } else if (route.query) {
+      return `${path.model}/${path.query}`;
+    } else {
+      return path.model;
     }
-    return Path.normalize(`${path.model}/${path.id}/${path.query}`);
   }
 
   /**
