@@ -64,7 +64,7 @@ export class Driver extends Class.Null implements Mapping.Driver {
    */
   @Class.Private()
   private async frontCall(method: string, path: string, headers: Mapping.Types.Entity, content?: Mapping.Types.Entity): Promise<Response> {
-    const response = await fetch(`${this.apiUrl}/${path}`, {
+    const response = await fetch(`${this.apiUrl}${path}`, {
       method: method,
       headers: new Headers(headers),
       body: content ? JSON.stringify(content) : void 0
@@ -91,7 +91,7 @@ export class Driver extends Class.Null implements Mapping.Driver {
    */
   @Class.Private()
   private async backCall(method: string, path: string, headers: Mapping.Types.Entity, content?: Mapping.Types.Entity): Promise<Response> {
-    const url = new URL(`${this.apiUrl}/${path}`);
+    const url = new URL(`${this.apiUrl}${path}`);
     const client = require(url.protocol);
     let data: string | undefined;
     if (content) {
@@ -167,20 +167,14 @@ export class Driver extends Class.Null implements Mapping.Driver {
   @Class.Private()
   private getPath(route: Route): string {
     const path = <Mapping.Types.Entity>{
-      model: Path.normalize(Mapping.Schema.getStorage(route.model)),
-      query: route.query || '',
-      id: route.id || ''
+      model: `/${Mapping.Schema.getStorage(route.model)}`,
+      query: route.query ? `/${route.query}` : '',
+      id: route.id ? `/${route.id}` : ''
     };
     if (this.apiPath) {
-      return this.apiPath.replace(/{model}|{id}|{query}/g, (match: string) => path[match]);
-    } else if (route.id && route.query) {
-      return `${path.model}/${path.id}/${path.query}`;
-    } else if (route.id) {
-      return `${path.model}/${path.id}`;
-    } else if (route.query) {
-      return `${path.model}/${path.query}`;
+      return Path.normalize(this.apiPath.replace(/{model}|{id}|{query}/g, (match: string) => path[match]));
     } else {
-      return path.model;
+      return Path.normalize(`${path.model}${path.id}${path.query}`);
     }
   }
 
@@ -230,7 +224,7 @@ export class Driver extends Class.Null implements Mapping.Driver {
    */
   @Class.Public()
   public usePath(path: string): Driver {
-    this.apiPath = Path.normalize(path);
+    this.apiPath = Path.normalize(`/${path}`);
     return this;
   }
 

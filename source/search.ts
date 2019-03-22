@@ -233,7 +233,7 @@ export class Search extends Class.Null {
     if (limit) {
       this.packLimit(queries, limit);
     }
-    return queries.length ? `/${this.QueryPrefix}/${queries.join('/')}` : ``;
+    return queries.length ? `${this.QueryPrefix}/${queries.join('/')}` : ``;
   }
 
   /**

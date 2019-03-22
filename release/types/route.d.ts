@@ -17,7 +17,7 @@ export interface Route {
   /**
    * Query data.
    */
-  query?: string | Query;
+  query?: string;
   /**
    * Id value.
    */

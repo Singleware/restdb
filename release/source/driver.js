@@ -43,7 +43,7 @@ let Driver = class Driver extends Class.Null {
      * @returns Returns a promise to get the request response.
      */
     async frontCall(method, path, headers, content) {
-        const response = await fetch(`${this.apiUrl}/${path}`, {
+        const response = await fetch(`${this.apiUrl}${path}`, {
             method: method,
             headers: new Headers(headers),
             body: content ? JSON.stringify(content) : void 0
@@ -68,7 +68,7 @@ let Driver = class Driver extends Class.Null {
      * @returns Returns a promise to get the request response.
      */
     async backCall(method, path, headers, content) {
-        const url = new URL(`${this.apiUrl}/${path}`);
+        const url = new URL(`${this.apiUrl}${path}`);
         const client = require(url.protocol);
         let data;
         if (content) {
@@ -135,24 +135,15 @@ let Driver = class Driver extends Class.Null {
      */
     getPath(route) {
         const path = {
-            model: Path.normalize(Mapping.Schema.getStorage(route.model)),
-            query: route.query || '',
-            id: route.id || ''
+            model: `/${Mapping.Schema.getStorage(route.model)}`,
+            query: route.query ? `/${route.query}` : '',
+            id: route.id ? `/${route.id}` : ''
         };
         if (this.apiPath) {
-            return this.apiPath.replace(/{model}|{id}|{query}/g, (match) => path[match]);
-        }
-        else if (route.id && route.query) {
-            return `${path.model}/${path.id}/${path.query}`;
-        }
-        else if (route.id) {
-            return `${path.model}/${path.id}`;
-        }
-        else if (route.query) {
-            return `${path.model}/${path.query}`;
+            return Path.normalize(this.apiPath.replace(/{model}|{id}|{query}/g, (match) => path[match]));
         }
         else {
-            return path.model;
+            return Path.normalize(`${path.model}${path.id}${path.query}`);
         }
     }
     /**
@@ -192,7 +183,7 @@ let Driver = class Driver extends Class.Null {
      * @returns Returns the own instance.
      */
     usePath(path) {
-        this.apiPath = Path.normalize(path);
+        this.apiPath = Path.normalize(`/${path}`);
         return this;
     }
     /**
