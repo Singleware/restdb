@@ -134,17 +134,20 @@ let Driver = class Driver extends Class.Null {
      * @returns Returns the generated path.
      */
     getPath(route) {
-        const path = {
+        const variables = {
             model: `/${Mapping.Schema.getStorage(route.model)}`,
             query: route.query ? `/${route.query}` : '',
             id: route.id ? `/${route.id}` : ''
         };
+        let path;
         if (this.apiPath) {
-            return Path.normalize(this.apiPath.replace(/{model}|{id}|{query}/g, (match) => path[match]));
+            path = this.apiPath.replace(/{model}|{id}|{query}/g, (match) => variables[match.substr(1, match.length - 2)]);
         }
         else {
-            return Path.normalize(`${path.model}${path.id}${path.query}`);
+            path = `${variables.model}${variables.id}${variables.query}`;
         }
+        this.apiPath = void 0;
+        return Path.normalize(path);
     }
     /**
      * Gets the error subject.

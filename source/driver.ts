@@ -166,16 +166,19 @@ export class Driver extends Class.Null implements Mapping.Driver {
    */
   @Class.Private()
   private getPath(route: Route): string {
-    const path = <Mapping.Types.Entity>{
+    const variables = <Mapping.Types.Entity>{
       model: `/${Mapping.Schema.getStorage(route.model)}`,
       query: route.query ? `/${route.query}` : '',
       id: route.id ? `/${route.id}` : ''
     };
+    let path;
     if (this.apiPath) {
-      return Path.normalize(this.apiPath.replace(/{model}|{id}|{query}/g, (match: string) => path[match]));
+      path = this.apiPath.replace(/{model}|{id}|{query}/g, (match: string) => variables[match.substr(1, match.length - 2)]);
     } else {
-      return Path.normalize(`${path.model}${path.id}${path.query}`);
+      path = `${variables.model}${variables.id}${variables.query}`;
     }
+    this.apiPath = void 0;
+    return Path.normalize(path);
   }
 
   /**
