@@ -13,9 +13,13 @@ export interface Query {
    */
   views: string[];
   /**
-   * List of filters.
+   * Pre-matches.
    */
-  filters: Mapping.Statements.Filter[];
+  pre?: Mapping.Statements.Match | Mapping.Statements.Match[];
+  /**
+   * Post-matches.
+   */
+  post?: Mapping.Statements.Match | Mapping.Statements.Match[];
   /**
    * Sorting order.
    */

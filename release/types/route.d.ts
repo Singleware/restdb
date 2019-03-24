@@ -4,10 +4,8 @@
  */
 import * as Mapping from '@singleware/mapping';
 
-import { Query } from './query';
-
 /**
- * Route interface.
+ * Path route interface.
  */
 export interface Route {
   /**

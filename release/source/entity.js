@@ -40,7 +40,7 @@ let Entity = class Entity extends Class.Null {
         return newer;
     }
     /**
-     * Extract the value from the given entity into a raw value.
+     * Extracts the value from the given entity into a raw value.
      * @param value Value to be extracted.
      * @returns Returns the new generated object.
      */

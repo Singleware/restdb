@@ -5,15 +5,8 @@
 import * as Mapping from '@singleware/mapping';
 
 /**
- * Request interface.
+ * Headers interface.
  */
-export interface Request {
-  /**
-   * Request URL.
-   */
-  url: string;
-  /**
-   * Request body.
-   */
-  body?: Mapping.Types.Entity;
+export interface Headers {
+  [name: string]: string | string[] | undefined;
 }

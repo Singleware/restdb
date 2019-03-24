@@ -14,8 +14,9 @@ const Class = require("@singleware/class");
 const Observable = require("@singleware/observable");
 const Mapping = require("@singleware/mapping");
 const Path = require("@singleware/path");
+const Request = require("./request");
+const filters_1 = require("./filters");
 const entity_1 = require("./entity");
-const search_1 = require("./search");
 /**
  * Data driver class.
  */
@@ -28,109 +29,43 @@ let Driver = class Driver extends Class.Null {
         /**
          * Header name for the authentication key.
          */
-        this.apiHeader = 'X-API-Key';
+        this.apiKeyHeader = 'X-API-Key';
+        /**
+         * Header name for the counting results.
+         */
+        this.apiCountHeader = 'X-API-Count';
         /**
          * Subject to notify any API error.
          */
         this.errorSubject = new Observable.Subject();
     }
     /**
-     * Call an HTTP request using native browser methods (frontend).
-     * @param method Request method.
-     * @param path Request path.
-     * @param headers Request headers.
-     * @param content Request content.
-     * @returns Returns a promise to get the request response.
-     */
-    async frontCall(method, path, headers, content) {
-        const response = await fetch(`${this.apiUrl}${path}`, {
-            method: method,
-            headers: new Headers(headers),
-            body: content ? JSON.stringify(content) : void 0
-        });
-        const body = await response.text();
-        return {
-            request: {
-                url: response.url,
-                body: content
-            },
-            statusCode: response.status,
-            statusText: response.statusText,
-            body: body.length > 0 ? JSON.parse(body) : void 0
-        };
-    }
-    /**
-     * Call an HTTP request using native nodejs methods. (backend)
-     * @param method Request method.
-     * @param path Request path.
-     * @param headers Request headers.
-     * @param content Request content.
-     * @returns Returns a promise to get the request response.
-     */
-    async backCall(method, path, headers, content) {
-        const url = new URL(`${this.apiUrl}${path}`);
-        const client = require(url.protocol);
-        let data;
-        if (content) {
-            data = JSON.stringify(content);
-            headers['Content-Length'] = data.length;
-        }
-        return new Promise((resolve, reject) => {
-            const request = client.request({
-                method: method,
-                headers: headers,
-                protocol: url.protocol,
-                port: url.port,
-                host: url.hostname,
-                path: url.pathname
-            }, (response) => {
-                let body = '';
-                response.setEncoding('utf8');
-                response.on('error', (error) => {
-                    reject(error);
-                });
-                response.on('data', (data) => {
-                    body += data;
-                });
-                response.on('end', () => {
-                    resolve({
-                        request: {
-                            url: response.url,
-                            body: content
-                        },
-                        statusCode: response.statusCode,
-                        statusText: response.statusText,
-                        body: body.length > 0 ? JSON.parse(body) : void 0
-                    });
-                });
-            });
-            if (data) {
-                request.write(data);
-                request.end();
-            }
-        });
-    }
-    /**
      * Send an HTTP request.
      * @param method Request method.
      * @param path Request path.
-     * @param body Request body.
-     * @returns Returns a promise to get the request response.
+     * @param content Request content.
+     * @returns Returns a promise to get the response output.
      */
-    request(method, path, body) {
-        const headers = {};
-        const content = body ? entity_1.Entity.extractMap(body) : void 0;
+    request(method, path, content) {
+        const input = {
+            url: `${this.apiUrl}${path}`,
+            method: method,
+            content: content ? entity_1.Entity.extractMap(content) : void 0,
+            headers: {}
+        };
         if (this.apiKey) {
-            headers[this.apiHeader] = this.apiKey;
+            input.headers[this.apiKeyHeader] = this.apiKey;
         }
-        if (typeof window !== typeof void 0) {
-            return this.frontCall(method, path, headers, content);
+        if (window !== void 0) {
+            return Request.Frontend.request(input);
         }
-        return this.backCall(method, path, headers, content);
+        else {
+            return Request.Backend.request(input);
+        }
     }
     /**
-     * Gets a new request path based on the specified route information.
-     * @param route Route information.
+     * Gets a new request path based on the specified route entity.
+     * @param route Route entity.
      * @returns Returns the generated path.
      */
     getPath(route) {
@@ -141,7 +76,7 @@ let Driver = class Driver extends Class.Null {
         };
         let path;
         if (this.apiPath) {
-            path = this.apiPath.replace(/{model}|{id}|{query}/g, (match) => variables[match.substr(1, match.length - 2)]);
+            path = this.apiPath.replace(/{model}|{query}|{id}/g, (match) => variables[match.substr(1, match.length - 2)]);
         }
         else {
             path = `${variables.model}${variables.id}${variables.query}`;
@@ -162,7 +97,7 @@ let Driver = class Driver extends Class.Null {
         return this.errorResponse;
     }
     /**
-     * Sets a new API key for subsequent requests.
+     * Sets a new API key for the subsequent requests.
      * @param key New API key.
      * @returns Returns the own instance.
      */
@@ -171,17 +106,29 @@ let Driver = class Driver extends Class.Null {
         return this;
     }
     /**
-     * Sets a new API key header for subsequent requests.
-     * @param header New API key header.
+     * Sets a new API key header for the subsequent requests.
+     * @param header New API key header name.
      * @returns Returns the own instance.
      */
-    useHeader(header) {
-        this.apiHeader = header;
+    useKeyHeaderName(header) {
+        this.apiKeyHeader = header;
+        return this;
+    }
+    /**
+     * Sets a new API count header for the subsequent requests.
+     * @param header New API count header name.
+     * @returns Returns the own instance.
+     */
+    useCountHeaderName(header) {
+        this.apiCountHeader = header;
         return this;
     }
     /**
      * Sets a temporary path for the next request.
-     * Use: {} to set the complementary path string.
+     * Variables:
+     *  {model} - It will be replaced by the entity name.
+     *  {query} - It will be replaced by the request query.
+     *  {id}    - It will be replaced by the request ID.
      * @param path Path to be set.
      * @returns Returns the own instance.
      */
@@ -199,20 +146,20 @@ let Driver = class Driver extends Class.Null {
         this.apiKey = key;
     }
     /**
-     * Insert the specified entity using the POST request.
+     * Insert the specified entity using a POST request.
      * @param model Model type.
      * @param views View modes.
      * @param entities Entity list.
      * @returns Returns a promise to get the id list of all inserted entities.
+     * @throws Throws an error when the result body doesn't contains the insertion id.
      */
     async insert(model, views, entities) {
         const list = [];
-        const path = this.getPath({ model: model, query: search_1.Search.toURL(model, views) });
+        const path = this.getPath({ model: model, query: filters_1.Filters.toURL(model, views) });
         for (const entity of entities) {
             const response = await this.request('POST', path, entity);
-            if (response.statusCode !== 201) {
-                this.errorResponse = response;
-                await this.errorSubject.notifyAll(response);
+            if (response.status.code !== 201) {
+                await this.errorSubject.notifyAll((this.errorResponse = response));
             }
             else if (!(response.body instanceof Object) || typeof response.body.id !== 'string') {
                 throw new Error(`The response body must be an object containing the inserted id.`);
@@ -224,21 +171,18 @@ let Driver = class Driver extends Class.Null {
         return list;
     }
     /**
-     * Search for all entities that corresponds to the specified filters using the GET request.
+     * Search for all entities that corresponds to the specified filter using a GET request.
      * @param model Model type.
      * @param views View modes.
      * @param filter Fields filter.
-     * @param sort Sorting fields.
-     * @param limit Result limits.
-     * @returns Returns a promise to get the list of entities found.
+     * @returns Returns a promise to get the list of found entities.
+     * @throws Throws an error when the result body isn't an array.
      */
-    async find(model, views, filter, sort, limit) {
-        const path = this.getPath({ model: model, query: search_1.Search.toURL(model, views, filter, sort, limit) });
+    async find(model, views, filter) {
+        const path = this.getPath({ model: model, query: filters_1.Filters.toURL(model, views, filter) });
         const response = await this.request('GET', path);
-        if (response.statusCode !== 200) {
-            this.errorResponse = response;
-            await this.errorSubject.notifyAll(response);
-            return [];
+        if (response.status.code !== 200) {
+            return await this.errorSubject.notifyAll((this.errorResponse = response)), [];
         }
         else if (!(response.body instanceof Array)) {
             throw new Error(`The response body must be an array containing the search results.`);
@@ -248,50 +192,42 @@ let Driver = class Driver extends Class.Null {
         }
     }
     /**
-     * Find the entity that corresponds to the specified entity id using the GET request.
+     * Find the entity that corresponds to the specified id using a GET request.
      * @param model Model type.
      * @param views View modes.
      * @param id Entity id.
      * @returns Returns a promise to get the found entity or undefined when the entity was not found.
      */
     async findById(model, views, id) {
-        const path = this.getPath({ model: model, id: id, query: search_1.Search.toURL(model, views) });
+        const path = this.getPath({ model: model, id: id, query: filters_1.Filters.toURL(model, views) });
         const response = await this.request('GET', path);
-        if (response.statusCode !== 200) {
-            this.errorResponse = response;
-            await this.errorSubject.notifyAll(response);
-            return void 0;
+        if (response.status.code !== 200) {
+            return await this.errorSubject.notifyAll((this.errorResponse = response)), void 0;
         }
         else {
             return response.body;
         }
     }
     /**
-     * Update all entities that corresponds to the specified filter using the PATCH request.
+     * Update all entities that corresponds to the specified matching fields using a PATCH request.
      * @param model Model type.
      * @param views View modes.
-     * @param filter Fields filter.
+     * @param match Matching fields.
      * @param entity Entity data.
      * @returns Returns a promise to get the number of updated entities.
-     * @throws Throws an error when the response doesn't have the object with the total of updated results.
      */
-    async update(model, views, filter, entity) {
-        const path = this.getPath({ model: model, query: search_1.Search.toURL(model, views, filter) });
+    async update(model, views, match, entity) {
+        const path = this.getPath({ model: model, query: filters_1.Filters.toURL(model, views, { pre: match }) });
         const response = await this.request('PATCH', path, entity);
-        if (response.statusCode !== 200) {
-            this.errorResponse = response;
-            await this.errorSubject.notifyAll(response);
-            return 0;
-        }
-        else if (!(response.body instanceof Object) || typeof response.body.total !== 'number') {
-            throw new Error(`The response body must be an object containing the total of updated results.`);
+        if (response.status.code !== 200) {
+            return await this.errorSubject.notifyAll((this.errorResponse = response)), 0;
         }
         else {
-            return response.body.total;
+            return parseInt(response.headers[this.apiCountHeader]) || 0;
         }
     }
     /**
-     * Update the entity that corresponds to the specified entity id using the PATCH request.
+     * Update the entity that corresponds to the specified id using a PATCH request.
      * @param model Model type.
      * @param views View modes.
      * @param id Entity id.
@@ -299,41 +235,33 @@ let Driver = class Driver extends Class.Null {
      * @returns Returns a promise to get the true when the entity has been updated or false otherwise.
      */
     async updateById(model, views, id, entity) {
-        const path = this.getPath({ model: model, id: id, query: search_1.Search.toURL(model, views) });
+        const path = this.getPath({ model: model, id: id, query: filters_1.Filters.toURL(model, views) });
         const response = await this.request('PATCH', path, entity);
-        if (response.statusCode !== 200 && response.statusCode !== 204) {
-            this.errorResponse = response;
-            await this.errorSubject.notifyAll(response);
-            return false;
+        if (response.status.code !== 204) {
+            return await this.errorSubject.notifyAll((this.errorResponse = response)), false;
         }
         else {
             return true;
         }
     }
     /**
-     * Delete all entities that corresponds to the specified filter using the DELETE request.
+     * Delete all entities that corresponds to the specified matching fields using a DELETE request.
      * @param model Model type.
-     * @param filter Fields filter.
+     * @param match Matching fields.
      * @return Returns a promise to get the number of deleted entities.
-     * @throws Throws an error when the response doesn't have the object with the total of deleted results.
      */
-    async delete(model, filter) {
-        const path = this.getPath({ model: model, query: search_1.Search.toURL(model, [], filter) });
+    async delete(model, match) {
+        const path = this.getPath({ model: model, query: filters_1.Filters.toURL(model, [], { pre: match }) });
         const response = await this.request('DELETE', path);
-        if (response.statusCode !== 200) {
-            this.errorResponse = response;
-            await this.errorSubject.notifyAll(response);
-            return 0;
-        }
-        else if (!(response.body instanceof Object) || typeof response.body.total !== 'number') {
-            throw new Error(`The body must be an object containing the total of deleted results.`);
+        if (response.status.code !== 200 && response.status.code !== 204) {
+            return await this.errorSubject.notifyAll((this.errorResponse = response)), 0;
         }
         else {
-            return response.body.total;
+            return parseInt(response.headers[this.apiCountHeader]) || 0;
         }
     }
     /**
-     * Delete the entity that corresponds to the specified id using the DELETE request.
+     * Delete the entity that corresponds to the specified id using a DELETE request.
      * @param model Model type.
      * @param id Entity id.
      * @return Returns a promise to get the true when the entity has been deleted or false otherwise.
@@ -341,13 +269,28 @@ let Driver = class Driver extends Class.Null {
     async deleteById(model, id) {
         const path = this.getPath({ model: model, id: id });
         const response = await this.request('DELETE', path);
-        if (response.statusCode !== 200 && response.statusCode !== 204) {
-            this.errorResponse = response;
-            await this.errorSubject.notifyAll(response);
-            return false;
+        if (response.status.code !== 200 && response.status.code !== 204) {
+            return await this.errorSubject.notifyAll((this.errorResponse = response)), false;
         }
         else {
             return true;
+        }
+    }
+    /**
+     * Count all corresponding entities using the a HEAD request
+     * @param model Model type.
+     * @param views View modes.
+     * @param filter Field filter.
+     * @returns Returns a promise to get the total of found entities.
+     */
+    async count(model, views, filter) {
+        const path = this.getPath({ model: model, query: filters_1.Filters.toURL(model, views, filter) });
+        const response = await this.request('HEAD', path);
+        if (response.status.code !== 204) {
+            return await this.errorSubject.notifyAll((this.errorResponse = response)), 0;
+        }
+        else {
+            return parseInt(response.headers[this.apiCountHeader]) || 0;
         }
     }
 };
@@ -362,19 +305,16 @@ __decorate([
 ], Driver.prototype, "apiKey", void 0);
 __decorate([
     Class.Private()
-], Driver.prototype, "apiHeader", void 0);
+], Driver.prototype, "apiKeyHeader", void 0);
+__decorate([
+    Class.Private()
+], Driver.prototype, "apiCountHeader", void 0);
 __decorate([
     Class.Private()
 ], Driver.prototype, "errorResponse", void 0);
 __decorate([
     Class.Private()
 ], Driver.prototype, "errorSubject", void 0);
-__decorate([
-    Class.Private()
-], Driver.prototype, "frontCall", null);
-__decorate([
-    Class.Private()
-], Driver.prototype, "backCall", null);
 __decorate([
     Class.Private()
 ], Driver.prototype, "request", null);
@@ -392,7 +332,10 @@ __decorate([
 ], Driver.prototype, "useKey", null);
 __decorate([
     Class.Public()
-], Driver.prototype, "useHeader", null);
+], Driver.prototype, "useKeyHeaderName", null);
+__decorate([
+    Class.Public()
+], Driver.prototype, "useCountHeaderName", null);
 __decorate([
     Class.Public()
 ], Driver.prototype, "usePath", null);
@@ -420,6 +363,9 @@ __decorate([
 __decorate([
     Class.Public()
 ], Driver.prototype, "deleteById", null);
+__decorate([
+    Class.Public()
+], Driver.prototype, "count", null);
 Driver = __decorate([
     Class.Describe()
 ], Driver);

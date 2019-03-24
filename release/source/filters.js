@@ -13,12 +13,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const Class = require("@singleware/class");
 const Mapping = require("@singleware/mapping");
 /**
- * Search helper class.
+ * Filters helper class.
  */
-let Search = class Search extends Class.Null {
+let Filters = class Filters extends Class.Null {
     /**
-     * Packs the specified view modes.
-     * @param queries Query parameters list.
+     * Packs the specified view modes into the given query list.
+     * @param queries Query list.
      * @param views View modes.
      */
     static packViews(queries, views) {
@@ -28,7 +28,7 @@ let Search = class Search extends Class.Null {
         }
     }
     /**
-     * Unpacks the specified view modes string.
+     * Unpacks the specified view modes string into a new view modes list.
      * @param views View modes string.
      * @returns Returns the generated list of view modes.
      */
@@ -36,17 +36,16 @@ let Search = class Search extends Class.Null {
         return views.split(';');
     }
     /**
-     * Packs the specified filters entity according to the given data model.
+     * Packs the specified match rule entity according to the specified fields and model type.
      * @param model Model type.
-     * @param queries Query parameters list.
-     * @param filter Filters entity.
-     * @throws Throws an exception when the specified column does not exists in the provided data model.
+     * @param match Matching fields.
+     * @returns Returns the match rule string.
      */
-    static packFilters(model, queries, filter) {
-        let parts = [];
-        for (const name in filter) {
+    static packMatchRule(model, match) {
+        let matches = [];
+        for (const name in match) {
             const schema = Mapping.Schema.getRealColumn(model, name);
-            const operation = filter[name];
+            const operation = match[name];
             const expression = `${schema.name}:${operation.operator}`;
             switch (operation.operator) {
                 case Mapping.Statements.Operator.REGEX:
@@ -56,29 +55,27 @@ let Search = class Search extends Class.Null {
                 case Mapping.Statements.Operator.NOT_EQUAL:
                 case Mapping.Statements.Operator.GREATER_OR_EQUAL:
                 case Mapping.Statements.Operator.GREATER:
-                    parts.push(`${expression}:${encodeURIComponent(operation.value)}`);
+                    matches.push(`${expression}:${encodeURIComponent(operation.value)}`);
                     break;
                 case Mapping.Statements.Operator.BETWEEN:
                 case Mapping.Statements.Operator.CONTAIN:
                 case Mapping.Statements.Operator.NOT_CONTAIN:
-                    parts.push(`${expression}:${[...operation.value].map(item => encodeURIComponent(item)).join('|')}`);
+                    matches.push(`${expression}:${[...operation.value].map(item => encodeURIComponent(item)).join(',')}`);
                     break;
             }
         }
-        if (parts.length) {
-            queries.push(`${this.FilterPrefix}/${parts.join(';')}`);
-        }
+        return matches.join(';');
     }
     /**
-     * Unpacks the specified filters string according to the specified data model.
+     * Unpacks the specified match rule string according to the specified model type.
      * @param model Model type.
-     * @param filter Filters string.
-     * @returns Returns the generated filter object.
-     * @throws Throws an exception when the specified column does not exists in the provided data model.
+     * @param match Match string.
+     * @returns Returns the generated match entity.
+     * @throws @throws Throws an error when there are unsupported orders in the match string.
      */
-    static unpackFilters(model, filter) {
+    static unpackMatchRule(model, match) {
         const newer = {};
-        const fields = filter.split(';');
+        const fields = match.split(';');
         for (const field of fields) {
             const [name, operator, value] = field.split(':', 3);
             const code = parseInt(operator);
@@ -96,20 +93,62 @@ let Search = class Search extends Class.Null {
                 case Mapping.Statements.Operator.BETWEEN:
                 case Mapping.Statements.Operator.CONTAIN:
                 case Mapping.Statements.Operator.NOT_CONTAIN:
-                    newer[schema.name] = { operator: code, value: value.split('|').map(value => decodeURIComponent(value)) };
+                    newer[schema.name] = { operator: code, value: value.split(',').map(value => decodeURIComponent(value)) };
                     break;
                 default:
-                    throw new Error(`Unsupported filter operator code "${code}"`);
+                    throw new Error(`Match operator code '${code}' doesn't supported.`);
             }
         }
         return newer;
     }
     /**
-     * Packs the specified sort object according to the specified data model.
+     * Packs the specified pre-match into the query list according to the given model type.
      * @param model Model type.
-     * @param queries Query parameters list.
+     * @param queries Query list.
+     * @param match Matching fields.
+     */
+    static packPreMatch(model, queries, match) {
+        const matches = (match instanceof Array ? match : [match]).map((match) => this.packMatchRule(model, match));
+        if (matches.length) {
+            queries.push(`${this.PreMatchPrefix}/${matches.join('|')}`);
+        }
+    }
+    /**
+     * Packs the specified post-match into the query list according to the given model type.
+     * @param model Model type.
+     * @param queries Query list.
+     * @param match Matching fields.
+     */
+    static packPostMatch(model, queries, match) {
+        const matches = (match instanceof Array ? match : [match]).map((match) => this.packMatchRule(model, match));
+        if (matches.length) {
+            queries.push(`${this.PostMatchPrefix}/${matches.join('|')}`);
+        }
+    }
+    /**
+     * Unpacks the specified match string according to the specified model type.
+     * @param model Model type.
+     * @param match Match string.
+     * @returns Returns a single generated match entity or the generated match entity list.
+     */
+    static unpackMatch(model, match) {
+        const newer = [];
+        const matches = match.split('|');
+        for (const match of matches) {
+            newer.push(this.unpackMatchRule(model, match));
+        }
+        if (newer.length === 1) {
+            return newer[0];
+        }
+        else {
+            return newer;
+        }
+    }
+    /**
+     * Packs the specified sort entity according to the specified model type.
+     * @param model Model type.
+     * @param queries Query list.
      * @param sort Sorting order.
-     * @throws Throws an exception when the specified column does not exists in the provided data model.
      */
     static packSort(model, queries, sort) {
         let parts = [];
@@ -122,11 +161,11 @@ let Search = class Search extends Class.Null {
         }
     }
     /**
-     * Unpacks the specified sort string according to the specified data model.
+     * Unpacks the specified sort string according to the specified model type.
      * @param model Model type.
      * @param sort Sort string.
-     * @returns Returns the generated sort object.
-     * @throws Throws an exception when the specified column does not exists in the provided data model.
+     * @returns Returns the generated sort entity.
+     * @throws Throws an error when there are unsupported orders in the specified sort string.
      */
     static unpackSort(model, sort) {
         const newer = {};
@@ -141,15 +180,15 @@ let Search = class Search extends Class.Null {
                     newer[schema.name] = code;
                     break;
                 default:
-                    throw new Error(`Unsupported sorting order code "${code}"`);
+                    throw new Error(`Sorting order code '${code}' doesn't supported.`);
             }
         }
         return newer;
     }
     /**
-     * Packs the specified limit object.
-     * @param queries Query parameters list.
-     * @param limit Limit object.
+     * Packs the specified limit entity.
+     * @param queries Query list.
+     * @param limit Limit entity.
      */
     static packLimit(queries, limit) {
         queries.push(`${this.LimitPrefix}/${limit.start || 0};${limit.count || 0}`);
@@ -157,7 +196,7 @@ let Search = class Search extends Class.Null {
     /**
      * Unpacks the specified limit string.
      * @param limit Limit string.
-     * @returns Returns the generated limit object.
+     * @returns Returns the generated limit entity.
      */
     static unpackLimit(limit) {
         const [start, count] = limit.split(';', 2);
@@ -167,64 +206,64 @@ let Search = class Search extends Class.Null {
         };
     }
     /**
-     * Build a query URL from the specified parameters.
+     * Build a query string URL from the specified view modes and field filter.
      * @param model Model type.
      * @param views View modes.
-     * @param filters Filter fields.
-     * @param sort Sorting fields.
-     * @param limit Result limits.
-     * @returns Returns the generated URL path filter.
-     * @throws Throws an error when there is a nonexistent column in the specified filter.
+     * @param filter Field filter.
+     * @returns Returns the generated query string URL.
      */
-    static toURL(model, views, filters, sort, limit) {
+    static toURL(model, views, filter) {
         const queries = [];
         if (views.length) {
             this.packViews(queries, views);
         }
-        if (filters) {
-            this.packFilters(model, queries, filters);
-        }
-        if (sort) {
-            this.packSort(model, queries, sort);
-        }
-        if (limit) {
-            this.packLimit(queries, limit);
+        if (filter) {
+            if (filter.pre) {
+                this.packPreMatch(model, queries, filter.pre);
+            }
+            if (filter.post) {
+                this.packPostMatch(model, queries, filter.post);
+            }
+            if (filter.sort) {
+                this.packSort(model, queries, filter.sort);
+            }
+            if (filter.limit) {
+                this.packLimit(queries, filter.limit);
+            }
         }
         return queries.length ? `${this.QueryPrefix}/${queries.join('/')}` : ``;
     }
     /**
-     * Builds a query object from the specified query URL.
+     * Builds a query entity from the specified query URL.
      * @param model Model type.
      * @param url Query URL.
-     * @returns Returns the generated query object.
-     * @throws Throws an error when there is a nonexistent column or unsupported data in the specified URL.
+     * @returns Returns the generated query entity.
+     * @throws Throws an error when there are unsupported data in the specified URL.
      */
     static fromURL(model, url) {
-        const result = {
-            views: [],
-            filters: [],
-            sort: void 0,
-            limit: void 0
-        };
+        const result = { views: [] };
         const parts = url.split('/').reverse();
         if (parts.pop() === this.QueryPrefix) {
             while (parts.length) {
                 const data = parts.pop();
                 switch (data) {
                     case this.ViewsPrefix:
-                        result.views = this.unpackViews(parts.pop() || '');
+                        result.views = this.unpackViews(parts.pop());
                         break;
-                    case this.FilterPrefix:
-                        result.filters.push(this.unpackFilters(model, parts.pop() || ''));
+                    case this.PreMatchPrefix:
+                        result.pre = this.unpackMatch(model, parts.pop());
+                        break;
+                    case this.PostMatchPrefix:
+                        result.post = this.unpackMatch(model, parts.pop());
                         break;
                     case this.SortPrefix:
-                        result.sort = this.unpackSort(model, parts.pop() || '');
+                        result.sort = this.unpackSort(model, parts.pop());
                         break;
                     case this.LimitPrefix:
-                        result.limit = this.unpackLimit(parts.pop() || '');
+                        result.limit = this.unpackLimit(parts.pop());
                         break;
                     default:
-                        throw new Error(`Unsupported serialized data type "${data}"`);
+                        throw new Error(`Serialized data type '${data}' does not supported.`);
                 }
             }
         }
@@ -234,69 +273,85 @@ let Search = class Search extends Class.Null {
 /**
  * Magic query prefix.
  */
-Search.QueryPrefix = 'query';
+Filters.QueryPrefix = 'query';
 /**
  * Magic views prefix.
  */
-Search.ViewsPrefix = 'v';
+Filters.ViewsPrefix = 'v';
 /**
- * Magic filter prefix.
+ * Magic pre-match prefix.
  */
-Search.FilterPrefix = 'f';
+Filters.PreMatchPrefix = 'b';
+/**
+ * Magic post-match prefix.
+ */
+Filters.PostMatchPrefix = 'a';
 /**
  * Magic sort prefix.
  */
-Search.SortPrefix = 's';
+Filters.SortPrefix = 's';
 /**
  * Magic limit prefix.
  */
-Search.LimitPrefix = 'l';
+Filters.LimitPrefix = 'l';
 __decorate([
     Class.Private()
-], Search, "QueryPrefix", void 0);
+], Filters, "QueryPrefix", void 0);
 __decorate([
     Class.Private()
-], Search, "ViewsPrefix", void 0);
+], Filters, "ViewsPrefix", void 0);
 __decorate([
     Class.Private()
-], Search, "FilterPrefix", void 0);
+], Filters, "PreMatchPrefix", void 0);
 __decorate([
     Class.Private()
-], Search, "SortPrefix", void 0);
+], Filters, "PostMatchPrefix", void 0);
 __decorate([
     Class.Private()
-], Search, "LimitPrefix", void 0);
+], Filters, "SortPrefix", void 0);
 __decorate([
     Class.Private()
-], Search, "packViews", null);
+], Filters, "LimitPrefix", void 0);
 __decorate([
     Class.Private()
-], Search, "unpackViews", null);
+], Filters, "packViews", null);
 __decorate([
     Class.Private()
-], Search, "packFilters", null);
+], Filters, "unpackViews", null);
 __decorate([
     Class.Private()
-], Search, "unpackFilters", null);
+], Filters, "packMatchRule", null);
 __decorate([
     Class.Private()
-], Search, "packSort", null);
+], Filters, "unpackMatchRule", null);
 __decorate([
     Class.Private()
-], Search, "unpackSort", null);
+], Filters, "packPreMatch", null);
 __decorate([
     Class.Private()
-], Search, "packLimit", null);
+], Filters, "packPostMatch", null);
 __decorate([
     Class.Private()
-], Search, "unpackLimit", null);
+], Filters, "unpackMatch", null);
+__decorate([
+    Class.Private()
+], Filters, "packSort", null);
+__decorate([
+    Class.Private()
+], Filters, "unpackSort", null);
+__decorate([
+    Class.Private()
+], Filters, "packLimit", null);
+__decorate([
+    Class.Private()
+], Filters, "unpackLimit", null);
 __decorate([
     Class.Public()
-], Search, "toURL", null);
+], Filters, "toURL", null);
 __decorate([
     Class.Public()
-], Search, "fromURL", null);
-Search = __decorate([
+], Filters, "fromURL", null);
+Filters = __decorate([
     Class.Describe()
-], Search);
-exports.Search = Search;
+], Filters);
+exports.Filters = Filters;

@@ -5,19 +5,15 @@
 import * as Mapping from '@singleware/mapping';
 
 /**
- * Path route interface.
+ * Status interface.
  */
-export interface Route {
+export interface Status {
   /**
-   * Entity model.
+   * Status code.
    */
-  model: Mapping.Types.Model;
+  code: number;
   /**
-   * Query data.
+   * Status message.
    */
-  query?: string;
-  /**
-   * Id value.
-   */
-  id?: string;
+  message: string;
 }
