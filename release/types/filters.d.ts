@@ -30,78 +30,60 @@ export declare class Filters extends Class.Null {
      */
     private static LimitPrefix;
     /**
-     * Packs the specified view modes into the given query list.
-     * @param queries Query list.
+     * Packs the specified list of view modes into a parameterized array of view modes.
      * @param views View modes.
+     * @returns Returns the parameterized array of view modes.
      */
-    private static packViews;
+    private static packViewModes;
     /**
-     * Unpacks the specified view modes string into a new view modes list.
-     * @param views View modes string.
-     * @returns Returns the generated list of view modes.
+     * Unpacks the parameterized array of view modes into a list of view modes.
+     * @param array Parameterized array of view modes.
+     * @returns Returns the list of view modes.
+     * @throws Throws an error when there are invalid serialized data.
      */
-    private static unpackViews;
+    private static unpackViewModes;
     /**
-     * Packs the specified match rule entity according to the specified fields and model type.
+     * Packs the specified matching rules into a parameterized array of matching rules.
      * @param model Model type.
-     * @param match Matching fields.
-     * @returns Returns the match rule string.
+     * @param match Matching rules.
+     * @returns Returns the parameterized array of matching rules.
+     * @throws Throws an error when there are invalid matching operator codes.
      */
-    private static packMatchRule;
+    private static packMatchRules;
     /**
-     * Unpacks the specified match rule string according to the specified model type.
+     * Unpacks the parameterized array of matching rules into the matching rules.
      * @param model Model type.
-     * @param match Match string.
-     * @returns Returns the generated match entity.
-     * @throws @throws Throws an error when there are unsupported orders in the match string.
+     * @param array Parameterized array of matching rules.
+     * @returns Returns the generated matching rules.
+     * @throws Throws an error when there are invalid serialized data.
      */
-    private static unpackMatchRule;
+    private static unpackMatchRules;
     /**
-     * Packs the specified pre-match into the query list according to the given model type.
+     * Packs the specified sorting fields into a parameterized array of sorting fields.
      * @param model Model type.
-     * @param queries Query list.
-     * @param match Matching fields.
-     */
-    private static packPreMatch;
-    /**
-     * Packs the specified post-match into the query list according to the given model type.
-     * @param model Model type.
-     * @param queries Query list.
-     * @param match Matching fields.
-     */
-    private static packPostMatch;
-    /**
-     * Unpacks the specified match string according to the specified model type.
-     * @param model Model type.
-     * @param match Match string.
-     * @returns Returns a single generated match entity or the generated match entity list.
-     */
-    private static unpackMatch;
-    /**
-     * Packs the specified sort entity according to the specified model type.
-     * @param model Model type.
-     * @param queries Query list.
-     * @param sort Sorting order.
+     * @param sort Sorting fields.
+     * @returns Returns the parameterized array of sorting fields.
      */
     private static packSort;
     /**
-     * Unpacks the specified sort string according to the specified model type.
+     * Unpacks the parameterized array of sorting fields into the sorting fields.
      * @param model Model type.
-     * @param sort Sort string.
-     * @returns Returns the generated sort entity.
-     * @throws Throws an error when there are unsupported orders in the specified sort string.
+     * @param array Parameterized array of sorting fields.
+     * @returns Returns the generated sorting fields.
+     * @throws Throws an error when there are invalid serialized data.
      */
     private static unpackSort;
     /**
-     * Packs the specified limit entity.
-     * @param queries Query list.
+     * Packs the specified limit entity into a parameterized array of limits.
      * @param limit Limit entity.
+     * @returns Returns the parameterized array of limits.
      */
     private static packLimit;
     /**
-     * Unpacks the specified limit string.
-     * @param limit Limit string.
+     * Unpacks the parameterized array of limits into the limit entity.
+     * @param array Parameterized array of limits.
      * @returns Returns the generated limit entity.
+     * @throws Throws an error when there are invalid serialized data.
      */
     private static unpackLimit;
     /**
@@ -117,7 +99,7 @@ export declare class Filters extends Class.Null {
      * @param model Model type.
      * @param url Query URL.
      * @returns Returns the generated query entity.
-     * @throws Throws an error when there are unsupported data in the specified URL.
+     * @throws Throws an error when there are unsupported data serialization in the specified URL.
      */
     static fromURL(model: Mapping.Types.Model, url: string): Query;
 }

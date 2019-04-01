@@ -27,12 +27,6 @@ export class Driver extends Class.Null implements Mapping.Driver {
   private apiUrl?: string;
 
   /**
-   * Temporary path for the next request.
-   */
-  @Class.Private()
-  private apiPath?: string;
-
-  /**
    * Key for authenticated requests.
    */
   @Class.Private()
@@ -80,33 +74,28 @@ export class Driver extends Class.Null implements Mapping.Driver {
     if (this.apiKey) {
       input.headers[this.apiKeyHeader] = this.apiKey;
     }
-    if (window !== void 0) {
-      return Request.Frontend.request(input);
-    } else {
-      return Request.Backend.request(input);
-    }
+    return window !== void 0 ? Request.Frontend.request(input) : Request.Backend.request(input);
   }
 
   /**
    * Gets a new request path based on the specified route entity.
    * @param route Route entity.
-   * @returns Returns the generated path.
+   * @returns Returns the generated request path.
    */
   @Class.Private()
   private getPath(route: Route): string {
-    const variables = <Mapping.Types.Entity>{
-      model: `/${Mapping.Schema.getStorage(route.model)}`,
-      query: route.query ? `/${route.query}` : '',
-      id: route.id ? `/${route.id}` : ''
-    };
-    let path;
-    if (this.apiPath) {
-      path = this.apiPath.replace(/{model}|{query}|{id}/g, (match: string) => variables[match.substr(1, match.length - 2)]);
-    } else {
-      path = `${variables.model}${variables.id}${variables.query}`;
+    const assigned = <Mapping.Types.Entity>{};
+    const path = Mapping.Schema.getStorage(route.model).replace(/{query}|{id}/g, (match: string) => {
+      const name = match.substr(1, match.length - 2);
+      const variable = (<Mapping.Types.Entity>route)[name];
+      return variable !== void 0 ? ((assigned[name] = true), variable) : '';
+    });
+    if (!assigned.id && route.id !== void 0 && route.id.length > 0) {
+      return Path.normalize(`/${path}/${route.id}`);
+    } else if (!assigned.query && route.query !== void 0 && route.query.length > 0) {
+      return Path.normalize(`/${path}/${route.query}`);
     }
-    this.apiPath = void 0;
-    return Path.normalize(path);
+    return Path.normalize(`/${path}`);
   }
 
   /**
@@ -159,21 +148,6 @@ export class Driver extends Class.Null implements Mapping.Driver {
   }
 
   /**
-   * Sets a temporary path for the next request.
-   * Variables:
-   *  {model} - It will be replaced by the entity name.
-   *  {query} - It will be replaced by the request query.
-   *  {id}    - It will be replaced by the request ID.
-   * @param path Path to be set.
-   * @returns Returns the own instance.
-   */
-  @Class.Public()
-  public usePath(path: string): Driver {
-    this.apiPath = Path.normalize(`/${path}`);
-    return this;
-  }
-
-  /**
    * Connect to the API.
    * @param url Api URL.
    * @param key Api key.
@@ -201,7 +175,7 @@ export class Driver extends Class.Null implements Mapping.Driver {
       if (response.status.code !== 201) {
         await this.errorSubject.notifyAll((this.errorResponse = response));
       } else if (!(response.body instanceof Object) || typeof (<Mapping.Types.Entity>response.body).id !== 'string') {
-        throw new Error(`The response body must be an object containing the inserted id.`);
+        throw new Error(`The response body must be an object containing the insertion id.`);
       } else {
         list.push(response.body.id);
       }
@@ -225,9 +199,8 @@ export class Driver extends Class.Null implements Mapping.Driver {
       return await this.errorSubject.notifyAll((this.errorResponse = response)), [];
     } else if (!(response.body instanceof Array)) {
       throw new Error(`The response body must be an array containing the search results.`);
-    } else {
-      return <T[]>response.body;
     }
+    return <T[]>response.body;
   }
 
   /**
@@ -239,13 +212,12 @@ export class Driver extends Class.Null implements Mapping.Driver {
    */
   @Class.Public()
   public async findById<T extends Mapping.Types.Entity>(model: Mapping.Types.Model<T>, views: string[], id: any): Promise<T | undefined> {
-    const path = this.getPath({ model: model, id: id, query: Filters.toURL(model, views) });
+    const path = this.getPath({ model: model, id: id.toString(), query: Filters.toURL(model, views) });
     const response = await this.request('GET', path);
     if (response.status.code !== 200) {
       return await this.errorSubject.notifyAll((this.errorResponse = response)), void 0;
-    } else {
-      return <T>response.body;
     }
+    return <T>response.body;
   }
 
   /**
@@ -262,9 +234,8 @@ export class Driver extends Class.Null implements Mapping.Driver {
     const response = await this.request('PATCH', path, entity);
     if (response.status.code !== 200) {
       return await this.errorSubject.notifyAll((this.errorResponse = response)), 0;
-    } else {
-      return parseInt(<string>response.headers[this.apiCountHeader]) || 0;
     }
+    return parseInt(<string>response.headers[this.apiCountHeader]) || 0;
   }
 
   /**
@@ -277,13 +248,12 @@ export class Driver extends Class.Null implements Mapping.Driver {
    */
   @Class.Public()
   public async updateById(model: Mapping.Types.Model, views: string[], id: any, entity: Mapping.Types.Entity): Promise<boolean> {
-    const path = this.getPath({ model: model, id: id, query: Filters.toURL(model, views) });
+    const path = this.getPath({ model: model, id: id.toString(), query: Filters.toURL(model, views) });
     const response = await this.request('PATCH', path, entity);
     if (response.status.code !== 204) {
       return await this.errorSubject.notifyAll((this.errorResponse = response)), false;
-    } else {
-      return true;
     }
+    return true;
   }
 
   /**
@@ -298,9 +268,8 @@ export class Driver extends Class.Null implements Mapping.Driver {
     const response = await this.request('DELETE', path);
     if (response.status.code !== 200 && response.status.code !== 204) {
       return await this.errorSubject.notifyAll((this.errorResponse = response)), 0;
-    } else {
-      return parseInt(<string>response.headers[this.apiCountHeader]) || 0;
     }
+    return parseInt(<string>response.headers[this.apiCountHeader]) || 0;
   }
 
   /**
@@ -311,21 +280,20 @@ export class Driver extends Class.Null implements Mapping.Driver {
    */
   @Class.Public()
   public async deleteById(model: Mapping.Types.Model, id: any): Promise<boolean> {
-    const path = this.getPath({ model: model, id: id });
+    const path = this.getPath({ model: model, id: id.toString() });
     const response = await this.request('DELETE', path);
     if (response.status.code !== 200 && response.status.code !== 204) {
       return await this.errorSubject.notifyAll((this.errorResponse = response)), false;
-    } else {
-      return true;
     }
+    return true;
   }
 
   /**
-   * Count all corresponding entities using the a HEAD request
+   * Count all corresponding entities using the a HEAD request.
    * @param model Model type.
    * @param views View modes.
    * @param filter Field filter.
-   * @returns Returns a promise to get the total of found entities.
+   * @returns Returns a promise to get the total amount of found entities.
    */
   @Class.Public()
   public async count(model: Mapping.Types.Model, views: string[], filter: Mapping.Statements.Filter): Promise<number> {
@@ -333,8 +301,7 @@ export class Driver extends Class.Null implements Mapping.Driver {
     const response = await this.request('HEAD', path);
     if (response.status.code !== 204) {
       return await this.errorSubject.notifyAll((this.errorResponse = response)), 0;
-    } else {
-      return parseInt(<string>response.headers[this.apiCountHeader]) || 0;
     }
+    return parseInt(<string>response.headers[this.apiCountHeader]) || 0;
   }
 }

@@ -11,6 +11,11 @@ const Class = require("@singleware/class");
  * Backend client class.
  */
 let Backend = class Backend extends Class.Null {
+    /**
+     * Request a new response from the API using a backend HTTP client.
+     * @param input Request input.
+     * @returns Returns the request output.
+     */
     static async request(input) {
         const url = new URL(input.url);
         const client = require(url.protocol);
@@ -20,23 +25,25 @@ let Backend = class Backend extends Class.Null {
             input.headers['Content-Length'] = data.length.toString();
         }
         return new Promise((resolve, reject) => {
-            const request = client.request({
+            const options = {
                 method: input.method,
                 headers: input.headers,
                 protocol: url.protocol,
                 port: url.port,
                 host: url.hostname,
                 path: url.pathname
-            }, (response) => {
+            };
+            const request = client.request(options, (response) => {
                 let body = '';
-                response.setEncoding('utf8');
-                response.on('error', (error) => {
-                    reject(error);
-                });
-                response.on('data', (data) => {
+                response
+                    .setEncoding('utf8')
+                    .on('data', (data) => {
                     body += data;
-                });
-                response.on('end', () => {
+                })
+                    .on('error', (error) => {
+                    reject(error);
+                })
+                    .on('end', () => {
                     resolve({
                         input: input,
                         status: {

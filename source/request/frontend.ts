@@ -7,21 +7,32 @@ import * as Class from '@singleware/class';
 import * as Response from '../response';
 
 import { Input } from './input';
+import { Headers as ResponseHeaders } from '../headers';
 
 /**
  * Frontend client class.
  */
 @Class.Describe()
 export class Frontend extends Class.Null {
+  /**
+   * Get all the response headers as a native headers map.
+   * @param headers Non-native headers object.
+   * @returns Returns the native headers map.
+   */
   @Class.Private()
-  private static getHeaders(headers: Headers): any {
-    const data = <any>{};
+  private static getHeaders(headers: Headers): ResponseHeaders {
+    const data = <ResponseHeaders>{};
     for (const name in headers) {
       data[name] = <string>headers.get(name);
     }
     return data;
   }
 
+  /**
+   * Request a new response from the API using a frontend HTTP client.
+   * @param input Request input.
+   * @returns Returns the request output.
+   */
   @Class.Public()
   public static async request(input: Input): Promise<Response.Output> {
     const response = await fetch(input.url, {

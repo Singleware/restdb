@@ -56,33 +56,27 @@ let Driver = class Driver extends Class.Null {
         if (this.apiKey) {
             input.headers[this.apiKeyHeader] = this.apiKey;
         }
-        if (window !== void 0) {
-            return Request.Frontend.request(input);
-        }
-        else {
-            return Request.Backend.request(input);
-        }
+        return window !== void 0 ? Request.Frontend.request(input) : Request.Backend.request(input);
     }
     /**
      * Gets a new request path based on the specified route entity.
      * @param route Route entity.
-     * @returns Returns the generated path.
+     * @returns Returns the generated request path.
      */
     getPath(route) {
-        const variables = {
-            model: `/${Mapping.Schema.getStorage(route.model)}`,
-            query: route.query ? `/${route.query}` : '',
-            id: route.id ? `/${route.id}` : ''
-        };
-        let path;
-        if (this.apiPath) {
-            path = this.apiPath.replace(/{model}|{query}|{id}/g, (match) => variables[match.substr(1, match.length - 2)]);
+        const assigned = {};
+        const path = Mapping.Schema.getStorage(route.model).replace(/{query}|{id}/g, (match) => {
+            const name = match.substr(1, match.length - 2);
+            const variable = route[name];
+            return variable !== void 0 ? ((assigned[name] = true), variable) : '';
+        });
+        if (!assigned.id && route.id !== void 0 && route.id.length > 0) {
+            return Path.normalize(`/${path}/${route.id}`);
         }
-        else {
-            path = `${variables.model}${variables.id}${variables.query}`;
+        else if (!assigned.query && route.query !== void 0 && route.query.length > 0) {
+            return Path.normalize(`/${path}/${route.query}`);
         }
-        this.apiPath = void 0;
-        return Path.normalize(path);
+        return Path.normalize(`/${path}`);
     }
     /**
      * Gets the error subject.
@@ -124,19 +118,6 @@ let Driver = class Driver extends Class.Null {
         return this;
     }
     /**
-     * Sets a temporary path for the next request.
-     * Variables:
-     *  {model} - It will be replaced by the entity name.
-     *  {query} - It will be replaced by the request query.
-     *  {id}    - It will be replaced by the request ID.
-     * @param path Path to be set.
-     * @returns Returns the own instance.
-     */
-    usePath(path) {
-        this.apiPath = Path.normalize(`/${path}`);
-        return this;
-    }
-    /**
      * Connect to the API.
      * @param url Api URL.
      * @param key Api key.
@@ -162,7 +143,7 @@ let Driver = class Driver extends Class.Null {
                 await this.errorSubject.notifyAll((this.errorResponse = response));
             }
             else if (!(response.body instanceof Object) || typeof response.body.id !== 'string') {
-                throw new Error(`The response body must be an object containing the inserted id.`);
+                throw new Error(`The response body must be an object containing the insertion id.`);
             }
             else {
                 list.push(response.body.id);
@@ -187,9 +168,7 @@ let Driver = class Driver extends Class.Null {
         else if (!(response.body instanceof Array)) {
             throw new Error(`The response body must be an array containing the search results.`);
         }
-        else {
-            return response.body;
-        }
+        return response.body;
     }
     /**
      * Find the entity that corresponds to the specified id using a GET request.
@@ -199,14 +178,12 @@ let Driver = class Driver extends Class.Null {
      * @returns Returns a promise to get the found entity or undefined when the entity was not found.
      */
     async findById(model, views, id) {
-        const path = this.getPath({ model: model, id: id, query: filters_1.Filters.toURL(model, views) });
+        const path = this.getPath({ model: model, id: id.toString(), query: filters_1.Filters.toURL(model, views) });
         const response = await this.request('GET', path);
         if (response.status.code !== 200) {
             return await this.errorSubject.notifyAll((this.errorResponse = response)), void 0;
         }
-        else {
-            return response.body;
-        }
+        return response.body;
     }
     /**
      * Update all entities that corresponds to the specified matching fields using a PATCH request.
@@ -222,9 +199,7 @@ let Driver = class Driver extends Class.Null {
         if (response.status.code !== 200) {
             return await this.errorSubject.notifyAll((this.errorResponse = response)), 0;
         }
-        else {
-            return parseInt(response.headers[this.apiCountHeader]) || 0;
-        }
+        return parseInt(response.headers[this.apiCountHeader]) || 0;
     }
     /**
      * Update the entity that corresponds to the specified id using a PATCH request.
@@ -235,14 +210,12 @@ let Driver = class Driver extends Class.Null {
      * @returns Returns a promise to get the true when the entity has been updated or false otherwise.
      */
     async updateById(model, views, id, entity) {
-        const path = this.getPath({ model: model, id: id, query: filters_1.Filters.toURL(model, views) });
+        const path = this.getPath({ model: model, id: id.toString(), query: filters_1.Filters.toURL(model, views) });
         const response = await this.request('PATCH', path, entity);
         if (response.status.code !== 204) {
             return await this.errorSubject.notifyAll((this.errorResponse = response)), false;
         }
-        else {
-            return true;
-        }
+        return true;
     }
     /**
      * Delete all entities that corresponds to the specified matching fields using a DELETE request.
@@ -256,9 +229,7 @@ let Driver = class Driver extends Class.Null {
         if (response.status.code !== 200 && response.status.code !== 204) {
             return await this.errorSubject.notifyAll((this.errorResponse = response)), 0;
         }
-        else {
-            return parseInt(response.headers[this.apiCountHeader]) || 0;
-        }
+        return parseInt(response.headers[this.apiCountHeader]) || 0;
     }
     /**
      * Delete the entity that corresponds to the specified id using a DELETE request.
@@ -267,21 +238,19 @@ let Driver = class Driver extends Class.Null {
      * @return Returns a promise to get the true when the entity has been deleted or false otherwise.
      */
     async deleteById(model, id) {
-        const path = this.getPath({ model: model, id: id });
+        const path = this.getPath({ model: model, id: id.toString() });
         const response = await this.request('DELETE', path);
         if (response.status.code !== 200 && response.status.code !== 204) {
             return await this.errorSubject.notifyAll((this.errorResponse = response)), false;
         }
-        else {
-            return true;
-        }
+        return true;
     }
     /**
-     * Count all corresponding entities using the a HEAD request
+     * Count all corresponding entities using the a HEAD request.
      * @param model Model type.
      * @param views View modes.
      * @param filter Field filter.
-     * @returns Returns a promise to get the total of found entities.
+     * @returns Returns a promise to get the total amount of found entities.
      */
     async count(model, views, filter) {
         const path = this.getPath({ model: model, query: filters_1.Filters.toURL(model, views, filter) });
@@ -289,17 +258,12 @@ let Driver = class Driver extends Class.Null {
         if (response.status.code !== 204) {
             return await this.errorSubject.notifyAll((this.errorResponse = response)), 0;
         }
-        else {
-            return parseInt(response.headers[this.apiCountHeader]) || 0;
-        }
+        return parseInt(response.headers[this.apiCountHeader]) || 0;
     }
 };
 __decorate([
     Class.Private()
 ], Driver.prototype, "apiUrl", void 0);
-__decorate([
-    Class.Private()
-], Driver.prototype, "apiPath", void 0);
 __decorate([
     Class.Private()
 ], Driver.prototype, "apiKey", void 0);
@@ -336,9 +300,6 @@ __decorate([
 __decorate([
     Class.Public()
 ], Driver.prototype, "useCountHeaderName", null);
-__decorate([
-    Class.Public()
-], Driver.prototype, "usePath", null);
 __decorate([
     Class.Public()
 ], Driver.prototype, "connect", null);

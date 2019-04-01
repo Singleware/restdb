@@ -15,6 +15,11 @@ const Class = require("@singleware/class");
  * Frontend client class.
  */
 let Frontend = class Frontend extends Class.Null {
+    /**
+     * Get all the response headers as a native headers map.
+     * @param headers Non-native headers object.
+     * @returns Returns the native headers map.
+     */
     static getHeaders(headers) {
         const data = {};
         for (const name in headers) {
@@ -22,6 +27,11 @@ let Frontend = class Frontend extends Class.Null {
         }
         return data;
     }
+    /**
+     * Request a new response from the API using a frontend HTTP client.
+     * @param input Request input.
+     * @returns Returns the request output.
+     */
     static async request(input) {
         const response = await fetch(input.url, {
             method: input.method,

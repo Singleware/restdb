@@ -22,239 +22,229 @@ export class Filters extends Class.Null {
    * Magic views prefix.
    */
   @Class.Private()
-  private static ViewsPrefix = 'v';
+  private static ViewsPrefix = 'views';
 
   /**
    * Magic pre-match prefix.
    */
   @Class.Private()
-  private static PreMatchPrefix = 'b';
+  private static PreMatchPrefix = 'pre';
 
   /**
    * Magic post-match prefix.
    */
   @Class.Private()
-  private static PostMatchPrefix = 'a';
+  private static PostMatchPrefix = 'post';
 
   /**
    * Magic sort prefix.
    */
   @Class.Private()
-  private static SortPrefix = 's';
+  private static SortPrefix = 'sort';
 
   /**
    * Magic limit prefix.
    */
   @Class.Private()
-  private static LimitPrefix = 'l';
+  private static LimitPrefix = 'limit';
 
   /**
-   * Packs the specified view modes into the given query list.
-   * @param queries Query list.
+   * Packs the specified list of view modes into a parameterized array of view modes.
    * @param views View modes.
+   * @returns Returns the parameterized array of view modes.
    */
   @Class.Private()
-  private static packViews(queries: string[], views: string[]): void {
-    const list = views.filter(view => view !== Mapping.Types.View.ALL);
-    if (list.length > 0) {
-      queries.push(`${this.ViewsPrefix}/${list.join(';')}`);
+  private static packViewModes(views: string[]): (string | number)[] {
+    return [this.ViewsPrefix, views.length, ...views];
+  }
+
+  /**
+   * Unpacks the parameterized array of view modes into a list of view modes.
+   * @param array Parameterized array of view modes.
+   * @returns Returns the list of view modes.
+   * @throws Throws an error when there are invalid serialized data.
+   */
+  @Class.Private()
+  private static unpackViewModes(array: string[]): string[] {
+    if (this.ViewsPrefix !== array.pop()) {
+      throw new Error(`Invalid magic prefix for the given array of view modes.`);
     }
+    const length = parseInt(<string>array.pop());
+    if (array.length < length) {
+      throw new Error(`Invalid size for the given array of view modes.`);
+    }
+    const views = [];
+    for (let i = 0; i < length; ++i) {
+      views.push(<string>array.pop());
+    }
+    return views;
   }
 
   /**
-   * Unpacks the specified view modes string into a new view modes list.
-   * @param views View modes string.
-   * @returns Returns the generated list of view modes.
-   */
-  @Class.Private()
-  private static unpackViews(views: string): string[] {
-    return views.split(';');
-  }
-
-  /**
-   * Packs the specified match rule entity according to the specified fields and model type.
+   * Packs the specified matching rules into a parameterized array of matching rules.
    * @param model Model type.
-   * @param match Matching fields.
-   * @returns Returns the match rule string.
+   * @param match Matching rules.
+   * @returns Returns the parameterized array of matching rules.
+   * @throws Throws an error when there are invalid matching operator codes.
    */
   @Class.Private()
-  private static packMatchRule(model: Mapping.Types.Model, match: Mapping.Statements.Match): string {
-    let matches = [];
-    for (const name in match) {
-      const schema = Mapping.Schema.getRealColumn(model, name);
-      const operation = match[name];
-      const expression = `${schema.name}:${operation.operator}`;
-      switch (operation.operator) {
-        case Mapping.Statements.Operator.REGEX:
-        case Mapping.Statements.Operator.LESS:
-        case Mapping.Statements.Operator.LESS_OR_EQUAL:
-        case Mapping.Statements.Operator.EQUAL:
-        case Mapping.Statements.Operator.NOT_EQUAL:
-        case Mapping.Statements.Operator.GREATER_OR_EQUAL:
-        case Mapping.Statements.Operator.GREATER:
-          matches.push(`${expression}:${encodeURIComponent(operation.value)}`);
-          break;
-        case Mapping.Statements.Operator.BETWEEN:
-        case Mapping.Statements.Operator.CONTAIN:
-        case Mapping.Statements.Operator.NOT_CONTAIN:
-          matches.push(`${expression}:${[...operation.value].map(item => encodeURIComponent(item)).join(',')}`);
-          break;
+  private static packMatchRules(prefix: string, model: Mapping.Types.Model, match: Mapping.Statements.Match | Mapping.Statements.Match[]): (number | string)[] {
+    const rules = [];
+    let total = 0;
+    for (const fields of match instanceof Array ? match : [match]) {
+      const expression = [];
+      let length = 0;
+      for (const name in fields) {
+        const schema = Mapping.Schema.getRealColumn(model, name);
+        const operation = fields[name];
+        expression.push(schema.name, operation.operator);
+        length++;
+        switch (operation.operator) {
+          case Mapping.Statements.Operator.REGEX:
+          case Mapping.Statements.Operator.LESS:
+          case Mapping.Statements.Operator.LESS_OR_EQUAL:
+          case Mapping.Statements.Operator.EQUAL:
+          case Mapping.Statements.Operator.NOT_EQUAL:
+          case Mapping.Statements.Operator.GREATER_OR_EQUAL:
+          case Mapping.Statements.Operator.GREATER:
+            expression.push(encodeURIComponent(operation.value));
+            break;
+          case Mapping.Statements.Operator.BETWEEN:
+          case Mapping.Statements.Operator.CONTAIN:
+          case Mapping.Statements.Operator.NOT_CONTAIN:
+            expression.push(operation.value.length, (<any[]>operation.value).map(item => encodeURIComponent(item)));
+            break;
+          default:
+            throw new TypeError(`Invalid operator '${operation.operator}' for the match operation.`);
+        }
+      }
+      if (length > 0) {
+        rules.push(length, ...expression);
+        total++;
       }
     }
-    return matches.join(';');
+    return [prefix, total, ...rules];
   }
 
   /**
-   * Unpacks the specified match rule string according to the specified model type.
+   * Unpacks the parameterized array of matching rules into the matching rules.
    * @param model Model type.
-   * @param match Match string.
-   * @returns Returns the generated match entity.
-   * @throws @throws Throws an error when there are unsupported orders in the match string.
+   * @param array Parameterized array of matching rules.
+   * @returns Returns the generated matching rules.
+   * @throws Throws an error when there are invalid serialized data.
    */
   @Class.Private()
-  private static unpackMatchRule(model: Mapping.Types.Model, match: string): Mapping.Statements.Match {
-    const newer = <Mapping.Statements.Match>{};
-    const fields = match.split(';');
-    for (const field of fields) {
-      const [name, operator, value] = field.split(':', 3);
-      const code = parseInt(operator);
-      const schema = Mapping.Schema.getRealColumn(model, name);
-      switch (code) {
-        case Mapping.Statements.Operator.REGEX:
-        case Mapping.Statements.Operator.LESS:
-        case Mapping.Statements.Operator.LESS_OR_EQUAL:
-        case Mapping.Statements.Operator.EQUAL:
-        case Mapping.Statements.Operator.NOT_EQUAL:
-        case Mapping.Statements.Operator.GREATER_OR_EQUAL:
-        case Mapping.Statements.Operator.GREATER:
-          newer[schema.name] = { operator: code, value: decodeURIComponent(value) };
-          break;
-        case Mapping.Statements.Operator.BETWEEN:
-        case Mapping.Statements.Operator.CONTAIN:
-        case Mapping.Statements.Operator.NOT_CONTAIN:
-          newer[schema.name] = { operator: code, value: value.split(',').map(value => decodeURIComponent(value)) };
-          break;
-        default:
-          throw new Error(`Match operator code '${code}' doesn't supported.`);
+  private static unpackMatchRules(prefix: string, model: Mapping.Types.Model, array: string[]): Mapping.Statements.Match | Mapping.Statements.Match[] {
+    if (prefix !== array.pop()) {
+      throw new Error(`Invalid magic prefix for the given array of matching lists.`);
+    }
+    const match = [];
+    for (let total = parseInt(<string>array.pop()); total > 0; --total) {
+      const fields = <Mapping.Statements.Match>{};
+      for (let length = parseInt(<string>array.pop()); length > 0; --length) {
+        const name = <string>array.pop();
+        const operator = parseInt(<string>array.pop());
+        const schema = Mapping.Schema.getRealColumn(model, name);
+        switch (operator) {
+          case Mapping.Statements.Operator.REGEX:
+          case Mapping.Statements.Operator.LESS:
+          case Mapping.Statements.Operator.LESS_OR_EQUAL:
+          case Mapping.Statements.Operator.EQUAL:
+          case Mapping.Statements.Operator.NOT_EQUAL:
+          case Mapping.Statements.Operator.GREATER_OR_EQUAL:
+          case Mapping.Statements.Operator.GREATER:
+            fields[schema.name] = { operator: operator, value: decodeURIComponent(<string>array.pop()) };
+            break;
+          case Mapping.Statements.Operator.BETWEEN:
+          case Mapping.Statements.Operator.CONTAIN:
+          case Mapping.Statements.Operator.NOT_CONTAIN:
+            const length = parseInt(<string>array.pop());
+            const values = [];
+            for (let i = 0; i < length; ++i) {
+              values.push(decodeURIComponent(<string>array.pop()));
+            }
+            fields[schema.name] = { operator: operator, value: values };
+            break;
+          default:
+            throw new TypeError(`Invalid operator code for the match operation.`);
+        }
       }
+      match.push(fields);
     }
-    return newer;
+    return match.length === 1 ? match[0] : match;
   }
 
   /**
-   * Packs the specified pre-match into the query list according to the given model type.
+   * Packs the specified sorting fields into a parameterized array of sorting fields.
    * @param model Model type.
-   * @param queries Query list.
-   * @param match Matching fields.
+   * @param sort Sorting fields.
+   * @returns Returns the parameterized array of sorting fields.
    */
   @Class.Private()
-  private static packPreMatch(model: Mapping.Types.Model, queries: string[], match: Mapping.Statements.Match | Mapping.Statements.Match[]): void {
-    const matches = (match instanceof Array ? match : [match]).map((match: Mapping.Statements.Match) => this.packMatchRule(model, match));
-    if (matches.length) {
-      queries.push(`${this.PreMatchPrefix}/${matches.join('|')}`);
-    }
-  }
-
-  /**
-   * Packs the specified post-match into the query list according to the given model type.
-   * @param model Model type.
-   * @param queries Query list.
-   * @param match Matching fields.
-   */
-  @Class.Private()
-  private static packPostMatch(model: Mapping.Types.Model, queries: string[], match: Mapping.Statements.Match | Mapping.Statements.Match[]): void {
-    const matches = (match instanceof Array ? match : [match]).map((match: Mapping.Statements.Match) => this.packMatchRule(model, match));
-    if (matches.length) {
-      queries.push(`${this.PostMatchPrefix}/${matches.join('|')}`);
-    }
-  }
-
-  /**
-   * Unpacks the specified match string according to the specified model type.
-   * @param model Model type.
-   * @param match Match string.
-   * @returns Returns a single generated match entity or the generated match entity list.
-   */
-  @Class.Private()
-  private static unpackMatch(model: Mapping.Types.Model, match: string): Mapping.Statements.Match | Mapping.Statements.Match[] {
-    const newer = <Mapping.Statements.Match[]>[];
-    const matches = match.split('|');
-    for (const match of matches) {
-      newer.push(this.unpackMatchRule(model, match));
-    }
-    if (newer.length === 1) {
-      return newer[0];
-    } else {
-      return newer;
-    }
-  }
-
-  /**
-   * Packs the specified sort entity according to the specified model type.
-   * @param model Model type.
-   * @param queries Query list.
-   * @param sort Sorting order.
-   */
-  @Class.Private()
-  private static packSort(model: Mapping.Types.Model, queries: string[], sort: Mapping.Statements.Sort): void {
-    let parts = [];
+  private static packSort(model: Mapping.Types.Model, sort: Mapping.Statements.Sort): (number | string)[] {
+    const fields = [];
+    let total = 0;
     for (const name in sort) {
       const schema = Mapping.Schema.getRealColumn(model, name);
-      parts.push(`${schema.name}:${sort[name]}`);
+      const order = sort[name];
+      fields.push(schema.name, order);
     }
-    if (parts.length) {
-      queries.push(`${this.SortPrefix}/${parts.join(';')}`);
-    }
+    return [this.SortPrefix, total, ...fields];
   }
 
   /**
-   * Unpacks the specified sort string according to the specified model type.
+   * Unpacks the parameterized array of sorting fields into the sorting fields.
    * @param model Model type.
-   * @param sort Sort string.
-   * @returns Returns the generated sort entity.
-   * @throws Throws an error when there are unsupported orders in the specified sort string.
+   * @param array Parameterized array of sorting fields.
+   * @returns Returns the generated sorting fields.
+   * @throws Throws an error when there are invalid serialized data.
    */
   @Class.Private()
-  private static unpackSort(model: Mapping.Types.Model, sort: string): Mapping.Statements.Sort {
+  private static unpackSort(model: Mapping.Types.Model, array: string[]): Mapping.Statements.Sort {
+    if (this.SortPrefix !== array.pop()) {
+      throw new Error(`Invalid magic prefix for the given array of sorting list.`);
+    }
     const newer = <Mapping.Statements.Sort>{};
-    const fields = sort.split(';');
-    for (const field of fields) {
-      const [name, order] = field.split(':', 2);
-      const code = parseInt(order);
+    for (let total = parseInt(<string>array.pop()); total > 0; --total) {
+      const name = <string>array.pop();
+      const order = parseInt(<string>array.pop());
       const schema = Mapping.Schema.getRealColumn(model, name);
-      switch (code) {
+      switch (order) {
         case Mapping.Statements.Order.ASCENDING:
         case Mapping.Statements.Order.DESCENDING:
-          newer[schema.name] = code;
+          newer[schema.name] = order;
           break;
         default:
-          throw new Error(`Sorting order code '${code}' doesn't supported.`);
+          throw new Error(`Invalid sorting order code.`);
       }
     }
     return newer;
   }
 
   /**
-   * Packs the specified limit entity.
-   * @param queries Query list.
+   * Packs the specified limit entity into a parameterized array of limits.
    * @param limit Limit entity.
+   * @returns Returns the parameterized array of limits.
    */
   @Class.Private()
-  private static packLimit(queries: string[], limit: Mapping.Statements.Limit): void {
-    queries.push(`${this.LimitPrefix}/${limit.start || 0};${limit.count || 0}`);
+  private static packLimit(limit: Mapping.Statements.Limit): (string | number)[] {
+    return [this.LimitPrefix, limit.start || 0, limit.count || 0];
   }
 
   /**
-   * Unpacks the specified limit string.
-   * @param limit Limit string.
+   * Unpacks the parameterized array of limits into the limit entity.
+   * @param array Parameterized array of limits.
    * @returns Returns the generated limit entity.
+   * @throws Throws an error when there are invalid serialized data.
    */
   @Class.Private()
-  private static unpackLimit(limit: string): Mapping.Statements.Limit {
-    const [start, count] = limit.split(';', 2);
+  private static unpackLimit(array: string[]): Mapping.Statements.Limit {
+    if (this.LimitPrefix !== array.pop()) {
+      throw new Error(`Invalid magic prefix for the given array of limits.`);
+    }
     return {
-      start: parseInt(start),
-      count: parseInt(count)
+      start: parseInt(<string>array.pop()) || 0,
+      count: parseInt(<string>array.pop()) || 0
     };
   }
 
@@ -267,22 +257,22 @@ export class Filters extends Class.Null {
    */
   @Class.Public()
   public static toURL(model: Mapping.Types.Model, views: string[], filter?: Mapping.Statements.Filter): string {
-    const queries = <string[]>[];
-    if (views.length) {
-      this.packViews(queries, views);
+    const queries = <(string | number)[]>[];
+    if (views.length > 1 || views[0] !== Mapping.Types.View.ALL) {
+      queries.push(...this.packViewModes(views));
     }
     if (filter) {
       if (filter.pre) {
-        this.packPreMatch(model, queries, filter.pre);
+        queries.push(...this.packMatchRules(this.PreMatchPrefix, model, filter.pre));
       }
       if (filter.post) {
-        this.packPostMatch(model, queries, filter.post);
+        queries.push(...this.packMatchRules(this.PostMatchPrefix, model, filter.post));
       }
       if (filter.sort) {
-        this.packSort(model, queries, filter.sort);
+        queries.push(...this.packSort(model, filter.sort));
       }
       if (filter.limit) {
-        this.packLimit(queries, filter.limit);
+        queries.push(...this.packLimit(filter.limit));
       }
     }
     return queries.length ? `${this.QueryPrefix}/${queries.join('/')}` : ``;
@@ -293,7 +283,7 @@ export class Filters extends Class.Null {
    * @param model Model type.
    * @param url Query URL.
    * @returns Returns the generated query entity.
-   * @throws Throws an error when there are unsupported data in the specified URL.
+   * @throws Throws an error when there are unsupported data serialization in the specified URL.
    */
   @Class.Public()
   public static fromURL(model: Mapping.Types.Model, url: string): Query {
@@ -301,25 +291,24 @@ export class Filters extends Class.Null {
     const parts = url.split('/').reverse();
     if (parts.pop() === this.QueryPrefix) {
       while (parts.length) {
-        const data = parts.pop();
-        switch (data) {
-          case this.ViewsPrefix:
-            result.views = this.unpackViews(<string>parts.pop());
-            break;
+        switch (parts[parts.length - 1]) {
           case this.PreMatchPrefix:
-            result.pre = this.unpackMatch(model, <string>parts.pop());
+            result.pre = this.unpackMatchRules(this.PreMatchPrefix, model, parts);
             break;
           case this.PostMatchPrefix:
-            result.post = this.unpackMatch(model, <string>parts.pop());
+            result.post = this.unpackMatchRules(this.PostMatchPrefix, model, parts);
             break;
           case this.SortPrefix:
-            result.sort = this.unpackSort(model, <string>parts.pop());
+            result.sort = this.unpackSort(model, parts);
             break;
           case this.LimitPrefix:
-            result.limit = this.unpackLimit(<string>parts.pop());
+            result.limit = this.unpackLimit(parts);
+            break;
+          case this.ViewsPrefix:
+            result.views = this.unpackViewModes(parts);
             break;
           default:
-            throw new Error(`Serialized data type '${data}' does not supported.`);
+            throw new Error(`Unsupported data serialization type.`);
         }
       }
     }

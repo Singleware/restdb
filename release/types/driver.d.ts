@@ -11,10 +11,6 @@ export declare class Driver extends Class.Null implements Mapping.Driver {
      */
     private apiUrl?;
     /**
-     * Temporary path for the next request.
-     */
-    private apiPath?;
-    /**
      * Key for authenticated requests.
      */
     private apiKey?;
@@ -45,7 +41,7 @@ export declare class Driver extends Class.Null implements Mapping.Driver {
     /**
      * Gets a new request path based on the specified route entity.
      * @param route Route entity.
-     * @returns Returns the generated path.
+     * @returns Returns the generated request path.
      */
     private getPath;
     /**
@@ -74,16 +70,6 @@ export declare class Driver extends Class.Null implements Mapping.Driver {
      * @returns Returns the own instance.
      */
     useCountHeaderName(header: string): Driver;
-    /**
-     * Sets a temporary path for the next request.
-     * Variables:
-     *  {model} - It will be replaced by the entity name.
-     *  {query} - It will be replaced by the request query.
-     *  {id}    - It will be replaced by the request ID.
-     * @param path Path to be set.
-     * @returns Returns the own instance.
-     */
-    usePath(path: string): Driver;
     /**
      * Connect to the API.
      * @param url Api URL.
@@ -149,11 +135,11 @@ export declare class Driver extends Class.Null implements Mapping.Driver {
      */
     deleteById(model: Mapping.Types.Model, id: any): Promise<boolean>;
     /**
-     * Count all corresponding entities using the a HEAD request
+     * Count all corresponding entities using the a HEAD request.
      * @param model Model type.
      * @param views View modes.
      * @param filter Field filter.
-     * @returns Returns a promise to get the total of found entities.
+     * @returns Returns a promise to get the total amount of found entities.
      */
     count(model: Mapping.Types.Model, views: string[], filter: Mapping.Statements.Filter): Promise<number>;
 }

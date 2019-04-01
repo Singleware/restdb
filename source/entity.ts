@@ -11,9 +11,9 @@ import * as Mapping from '@singleware/mapping';
 @Class.Describe()
 export class Entity extends Class.Null {
   /**
-   * Extract all properties from the given entity list into a raw object array.
-   * @param entities Entities list.
-   * @returns Returns the new generated list.
+   * Extract all properties from the given entity array into a raw object array.
+   * @param entities Entity array.
+   * @returns Returns the new raw entity array.
    */
   @Class.Public()
   public static extractArray(entities: any[]): any[] {
@@ -25,9 +25,9 @@ export class Entity extends Class.Null {
   }
 
   /**
-   * Extract all properties from the given entity into a raw object map.
-   * @param entity Entity data.
-   * @returns Returns the new generated object.
+   * Extract all properties from the given entity map into a raw object map.
+   * @param entity Entity map.
+   * @returns Returns the new raw object map.
    */
   @Class.Public()
   public static extractMap(entity: Mapping.Types.Entity): Mapping.Types.Entity {
@@ -39,9 +39,9 @@ export class Entity extends Class.Null {
   }
 
   /**
-   * Extracts the value from the given entity into a raw value.
-   * @param value Value to be extracted.
-   * @returns Returns the new generated object.
+   * Extracts the raw value from the specified value.
+   * @param value Input value.
+   * @returns Returns the new raw value or the original value when there's no value to be extracted.
    */
   @Class.Public()
   public static extractValue(value: any): any {
