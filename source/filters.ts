@@ -158,9 +158,8 @@ export class Filters extends Class.Null {
           case Mapping.Statements.Operator.BETWEEN:
           case Mapping.Statements.Operator.CONTAIN:
           case Mapping.Statements.Operator.NOT_CONTAIN:
-            const length = parseInt(<string>array.pop());
             const values = [];
-            for (let i = 0; i < length; ++i) {
+            for (let i = parseInt(<string>array.pop()); i > 0; --i) {
               values.push(decodeURIComponent(<string>array.pop()));
             }
             fields[schema.name] = { operator: operator, value: values };
@@ -183,13 +182,12 @@ export class Filters extends Class.Null {
   @Class.Private()
   private static packSort(model: Mapping.Types.Model, sort: Mapping.Statements.Sort): (number | string)[] {
     const fields = [];
-    let total = 0;
+    let length = 0;
     for (const name in sort) {
-      const schema = Mapping.Schema.getRealColumn(model, name);
-      const order = sort[name];
-      fields.push(schema.name, order);
+      fields.push(Mapping.Schema.getRealColumn(model, name).name, sort[name]);
+      length++;
     }
-    return [this.SortPrefix, total, ...fields];
+    return [this.SortPrefix, length, ...fields];
   }
 
   /**
@@ -204,21 +202,21 @@ export class Filters extends Class.Null {
     if (this.SortPrefix !== array.pop()) {
       throw new Error(`Invalid magic prefix for the given array of sorting list.`);
     }
-    const newer = <Mapping.Statements.Sort>{};
-    for (let total = parseInt(<string>array.pop()); total > 0; --total) {
+    const fields = <Mapping.Statements.Sort>{};
+    for (let length = parseInt(<string>array.pop()); length > 0; --length) {
       const name = <string>array.pop();
       const order = parseInt(<string>array.pop());
       const schema = Mapping.Schema.getRealColumn(model, name);
       switch (order) {
         case Mapping.Statements.Order.ASCENDING:
         case Mapping.Statements.Order.DESCENDING:
-          newer[schema.name] = order;
+          fields[schema.name] = order;
           break;
         default:
           throw new Error(`Invalid sorting order code.`);
       }
     }
-    return newer;
+    return fields;
   }
 
   /**
