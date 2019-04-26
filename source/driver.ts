@@ -172,7 +172,7 @@ export class Driver extends Class.Null implements Mapping.Driver {
     const path = this.getPath({ model: model, query: Filters.toURL(model, views) });
     for (const entity of entities) {
       const response = await this.request('POST', path, entity);
-      if (response.status.code !== 201) {
+      if (response.status.code !== 201 && response.status.code !== 202) {
         await this.errorSubject.notifyAll((this.errorResponse = response));
       } else if (!(response.body instanceof Object) || typeof (<Mapping.Types.Entity>response.body).id !== 'string') {
         throw new Error(`The response body must be an object containing the insertion id.`);
@@ -232,7 +232,7 @@ export class Driver extends Class.Null implements Mapping.Driver {
   public async update(model: Mapping.Types.Model, views: string[], match: Mapping.Statements.Match, entity: Mapping.Types.Entity): Promise<number> {
     const path = this.getPath({ model: model, query: Filters.toURL(model, views, { pre: match }) });
     const response = await this.request('PATCH', path, entity);
-    if (response.status.code !== 200) {
+    if (response.status.code !== 200 && response.status.code !== 202 && response.status.code !== 204) {
       return await this.errorSubject.notifyAll((this.errorResponse = response)), 0;
     }
     return parseInt(<string>response.headers[this.apiCountHeader]) || 0;
@@ -250,7 +250,7 @@ export class Driver extends Class.Null implements Mapping.Driver {
   public async updateById(model: Mapping.Types.Model, views: string[], id: any, entity: Mapping.Types.Entity): Promise<boolean> {
     const path = this.getPath({ model: model, id: id.toString(), query: Filters.toURL(model, views) });
     const response = await this.request('PATCH', path, entity);
-    if (response.status.code !== 204) {
+    if (response.status.code !== 200 && response.status.code !== 202 && response.status.code !== 204) {
       return await this.errorSubject.notifyAll((this.errorResponse = response)), false;
     }
     return true;
@@ -266,7 +266,7 @@ export class Driver extends Class.Null implements Mapping.Driver {
   public async delete(model: Mapping.Types.Model, match: Mapping.Statements.Match): Promise<number> {
     const path = this.getPath({ model: model, query: Filters.toURL(model, [], { pre: match }) });
     const response = await this.request('DELETE', path);
-    if (response.status.code !== 200 && response.status.code !== 204) {
+    if (response.status.code !== 200 && response.status.code !== 202 && response.status.code !== 204) {
       return await this.errorSubject.notifyAll((this.errorResponse = response)), 0;
     }
     return parseInt(<string>response.headers[this.apiCountHeader]) || 0;
@@ -282,7 +282,7 @@ export class Driver extends Class.Null implements Mapping.Driver {
   public async deleteById(model: Mapping.Types.Model, id: any): Promise<boolean> {
     const path = this.getPath({ model: model, id: id.toString() });
     const response = await this.request('DELETE', path);
-    if (response.status.code !== 200 && response.status.code !== 204) {
+    if (response.status.code !== 200 && response.status.code !== 202 && response.status.code !== 204) {
       return await this.errorSubject.notifyAll((this.errorResponse = response)), false;
     }
     return true;
@@ -299,7 +299,7 @@ export class Driver extends Class.Null implements Mapping.Driver {
   public async count(model: Mapping.Types.Model, views: string[], filter: Mapping.Statements.Filter): Promise<number> {
     const path = this.getPath({ model: model, query: Filters.toURL(model, views, filter) });
     const response = await this.request('HEAD', path);
-    if (response.status.code !== 204) {
+    if (response.status.code !== 200 && response.status.code !== 204) {
       return await this.errorSubject.notifyAll((this.errorResponse = response)), 0;
     }
     return parseInt(<string>response.headers[this.apiCountHeader]) || 0;

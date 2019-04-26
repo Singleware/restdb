@@ -139,7 +139,7 @@ let Driver = class Driver extends Class.Null {
         const path = this.getPath({ model: model, query: filters_1.Filters.toURL(model, views) });
         for (const entity of entities) {
             const response = await this.request('POST', path, entity);
-            if (response.status.code !== 201) {
+            if (response.status.code !== 201 && response.status.code !== 202) {
                 await this.errorSubject.notifyAll((this.errorResponse = response));
             }
             else if (!(response.body instanceof Object) || typeof response.body.id !== 'string') {
@@ -196,7 +196,7 @@ let Driver = class Driver extends Class.Null {
     async update(model, views, match, entity) {
         const path = this.getPath({ model: model, query: filters_1.Filters.toURL(model, views, { pre: match }) });
         const response = await this.request('PATCH', path, entity);
-        if (response.status.code !== 200) {
+        if (response.status.code !== 200 && response.status.code !== 202 && response.status.code !== 204) {
             return await this.errorSubject.notifyAll((this.errorResponse = response)), 0;
         }
         return parseInt(response.headers[this.apiCountHeader]) || 0;
@@ -212,7 +212,7 @@ let Driver = class Driver extends Class.Null {
     async updateById(model, views, id, entity) {
         const path = this.getPath({ model: model, id: id.toString(), query: filters_1.Filters.toURL(model, views) });
         const response = await this.request('PATCH', path, entity);
-        if (response.status.code !== 204) {
+        if (response.status.code !== 200 && response.status.code !== 202 && response.status.code !== 204) {
             return await this.errorSubject.notifyAll((this.errorResponse = response)), false;
         }
         return true;
@@ -226,7 +226,7 @@ let Driver = class Driver extends Class.Null {
     async delete(model, match) {
         const path = this.getPath({ model: model, query: filters_1.Filters.toURL(model, [], { pre: match }) });
         const response = await this.request('DELETE', path);
-        if (response.status.code !== 200 && response.status.code !== 204) {
+        if (response.status.code !== 200 && response.status.code !== 202 && response.status.code !== 204) {
             return await this.errorSubject.notifyAll((this.errorResponse = response)), 0;
         }
         return parseInt(response.headers[this.apiCountHeader]) || 0;
@@ -240,7 +240,7 @@ let Driver = class Driver extends Class.Null {
     async deleteById(model, id) {
         const path = this.getPath({ model: model, id: id.toString() });
         const response = await this.request('DELETE', path);
-        if (response.status.code !== 200 && response.status.code !== 204) {
+        if (response.status.code !== 200 && response.status.code !== 202 && response.status.code !== 204) {
             return await this.errorSubject.notifyAll((this.errorResponse = response)), false;
         }
         return true;
@@ -255,7 +255,7 @@ let Driver = class Driver extends Class.Null {
     async count(model, views, filter) {
         const path = this.getPath({ model: model, query: filters_1.Filters.toURL(model, views, filter) });
         const response = await this.request('HEAD', path);
-        if (response.status.code !== 204) {
+        if (response.status.code !== 200 && response.status.code !== 204) {
             return await this.errorSubject.notifyAll((this.errorResponse = response)), 0;
         }
         return parseInt(response.headers[this.apiCountHeader]) || 0;
