@@ -25,13 +25,13 @@
   },
   "dependencies": {
     "@singleware/class": "^1.1.19",
-    "@singleware/mapping": "^1.2.37",
+    "@singleware/mapping": "^1.2.38",
     "@singleware/observable": "^1.0.21",
     "@singleware/path": "^1.0.7"
   },
   "devDependencies": {
-    "@types/node": "^11.13.0",
-    "prettier": "^1.16.4",
+    "@types/node": "^11.13.7",
+    "prettier": "^1.17.0",
     "typescript": "^2.9.2"
   },
   "prettier": {
