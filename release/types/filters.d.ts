@@ -38,7 +38,7 @@ export declare class Filters extends Class.Null {
     /**
      * Unpacks the parameterized array of view modes into a list of view modes.
      * @param array Parameterized array of view modes.
-     * @returns Returns the list of view modes.
+     * @returns Returns the list of view modes or undefined when there no view modes.
      * @throws Throws an error when there are invalid serialized data.
      */
     private static unpackViewModes;
@@ -54,7 +54,7 @@ export declare class Filters extends Class.Null {
      * Unpacks the parameterized array of matching rules into the matching rules.
      * @param model Model type.
      * @param array Parameterized array of matching rules.
-     * @returns Returns the generated matching rules.
+     * @returns Returns the generated matching rules or undefined when there's no rules.
      * @throws Throws an error when there are invalid serialized data.
      */
     private static unpackMatchRules;

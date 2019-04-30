@@ -61,7 +61,7 @@ export class Filters extends Class.Null {
   /**
    * Unpacks the parameterized array of view modes into a list of view modes.
    * @param array Parameterized array of view modes.
-   * @returns Returns the list of view modes.
+   * @returns Returns the list of view modes or undefined when there no view modes.
    * @throws Throws an error when there are invalid serialized data.
    */
   @Class.Private()
@@ -130,11 +130,11 @@ export class Filters extends Class.Null {
    * Unpacks the parameterized array of matching rules into the matching rules.
    * @param model Model type.
    * @param array Parameterized array of matching rules.
-   * @returns Returns the generated matching rules.
+   * @returns Returns the generated matching rules or undefined when there's no rules.
    * @throws Throws an error when there are invalid serialized data.
    */
   @Class.Private()
-  private static unpackMatchRules(prefix: string, model: Mapping.Types.Model, array: string[]): Mapping.Statements.Match | Mapping.Statements.Match[] {
+  private static unpackMatchRules(prefix: string, model: Mapping.Types.Model, array: string[]): Mapping.Statements.Match | Mapping.Statements.Match[] | undefined {
     if (prefix !== array.pop()) {
       throw new Error(`Invalid magic prefix for the given array of matching lists.`);
     }
@@ -170,7 +170,10 @@ export class Filters extends Class.Null {
       }
       match.push(fields);
     }
-    return match.length === 1 ? match[0] : match;
+    if (match.length > 0) {
+      return match.length === 1 ? match[0] : match;
+    }
+    return void 0;
   }
 
   /**
