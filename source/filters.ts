@@ -112,7 +112,7 @@ export class Filters extends Class.Null {
           case Mapping.Statements.Operator.BETWEEN:
           case Mapping.Statements.Operator.CONTAIN:
           case Mapping.Statements.Operator.NOT_CONTAIN:
-            expression.push(operation.value.length, (<any[]>operation.value).map(item => encodeURIComponent(item)));
+            expression.push(operation.value.length, ...(<any[]>operation.value).map(item => encodeURIComponent(item)));
             break;
           default:
             throw new TypeError(`Invalid operator '${operation.operator}' for the match operation.`);
