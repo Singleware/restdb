@@ -22,8 +22,17 @@ export class Frontend extends Class.Null {
   @Class.Private()
   private static getHeaders(headers: Headers): ResponseHeaders {
     const data = <ResponseHeaders>{};
-    for (const name in headers) {
-      data[name] = <string>headers.get(name);
+    const entries = headers.entries();
+    for (const entry of entries) {
+      const [name, value] = entry;
+      const current = data[name];
+      if (current === void 0) {
+        data[name] = <string>headers.get(name);
+      } else if (current instanceof Array) {
+        current.push(value);
+      } else {
+        data[name] = [current];
+      }
     }
     return data;
   }

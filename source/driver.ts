@@ -36,13 +36,13 @@ export class Driver extends Class.Null implements Mapping.Driver {
    * Header name for the authentication key.
    */
   @Class.Private()
-  private apiKeyHeader = 'X-API-Key';
+  private apiKeyHeader = 'x-api-key';
 
   /**
    * Header name for the counting results.
    */
   @Class.Private()
-  private apiCountHeader = 'X-API-Count';
+  private apiCountHeader = 'x-api-count';
 
   /**
    * Last error response.
@@ -143,7 +143,7 @@ export class Driver extends Class.Null implements Mapping.Driver {
    */
   @Class.Public()
   public useCountHeaderName(header: string): Driver {
-    this.apiCountHeader = header;
+    this.apiCountHeader = header.toLowerCase();
     return this;
   }
 
@@ -198,7 +198,7 @@ export class Driver extends Class.Null implements Mapping.Driver {
     if (response.status.code !== 200) {
       return await this.errorSubject.notifyAll((this.errorResponse = response)), [];
     } else if (!(response.body instanceof Array)) {
-      throw new Error(`The response body must be an array containing the search results.`);
+      throw new Error(`The response body must be an array containing the search result.`);
     }
     return <T[]>response.body;
   }

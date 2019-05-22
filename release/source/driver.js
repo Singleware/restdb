@@ -29,11 +29,11 @@ let Driver = class Driver extends Class.Null {
         /**
          * Header name for the authentication key.
          */
-        this.apiKeyHeader = 'X-API-Key';
+        this.apiKeyHeader = 'x-api-key';
         /**
          * Header name for the counting results.
          */
-        this.apiCountHeader = 'X-API-Count';
+        this.apiCountHeader = 'x-api-count';
         /**
          * Subject to notify any API error.
          */
@@ -114,7 +114,7 @@ let Driver = class Driver extends Class.Null {
      * @returns Returns the own instance.
      */
     useCountHeaderName(header) {
-        this.apiCountHeader = header;
+        this.apiCountHeader = header.toLowerCase();
         return this;
     }
     /**
@@ -166,7 +166,7 @@ let Driver = class Driver extends Class.Null {
             return await this.errorSubject.notifyAll((this.errorResponse = response)), [];
         }
         else if (!(response.body instanceof Array)) {
-            throw new Error(`The response body must be an array containing the search results.`);
+            throw new Error(`The response body must be an array containing the search result.`);
         }
         return response.body;
     }
