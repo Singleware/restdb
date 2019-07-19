@@ -97,25 +97,32 @@ export class Filters extends Class.Null {
       for (const name in fields) {
         const schema = Mapping.Schema.getRealColumn(model, name);
         const operation = fields[name];
-        const value = operation.value;
         expression.push(schema.name, operation.operator);
         length++;
         switch (operation.operator) {
-          case Mapping.Statements.Operator.REGEX:
-            expression.push(encodeURIComponent(value.substr(1, value.length - 2)));
-            break;
           case Mapping.Statements.Operator.LESS:
           case Mapping.Statements.Operator.LESS_OR_EQUAL:
           case Mapping.Statements.Operator.EQUAL:
           case Mapping.Statements.Operator.NOT_EQUAL:
           case Mapping.Statements.Operator.GREATER_OR_EQUAL:
           case Mapping.Statements.Operator.GREATER:
-            expression.push(encodeURIComponent(value));
+            expression.push(encodeURIComponent(operation.value));
             break;
           case Mapping.Statements.Operator.BETWEEN:
           case Mapping.Statements.Operator.CONTAIN:
           case Mapping.Statements.Operator.NOT_CONTAIN:
-            expression.push(value.length, ...(<any[]>value).map(item => encodeURIComponent(item)));
+            if (!(operation.value instanceof Array)) {
+              throw new Error(`Match value for '${schema.name}' should be an Array object.`);
+            }
+            const array = operation.value;
+            expression.push(array.length, ...array.map(item => encodeURIComponent(item)));
+            break;
+          case Mapping.Statements.Operator.REGEX:
+            if (!(operation.value instanceof RegExp)) {
+              throw new Error(`Match value for '${schema.name}' should be a RegExp object.`);
+            }
+            const regexp = operation.value.toString();
+            expression.push(encodeURIComponent(regexp.substr(1, regexp.length - 2)));
             break;
           default:
             throw new TypeError(`Invalid operator '${operation.operator}' for the match operation.`);
@@ -149,9 +156,6 @@ export class Filters extends Class.Null {
         const operator = parseInt(<string>array.pop());
         const schema = Mapping.Schema.getRealColumn(model, name);
         switch (operator) {
-          case Mapping.Statements.Operator.REGEX:
-            fields[schema.name] = { operator: operator, value: new RegExp(decodeURIComponent(<string>array.pop())) };
-            break;
           case Mapping.Statements.Operator.LESS:
           case Mapping.Statements.Operator.LESS_OR_EQUAL:
           case Mapping.Statements.Operator.EQUAL:
@@ -168,6 +172,9 @@ export class Filters extends Class.Null {
               values.push(decodeURIComponent(<string>array.pop()));
             }
             fields[schema.name] = { operator: operator, value: values };
+            break;
+          case Mapping.Statements.Operator.REGEX:
+            fields[schema.name] = { operator: operator, value: new RegExp(decodeURIComponent(<string>array.pop())) };
             break;
           default:
             throw new TypeError(`Invalid operator code for the match operation.`);
