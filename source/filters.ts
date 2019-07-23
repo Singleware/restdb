@@ -1,4 +1,4 @@
-/*
+/*!
  * Copyright (C) 2018-2019 Silas B. Domingos
  * This source code is licensed under the MIT License as described in the file LICENSE.
  */
@@ -270,9 +270,9 @@ export class Filters extends Class.Null {
    * @returns Returns the generated query string URL.
    */
   @Class.Public()
-  public static toURL(model: Mapping.Types.Model, views: string[], filter?: Mapping.Statements.Filter): string {
+  public static toURL(model: Mapping.Types.Model, views?: string[], filter?: Mapping.Statements.Filter): string {
     const queries = <(string | number)[]>[];
-    if (views.length > 1 || views[0] !== Mapping.Types.View.ALL) {
+    if (views && views.length > 0) {
       queries.push(...this.packViewModes(views));
     }
     if (filter) {

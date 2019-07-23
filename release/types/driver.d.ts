@@ -1,3 +1,7 @@
+/*!
+ * Copyright (C) 2018-2019 Silas B. Domingos
+ * This source code is licensed under the MIT License as described in the file LICENSE.
+ */
 import * as Class from '@singleware/class';
 import * as Observable from '@singleware/observable';
 import * as Mapping from '@singleware/mapping';
@@ -79,47 +83,44 @@ export declare class Driver extends Class.Null implements Mapping.Driver {
     /**
      * Insert the specified entity using a POST request.
      * @param model Model type.
-     * @param views View modes.
      * @param entities Entity list.
      * @returns Returns a promise to get the id list of all inserted entities.
      * @throws Throws an error when the result body doesn't contains the insertion id.
      */
-    insert<T extends Mapping.Types.Entity>(model: Mapping.Types.Model, views: string[], entities: T[]): Promise<string[]>;
+    insert<T extends Mapping.Types.Entity>(model: Mapping.Types.Model, entities: T[]): Promise<string[]>;
     /**
      * Search for all entities that corresponds to the specified filter using a GET request.
      * @param model Model type.
-     * @param views View modes.
      * @param filter Fields filter.
+     * @param fields Fields to be selected.
      * @returns Returns a promise to get the list of found entities.
      * @throws Throws an error when the result body isn't an array.
      */
-    find<T extends Mapping.Types.Entity>(model: Mapping.Types.Model<T>, views: string[], filter: Mapping.Statements.Filter): Promise<T[]>;
+    find<T extends Mapping.Types.Entity>(model: Mapping.Types.Model<T>, filter: Mapping.Statements.Filter, fields: string[]): Promise<T[]>;
     /**
      * Find the entity that corresponds to the specified id using a GET request.
      * @param model Model type.
-     * @param views View modes.
      * @param id Entity id.
+     * @param fields Fields to be selected.
      * @returns Returns a promise to get the found entity or undefined when the entity was not found.
      */
-    findById<T extends Mapping.Types.Entity>(model: Mapping.Types.Model<T>, views: string[], id: any): Promise<T | undefined>;
+    findById<T extends Mapping.Types.Entity>(model: Mapping.Types.Model<T>, id: any, fields: string[]): Promise<T | undefined>;
     /**
      * Update all entities that corresponds to the specified matching fields using a PATCH request.
      * @param model Model type.
-     * @param views View modes.
      * @param match Matching fields.
      * @param entity Entity data.
      * @returns Returns a promise to get the number of updated entities.
      */
-    update(model: Mapping.Types.Model, views: string[], match: Mapping.Statements.Match, entity: Mapping.Types.Entity): Promise<number>;
+    update(model: Mapping.Types.Model, match: Mapping.Statements.Match, entity: Mapping.Types.Entity): Promise<number>;
     /**
      * Update the entity that corresponds to the specified id using a PATCH request.
      * @param model Model type.
-     * @param views View modes.
      * @param id Entity id.
      * @param entity Entity data.
      * @returns Returns a promise to get the true when the entity has been updated or false otherwise.
      */
-    updateById(model: Mapping.Types.Model, views: string[], id: any, entity: Mapping.Types.Entity): Promise<boolean>;
+    updateById(model: Mapping.Types.Model, id: any, entity: Mapping.Types.Entity): Promise<boolean>;
     /**
      * Delete all entities that corresponds to the specified matching fields using a DELETE request.
      * @param model Model type.
@@ -137,9 +138,8 @@ export declare class Driver extends Class.Null implements Mapping.Driver {
     /**
      * Count all corresponding entities using the a HEAD request.
      * @param model Model type.
-     * @param views View modes.
      * @param filter Field filter.
      * @returns Returns a promise to get the total amount of found entities.
      */
-    count(model: Mapping.Types.Model, views: string[], filter: Mapping.Statements.Filter): Promise<number>;
+    count(model: Mapping.Types.Model, filter: Mapping.Statements.Filter): Promise<number>;
 }

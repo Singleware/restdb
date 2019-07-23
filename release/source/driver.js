@@ -6,7 +6,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-/*
+/*!
  * Copyright (C) 2018-2019 Silas B. Domingos
  * This source code is licensed under the MIT License as described in the file LICENSE.
  */
@@ -129,14 +129,13 @@ let Driver = class Driver extends Class.Null {
     /**
      * Insert the specified entity using a POST request.
      * @param model Model type.
-     * @param views View modes.
      * @param entities Entity list.
      * @returns Returns a promise to get the id list of all inserted entities.
      * @throws Throws an error when the result body doesn't contains the insertion id.
      */
-    async insert(model, views, entities) {
+    async insert(model, entities) {
         const list = [];
-        const path = this.getPath({ model: model, query: filters_1.Filters.toURL(model, views) });
+        const path = this.getPath({ model: model, query: filters_1.Filters.toURL(model) });
         for (const entity of entities) {
             const response = await this.request('POST', path, entity);
             if (response.status.code !== 201 && response.status.code !== 202) {
@@ -154,13 +153,13 @@ let Driver = class Driver extends Class.Null {
     /**
      * Search for all entities that corresponds to the specified filter using a GET request.
      * @param model Model type.
-     * @param views View modes.
      * @param filter Fields filter.
+     * @param fields Fields to be selected.
      * @returns Returns a promise to get the list of found entities.
      * @throws Throws an error when the result body isn't an array.
      */
-    async find(model, views, filter) {
-        const path = this.getPath({ model: model, query: filters_1.Filters.toURL(model, views, filter) });
+    async find(model, filter, fields) {
+        const path = this.getPath({ model: model, query: filters_1.Filters.toURL(model, fields, filter) });
         const response = await this.request('GET', path);
         if (response.status.code !== 200) {
             return await this.errorSubject.notifyAll((this.errorResponse = response)), [];
@@ -173,12 +172,12 @@ let Driver = class Driver extends Class.Null {
     /**
      * Find the entity that corresponds to the specified id using a GET request.
      * @param model Model type.
-     * @param views View modes.
      * @param id Entity id.
+     * @param fields Fields to be selected.
      * @returns Returns a promise to get the found entity or undefined when the entity was not found.
      */
-    async findById(model, views, id) {
-        const path = this.getPath({ model: model, id: id.toString(), query: filters_1.Filters.toURL(model, views) });
+    async findById(model, id, fields) {
+        const path = this.getPath({ model: model, id: id.toString(), query: filters_1.Filters.toURL(model, fields) });
         const response = await this.request('GET', path);
         if (response.status.code !== 200) {
             return await this.errorSubject.notifyAll((this.errorResponse = response)), void 0;
@@ -188,13 +187,12 @@ let Driver = class Driver extends Class.Null {
     /**
      * Update all entities that corresponds to the specified matching fields using a PATCH request.
      * @param model Model type.
-     * @param views View modes.
      * @param match Matching fields.
      * @param entity Entity data.
      * @returns Returns a promise to get the number of updated entities.
      */
-    async update(model, views, match, entity) {
-        const path = this.getPath({ model: model, query: filters_1.Filters.toURL(model, views, { pre: match }) });
+    async update(model, match, entity) {
+        const path = this.getPath({ model: model, query: filters_1.Filters.toURL(model, [], { pre: match }) });
         const response = await this.request('PATCH', path, entity);
         if (response.status.code !== 200 && response.status.code !== 202 && response.status.code !== 204) {
             return await this.errorSubject.notifyAll((this.errorResponse = response)), 0;
@@ -204,13 +202,12 @@ let Driver = class Driver extends Class.Null {
     /**
      * Update the entity that corresponds to the specified id using a PATCH request.
      * @param model Model type.
-     * @param views View modes.
      * @param id Entity id.
      * @param entity Entity data.
      * @returns Returns a promise to get the true when the entity has been updated or false otherwise.
      */
-    async updateById(model, views, id, entity) {
-        const path = this.getPath({ model: model, id: id.toString(), query: filters_1.Filters.toURL(model, views) });
+    async updateById(model, id, entity) {
+        const path = this.getPath({ model: model, id: id.toString(), query: filters_1.Filters.toURL(model) });
         const response = await this.request('PATCH', path, entity);
         if (response.status.code !== 200 && response.status.code !== 202 && response.status.code !== 204) {
             return await this.errorSubject.notifyAll((this.errorResponse = response)), false;
@@ -248,12 +245,11 @@ let Driver = class Driver extends Class.Null {
     /**
      * Count all corresponding entities using the a HEAD request.
      * @param model Model type.
-     * @param views View modes.
      * @param filter Field filter.
      * @returns Returns a promise to get the total amount of found entities.
      */
-    async count(model, views, filter) {
-        const path = this.getPath({ model: model, query: filters_1.Filters.toURL(model, views, filter) });
+    async count(model, filter) {
+        const path = this.getPath({ model: model, query: filters_1.Filters.toURL(model, [], filter) });
         const response = await this.request('HEAD', path);
         if (response.status.code !== 200 && response.status.code !== 204) {
             return await this.errorSubject.notifyAll((this.errorResponse = response)), 0;
@@ -331,3 +327,4 @@ Driver = __decorate([
     Class.Describe()
 ], Driver);
 exports.Driver = Driver;
+//# sourceMappingURL=driver.js.map

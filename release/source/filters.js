@@ -6,7 +6,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-/*
+/*!
  * Copyright (C) 2018-2019 Silas B. Domingos
  * This source code is licensed under the MIT License as described in the file LICENSE.
  */
@@ -223,7 +223,7 @@ let Filters = class Filters extends Class.Null {
      */
     static toURL(model, views, filter) {
         const queries = [];
-        if (views.length > 1 || views[0] !== Mapping.Types.View.ALL) {
+        if (views && views.length > 0) {
             queries.push(...this.packViewModes(views));
         }
         if (filter) {
@@ -354,3 +354,4 @@ Filters = __decorate([
     Class.Describe()
 ], Filters);
 exports.Filters = Filters;
+//# sourceMappingURL=filters.js.map

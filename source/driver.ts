@@ -1,4 +1,4 @@
-/*
+/*!
  * Copyright (C) 2018-2019 Silas B. Domingos
  * This source code is licensed under the MIT License as described in the file LICENSE.
  */
@@ -161,15 +161,14 @@ export class Driver extends Class.Null implements Mapping.Driver {
   /**
    * Insert the specified entity using a POST request.
    * @param model Model type.
-   * @param views View modes.
    * @param entities Entity list.
    * @returns Returns a promise to get the id list of all inserted entities.
    * @throws Throws an error when the result body doesn't contains the insertion id.
    */
   @Class.Public()
-  public async insert<T extends Mapping.Types.Entity>(model: Mapping.Types.Model, views: string[], entities: T[]): Promise<string[]> {
+  public async insert<T extends Mapping.Types.Entity>(model: Mapping.Types.Model, entities: T[]): Promise<string[]> {
     const list = [];
-    const path = this.getPath({ model: model, query: Filters.toURL(model, views) });
+    const path = this.getPath({ model: model, query: Filters.toURL(model) });
     for (const entity of entities) {
       const response = await this.request('POST', path, entity);
       if (response.status.code !== 201 && response.status.code !== 202) {
@@ -186,14 +185,14 @@ export class Driver extends Class.Null implements Mapping.Driver {
   /**
    * Search for all entities that corresponds to the specified filter using a GET request.
    * @param model Model type.
-   * @param views View modes.
    * @param filter Fields filter.
+   * @param fields Fields to be selected.
    * @returns Returns a promise to get the list of found entities.
    * @throws Throws an error when the result body isn't an array.
    */
   @Class.Public()
-  public async find<T extends Mapping.Types.Entity>(model: Mapping.Types.Model<T>, views: string[], filter: Mapping.Statements.Filter): Promise<T[]> {
-    const path = this.getPath({ model: model, query: Filters.toURL(model, views, filter) });
+  public async find<T extends Mapping.Types.Entity>(model: Mapping.Types.Model<T>, filter: Mapping.Statements.Filter, fields: string[]): Promise<T[]> {
+    const path = this.getPath({ model: model, query: Filters.toURL(model, fields, filter) });
     const response = await this.request('GET', path);
     if (response.status.code !== 200) {
       return await this.errorSubject.notifyAll((this.errorResponse = response)), [];
@@ -206,13 +205,13 @@ export class Driver extends Class.Null implements Mapping.Driver {
   /**
    * Find the entity that corresponds to the specified id using a GET request.
    * @param model Model type.
-   * @param views View modes.
    * @param id Entity id.
+   * @param fields Fields to be selected.
    * @returns Returns a promise to get the found entity or undefined when the entity was not found.
    */
   @Class.Public()
-  public async findById<T extends Mapping.Types.Entity>(model: Mapping.Types.Model<T>, views: string[], id: any): Promise<T | undefined> {
-    const path = this.getPath({ model: model, id: id.toString(), query: Filters.toURL(model, views) });
+  public async findById<T extends Mapping.Types.Entity>(model: Mapping.Types.Model<T>, id: any, fields: string[]): Promise<T | undefined> {
+    const path = this.getPath({ model: model, id: id.toString(), query: Filters.toURL(model, fields) });
     const response = await this.request('GET', path);
     if (response.status.code !== 200) {
       return await this.errorSubject.notifyAll((this.errorResponse = response)), void 0;
@@ -223,14 +222,13 @@ export class Driver extends Class.Null implements Mapping.Driver {
   /**
    * Update all entities that corresponds to the specified matching fields using a PATCH request.
    * @param model Model type.
-   * @param views View modes.
    * @param match Matching fields.
    * @param entity Entity data.
    * @returns Returns a promise to get the number of updated entities.
    */
   @Class.Public()
-  public async update(model: Mapping.Types.Model, views: string[], match: Mapping.Statements.Match, entity: Mapping.Types.Entity): Promise<number> {
-    const path = this.getPath({ model: model, query: Filters.toURL(model, views, { pre: match }) });
+  public async update(model: Mapping.Types.Model, match: Mapping.Statements.Match, entity: Mapping.Types.Entity): Promise<number> {
+    const path = this.getPath({ model: model, query: Filters.toURL(model, [], { pre: match }) });
     const response = await this.request('PATCH', path, entity);
     if (response.status.code !== 200 && response.status.code !== 202 && response.status.code !== 204) {
       return await this.errorSubject.notifyAll((this.errorResponse = response)), 0;
@@ -241,14 +239,13 @@ export class Driver extends Class.Null implements Mapping.Driver {
   /**
    * Update the entity that corresponds to the specified id using a PATCH request.
    * @param model Model type.
-   * @param views View modes.
    * @param id Entity id.
    * @param entity Entity data.
    * @returns Returns a promise to get the true when the entity has been updated or false otherwise.
    */
   @Class.Public()
-  public async updateById(model: Mapping.Types.Model, views: string[], id: any, entity: Mapping.Types.Entity): Promise<boolean> {
-    const path = this.getPath({ model: model, id: id.toString(), query: Filters.toURL(model, views) });
+  public async updateById(model: Mapping.Types.Model, id: any, entity: Mapping.Types.Entity): Promise<boolean> {
+    const path = this.getPath({ model: model, id: id.toString(), query: Filters.toURL(model) });
     const response = await this.request('PATCH', path, entity);
     if (response.status.code !== 200 && response.status.code !== 202 && response.status.code !== 204) {
       return await this.errorSubject.notifyAll((this.errorResponse = response)), false;
@@ -291,13 +288,12 @@ export class Driver extends Class.Null implements Mapping.Driver {
   /**
    * Count all corresponding entities using the a HEAD request.
    * @param model Model type.
-   * @param views View modes.
    * @param filter Field filter.
    * @returns Returns a promise to get the total amount of found entities.
    */
   @Class.Public()
-  public async count(model: Mapping.Types.Model, views: string[], filter: Mapping.Statements.Filter): Promise<number> {
-    const path = this.getPath({ model: model, query: Filters.toURL(model, views, filter) });
+  public async count(model: Mapping.Types.Model, filter: Mapping.Statements.Filter): Promise<number> {
+    const path = this.getPath({ model: model, query: Filters.toURL(model, [], filter) });
     const response = await this.request('HEAD', path);
     if (response.status.code !== 200 && response.status.code !== 204) {
       return await this.errorSubject.notifyAll((this.errorResponse = response)), 0;

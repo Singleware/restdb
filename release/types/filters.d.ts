@@ -1,3 +1,7 @@
+/*!
+ * Copyright (C) 2018-2019 Silas B. Domingos
+ * This source code is licensed under the MIT License as described in the file LICENSE.
+ */
 import * as Class from '@singleware/class';
 import * as Mapping from '@singleware/mapping';
 import { Query } from './query';
@@ -93,7 +97,7 @@ export declare class Filters extends Class.Null {
      * @param filter Field filter.
      * @returns Returns the generated query string URL.
      */
-    static toURL(model: Mapping.Types.Model, views: string[], filter?: Mapping.Statements.Filter): string;
+    static toURL(model: Mapping.Types.Model, views?: string[], filter?: Mapping.Statements.Filter): string;
     /**
      * Builds a query entity from the specified query URL.
      * @param model Model type.

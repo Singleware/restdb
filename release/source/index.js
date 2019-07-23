@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-/*
+/*!
  * Copyright (C) 2018-2019 Silas B. Domingos
  * This source code is licensed under the MIT License as described in the file LICENSE.
  */
@@ -14,3 +14,4 @@ const Request = require("./request");
 exports.Request = Request;
 const Response = require("./response");
 exports.Response = Response;
+//# sourceMappingURL=index.js.map

@@ -7,7 +7,7 @@
   "name": "@singleware/restdb",
   "description": "Singleware RestDB driver package.",
   "license": "MIT",
-  "version": "1.2.25",
+  "version": "1.3.1",
   "main": "release/source/index.js",
   "types": "release/types/index.d.ts",
   "keywords": [
@@ -25,14 +25,14 @@
   },
   "dependencies": {
     "@singleware/class": "^1.1.19",
-    "@singleware/mapping": "^1.2.42",
+    "@singleware/mapping": "^1.3.2",
     "@singleware/observable": "^1.0.21",
     "@singleware/path": "^1.0.7"
   },
   "devDependencies": {
-    "@types/node": "^11.13.10",
-    "prettier": "^1.17.0",
-    "typescript": "^2.9.2"
+    "@types/node": "^11.13.18",
+    "prettier": "^1.18.2",
+    "typescript": "^3.5.3"
   },
   "prettier": {
     "printWidth": 240,
@@ -41,7 +41,8 @@
     "semi": true
   },
   "scripts": {
-    "build": "npm run make-source && npm run make-examples",
+    "build": "npm run clean && npm run make-source && npm run make-examples",
+    "clean": "rm -rf ./release",
     "make-source": "npx tsc -p ./source && npm run update",
     "make-examples": "npx tsc -p ./examples",
     "update": "npm run update-root && npm run update-request && npm run update-response",
