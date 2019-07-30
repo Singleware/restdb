@@ -2,12 +2,11 @@
  * Copyright (C) 2018-2019 Silas B. Domingos
  * This source code is licensed under the MIT License as described in the file LICENSE.
  */
-import * as Mapping from '@singleware/mapping';
-
 import * as Request from '../request';
+import * as Types from '../aliases';
 
+import { Headers as ResponseHeaders } from '../headers';
 import { Status } from './status';
-import { Headers } from '../headers';
 
 /**
  * Output response interface.
@@ -24,9 +23,9 @@ export interface Output {
   /**
    * Output headers.
    */
-  headers: Headers;
+  headers: ResponseHeaders;
   /**
-   * Output body.
+   * Output payload.
    */
-  body?: Mapping.Types.Entity;
+  payload?: Types.Entity | Types.Entity[];
 }

@@ -16,11 +16,11 @@ const Class = require("@singleware/class");
  */
 let Frontend = class Frontend extends Class.Null {
     /**
-     * Get all the response headers as a native headers map.
+     * Get all response headers as native headers map.
      * @param headers Non-native headers object.
      * @returns Returns the native headers map.
      */
-    static getHeaders(headers) {
+    static getResponseHeaders(headers) {
         const data = {};
         const entries = headers.entries();
         for (const entry of entries) {
@@ -39,31 +39,51 @@ let Frontend = class Frontend extends Class.Null {
         return data;
     }
     /**
-     * Request a new response from the API using a frontend HTTP client.
+     * Gets the response output entity.
+     * @param input Request input.
+     * @param payload Response payload.
+     * @param response Response object.
+     * @returns Returns the response output entity.
+     */
+    static getResponseOutput(input, payload, response) {
+        const output = {
+            input: input,
+            headers: this.getResponseHeaders(response.headers),
+            status: {
+                code: response.status,
+                message: response.statusText
+            }
+        };
+        if (payload.length > 0) {
+            output.payload = JSON.parse(payload);
+        }
+        return output;
+    }
+    /**
+     * Request a new response from the API using a frontend HTTP/HTTPS client.
      * @param input Request input.
      * @returns Returns the request output.
      */
     static async request(input) {
-        const response = await fetch(input.url, {
+        const options = {
             method: input.method,
-            headers: new Headers(input.headers),
-            body: input.content ? JSON.stringify(input.content) : void 0
-        });
-        const body = await response.text();
-        return {
-            input: input,
-            status: {
-                code: response.status,
-                message: response.statusText
-            },
-            headers: this.getHeaders(response.headers),
-            body: body.length > 0 ? JSON.parse(body) : void 0
+            headers: new Headers(input.headers)
         };
+        if (input.payload) {
+            options.body = JSON.stringify(input.payload);
+            options.headers.set('Content-Type', 'application/json');
+        }
+        const response = await fetch(input.url, options);
+        const payload = await response.text();
+        return this.getResponseOutput(input, payload, response);
     }
 };
 __decorate([
     Class.Private()
-], Frontend, "getHeaders", null);
+], Frontend, "getResponseHeaders", null);
+__decorate([
+    Class.Private()
+], Frontend, "getResponseOutput", null);
 __decorate([
     Class.Public()
 ], Frontend, "request", null);

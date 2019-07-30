@@ -11,7 +11,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
  * This source code is licensed under the MIT License as described in the file LICENSE.
  */
 const Class = require("@singleware/class");
-const Mapping = require("@singleware/mapping");
 const RestDB = require("../source");
 /**
  * Connection string.
@@ -20,33 +19,34 @@ const connection = 'http://127.0.0.1:8080';
 /**
  * Database driver.
  */
-const driver = new RestDB.Driver();
+const driver = new RestDB.Common.Driver();
 /**
  * Test class.
  */
 let UserEntity = class UserEntity extends Class.Null {
 };
 __decorate([
-    Mapping.Schema.Id(),
-    Mapping.Schema.Alias('_id'),
+    RestDB.Schema.Id(),
+    RestDB.Schema.Primary(),
+    RestDB.Schema.Alias('_id'),
     Class.Public()
 ], UserEntity.prototype, "id", void 0);
 __decorate([
-    Mapping.Schema.String(),
+    RestDB.Schema.String(),
     Class.Public()
 ], UserEntity.prototype, "firstName", void 0);
 __decorate([
-    Mapping.Schema.String(),
+    RestDB.Schema.String(),
     Class.Public()
 ], UserEntity.prototype, "lastName", void 0);
 UserEntity = __decorate([
-    Mapping.Schema.Entity('UserEntity'),
+    RestDB.Schema.Entity('UserEntity'),
     Class.Describe()
 ], UserEntity);
 /**
  * Database mapper.
  */
-let UserMapper = class UserMapper extends Mapping.Mapper {
+let UserMapper = class UserMapper extends RestDB.Mapper {
     /**
      * Default constructor.
      */
@@ -55,44 +55,53 @@ let UserMapper = class UserMapper extends Mapping.Mapper {
     }
     /**
      * Create a test user.
-     * @returns Returns the id of new user.
+     * @returns Returns a promise to get the new user id.
      */
     async create() {
-        return await this.insert({
-            firstName: 'First 1',
-            lastName: 'Last 1'
-        });
+        return await this.insert({ firstName: 'First 1', lastName: 'Last 1' });
     }
     /**
      * Change the test user.
-     * @param id USer id.
-     * @returns Returns the number of updated users.
+     * @param id User id.
+     * @returns Returns a promise to get the number of updated users.
      */
     async change(id) {
-        return await this.update({
-            id: { operator: Mapping.Statements.Operator.EQUAL, value: id }
-        }, {
-            firstName: 'Changed!'
-        });
+        return await this.update({ id: { operator: RestDB.Operator.Equal, value: id } }, { firstName: 'Changed!' });
+    }
+    /**
+     * Replace the test user.
+     * @param id User id.
+     * @returns Returns a promise to get the replacement status.
+     */
+    async replace(id) {
+        return await this.replaceById(id, { firstName: 'Replaced!' });
     }
     /**
      * Read the test user.
      * @param id User id.
-     * @requires Returns the list of users found.
+     * @returns Returns a promise to get the list of found users.
      */
     async read(id) {
         return await this.find({
-            pre: { id: { operator: Mapping.Statements.Operator.EQUAL, value: id } }
+            pre: {
+                id: { operator: RestDB.Operator.Equal, value: id }
+            },
+            sort: {
+                id: RestDB.Order.Ascending
+            },
+            limit: {
+                start: 0,
+                count: 1
+            }
         });
     }
     /**
      * Remove the test user.
      * @param id User id.
+     * @returns Returns a promise to get the number of removed users.
      */
     async remove(id) {
-        return await this.delete({
-            id: { operator: Mapping.Statements.Operator.EQUAL, value: id }
-        });
+        return await this.delete({ id: { operator: RestDB.Operator.Equal, value: id } });
     }
 };
 __decorate([
@@ -101,6 +110,9 @@ __decorate([
 __decorate([
     Class.Public()
 ], UserMapper.prototype, "change", null);
+__decorate([
+    Class.Public()
+], UserMapper.prototype, "replace", null);
 __decorate([
     Class.Public()
 ], UserMapper.prototype, "read", null);
@@ -121,15 +133,16 @@ async function crudTest() {
     console.log('Connect');
     // Create user
     const id = await mapper.create();
-    console.log('Create:', id);
-    // Read user
     const before = await mapper.read(id);
-    console.log('Read before:', before[0].firstName, before[0].lastName);
+    console.log('Create:', id, before[0].firstName, before[0].lastName);
     // Update user
-    console.log('Update:', await mapper.change(id));
+    const update = await mapper.change(id);
+    const middle = await mapper.read(id);
+    console.log('Update:', update, middle[0].firstName, middle[0].lastName);
+    // Replace user
+    const replace = await mapper.replace(id);
     const after = await mapper.read(id);
-    // Read user
-    console.log('Read after:', after[0].firstName, after[0].lastName);
+    console.log('Replace:', replace, after[0].firstName, after[0].lastName);
     // Delete user
     console.log('Delete:', await mapper.remove(id));
 }

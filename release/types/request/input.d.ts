@@ -2,9 +2,9 @@
  * Copyright (C) 2018-2019 Silas B. Domingos
  * This source code is licensed under the MIT License as described in the file LICENSE.
  */
-import * as Mapping from '@singleware/mapping';
+import * as Types from '../aliases';
 
-import { Headers } from '../headers';
+import { Headers as RequestHeaders } from '../headers';
 
 /**
  * Input request interface.
@@ -21,9 +21,9 @@ export interface Input {
   /**
    * Input headers.
    */
-  headers: Headers;
+  headers: RequestHeaders;
   /**
-   * Input content.
+   * Input payload.
    */
-  content?: Mapping.Types.Entity;
+  payload?: Types.Entity | Types.Entity[];
 }

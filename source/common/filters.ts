@@ -3,12 +3,12 @@
  * This source code is licensed under the MIT License as described in the file LICENSE.
  */
 import * as Class from '@singleware/class';
-import * as Mapping from '@singleware/mapping';
+import * as Aliases from '../aliases';
 
 import { Query } from './query';
 
 /**
- * Filters helper class.
+ * Common driver, filters class.
  */
 @Class.Describe()
 export class Filters extends Class.Null {
@@ -19,10 +19,10 @@ export class Filters extends Class.Null {
   private static QueryPrefix = 'query';
 
   /**
-   * Magic views prefix.
+   * Magic fields prefix.
    */
   @Class.Private()
-  private static ViewsPrefix = 'views';
+  private static FieldsPrefix = 'fields';
 
   /**
    * Magic pre-match prefix.
@@ -49,35 +49,35 @@ export class Filters extends Class.Null {
   private static LimitPrefix = 'limit';
 
   /**
-   * Packs the specified list of view modes into a parameterized array of view modes.
-   * @param views View modes.
-   * @returns Returns the parameterized array of view modes.
+   * Packs the specified list of viewed fields into a parameterized array of viewed fields.
+   * @param fields Viewed fields.
+   * @returns Returns the parameterized array of viewed fields.
    */
   @Class.Private()
-  private static packViewModes(views: string[]): (string | number)[] {
-    return [this.ViewsPrefix, views.length, ...views];
+  private static packViewedFields(fields: string[]): (string | number)[] {
+    return [this.FieldsPrefix, fields.length, ...fields];
   }
 
   /**
-   * Unpacks the parameterized array of view modes into a list of view modes.
-   * @param array Parameterized array of view modes.
-   * @returns Returns the list of view modes or undefined when there no view modes.
+   * Unpacks the parameterized array of viewed fields into a list of viewed fields.
+   * @param array Parameterized array of viewed fields.
+   * @returns Returns the list of viewed fields or undefined when there no viewed fields.
    * @throws Throws an error when there are invalid serialized data.
    */
   @Class.Private()
-  private static unpackViewModes(array: string[]): string[] {
-    if (this.ViewsPrefix !== array.pop()) {
-      throw new Error(`Invalid magic prefix for the given array of view modes.`);
+  private static unpackViewedFields(array: string[]): string[] {
+    if (this.FieldsPrefix !== array.pop()) {
+      throw new Error(`Invalid magic prefix for the given array of viewed fields.`);
     }
     const length = parseInt(<string>array.pop());
     if (array.length < length) {
-      throw new Error(`Invalid size for the given array of view modes.`);
+      throw new Error(`Invalid size for the given array of viewed fields.`);
     }
-    const views = [];
+    const fields = [];
     for (let i = 0; i < length; ++i) {
-      views.push(<string>array.pop());
+      fields.push(<string>array.pop());
     }
-    return views;
+    return fields;
   }
 
   /**
@@ -88,35 +88,35 @@ export class Filters extends Class.Null {
    * @throws Throws an error when there are invalid matching operator codes.
    */
   @Class.Private()
-  private static packMatchRules(prefix: string, model: Mapping.Types.Model, match: Mapping.Statements.Match | Mapping.Statements.Match[]): (number | string)[] {
+  private static packMatchRules(prefix: string, model: Aliases.Model, match: Aliases.Match | Aliases.Match[]): (number | string)[] {
     const rules = [];
     let total = 0;
     for (const fields of match instanceof Array ? match : [match]) {
       const expression = [];
       let length = 0;
       for (const name in fields) {
-        const schema = Mapping.Schema.getRealColumn(model, name);
+        const schema = Aliases.Schema.getRealColumn(model, name);
         const operation = fields[name];
         expression.push(schema.name, operation.operator);
         length++;
         switch (operation.operator) {
-          case Mapping.Statements.Operator.LESS:
-          case Mapping.Statements.Operator.LESS_OR_EQUAL:
-          case Mapping.Statements.Operator.EQUAL:
-          case Mapping.Statements.Operator.NOT_EQUAL:
-          case Mapping.Statements.Operator.GREATER_OR_EQUAL:
-          case Mapping.Statements.Operator.GREATER:
+          case Aliases.Operator.Less:
+          case Aliases.Operator.LessOrEqual:
+          case Aliases.Operator.Equal:
+          case Aliases.Operator.NotEqual:
+          case Aliases.Operator.GreaterOrEqual:
+          case Aliases.Operator.Greater:
             expression.push(encodeURIComponent(operation.value));
             break;
-          case Mapping.Statements.Operator.BETWEEN:
-          case Mapping.Statements.Operator.CONTAIN:
-          case Mapping.Statements.Operator.NOT_CONTAIN:
+          case Aliases.Operator.Between:
+          case Aliases.Operator.Contain:
+          case Aliases.Operator.NotContain:
             if (!(operation.value instanceof Array)) {
               throw new Error(`Match value for '${schema.name}' should be an Array object.`);
             }
             expression.push(operation.value.length, ...operation.value.map(item => encodeURIComponent(item)));
             break;
-          case Mapping.Statements.Operator.REGEX:
+          case Aliases.Operator.RegEx:
             if (!(operation.value instanceof RegExp)) {
               throw new Error(`Match value for '${schema.name}' should be a RegExp object.`);
             }
@@ -143,36 +143,36 @@ export class Filters extends Class.Null {
    * @throws Throws an error when there are invalid serialized data.
    */
   @Class.Private()
-  private static unpackMatchRules(prefix: string, model: Mapping.Types.Model, array: string[]): Mapping.Statements.Match | Mapping.Statements.Match[] | undefined {
+  private static unpackMatchRules(prefix: string, model: Aliases.Model, array: string[]): Aliases.Match | Aliases.Match[] | undefined {
     if (prefix !== array.pop()) {
       throw new Error(`Invalid magic prefix for the given array of matching lists.`);
     }
     const match = [];
     for (let total = parseInt(<string>array.pop()); total > 0; --total) {
-      const fields = <Mapping.Statements.Match>{};
+      const fields = <Aliases.Match>{};
       for (let length = parseInt(<string>array.pop()); length > 0; --length) {
         const name = <string>array.pop();
         const operator = parseInt(<string>array.pop());
-        const schema = Mapping.Schema.getRealColumn(model, name);
+        const schema = Aliases.Schema.getRealColumn(model, name);
         switch (operator) {
-          case Mapping.Statements.Operator.LESS:
-          case Mapping.Statements.Operator.LESS_OR_EQUAL:
-          case Mapping.Statements.Operator.EQUAL:
-          case Mapping.Statements.Operator.NOT_EQUAL:
-          case Mapping.Statements.Operator.GREATER_OR_EQUAL:
-          case Mapping.Statements.Operator.GREATER:
+          case Aliases.Operator.Less:
+          case Aliases.Operator.LessOrEqual:
+          case Aliases.Operator.Equal:
+          case Aliases.Operator.NotEqual:
+          case Aliases.Operator.GreaterOrEqual:
+          case Aliases.Operator.Greater:
             fields[schema.name] = { operator: operator, value: decodeURIComponent(<string>array.pop()) };
             break;
-          case Mapping.Statements.Operator.BETWEEN:
-          case Mapping.Statements.Operator.CONTAIN:
-          case Mapping.Statements.Operator.NOT_CONTAIN:
+          case Aliases.Operator.Between:
+          case Aliases.Operator.Contain:
+          case Aliases.Operator.NotContain:
             const values = [];
             for (let i = parseInt(<string>array.pop()); i > 0; --i) {
               values.push(decodeURIComponent(<string>array.pop()));
             }
             fields[schema.name] = { operator: operator, value: values };
             break;
-          case Mapping.Statements.Operator.REGEX:
+          case Aliases.Operator.RegEx:
             const regexp = decodeURIComponent(<string>array.pop());
             const flags = decodeURIComponent(<string>array.pop());
             fields[schema.name] = { operator: operator, value: new RegExp(regexp, flags) };
@@ -196,11 +196,11 @@ export class Filters extends Class.Null {
    * @returns Returns the parameterized array of sorting fields.
    */
   @Class.Private()
-  private static packSort(model: Mapping.Types.Model, sort: Mapping.Statements.Sort): (number | string)[] {
+  private static packSort(model: Aliases.Model, sort: Aliases.Sort): (number | string)[] {
     const fields = [];
     let length = 0;
     for (const name in sort) {
-      fields.push(Mapping.Schema.getRealColumn(model, name).name, sort[name]);
+      fields.push(Aliases.Schema.getRealColumn(model, name).name, sort[name]);
       length++;
     }
     return [this.SortPrefix, length, ...fields];
@@ -214,18 +214,18 @@ export class Filters extends Class.Null {
    * @throws Throws an error when there are invalid serialized data.
    */
   @Class.Private()
-  private static unpackSort(model: Mapping.Types.Model, array: string[]): Mapping.Statements.Sort {
+  private static unpackSort(model: Aliases.Model, array: string[]): Aliases.Sort {
     if (this.SortPrefix !== array.pop()) {
       throw new Error(`Invalid magic prefix for the given array of sorting list.`);
     }
-    const fields = <Mapping.Statements.Sort>{};
+    const fields = <Aliases.Sort>{};
     for (let length = parseInt(<string>array.pop()); length > 0; --length) {
       const name = <string>array.pop();
       const order = parseInt(<string>array.pop());
-      const schema = Mapping.Schema.getRealColumn(model, name);
+      const schema = Aliases.Schema.getRealColumn(model, name);
       switch (order) {
-        case Mapping.Statements.Order.ASCENDING:
-        case Mapping.Statements.Order.DESCENDING:
+        case Aliases.Order.Ascending:
+        case Aliases.Order.Descending:
           fields[schema.name] = order;
           break;
         default:
@@ -241,7 +241,7 @@ export class Filters extends Class.Null {
    * @returns Returns the parameterized array of limits.
    */
   @Class.Private()
-  private static packLimit(limit: Mapping.Statements.Limit): (string | number)[] {
+  private static packLimit(limit: Aliases.Limit): (string | number)[] {
     return [this.LimitPrefix, limit.start || 0, limit.count || 0];
   }
 
@@ -252,7 +252,7 @@ export class Filters extends Class.Null {
    * @throws Throws an error when there are invalid serialized data.
    */
   @Class.Private()
-  private static unpackLimit(array: string[]): Mapping.Statements.Limit {
+  private static unpackLimit(array: string[]): Aliases.Limit {
     if (this.LimitPrefix !== array.pop()) {
       throw new Error(`Invalid magic prefix for the given array of limits.`);
     }
@@ -263,30 +263,30 @@ export class Filters extends Class.Null {
   }
 
   /**
-   * Build a query string URL from the specified view modes and field filter.
+   * Build a query string URL from the specified entity model, viewed fields and query filter.
    * @param model Model type.
-   * @param views View modes.
-   * @param filter Field filter.
+   * @param query Query filter.
+   * @param fields Viewed fields.
    * @returns Returns the generated query string URL.
    */
   @Class.Public()
-  public static toURL(model: Mapping.Types.Model, views?: string[], filter?: Mapping.Statements.Filter): string {
+  public static toURL(model: Aliases.Model, query?: Aliases.Query, fields?: string[]): string {
     const queries = <(string | number)[]>[];
-    if (views && views.length > 0) {
-      queries.push(...this.packViewModes(views));
+    if (fields && fields.length > 0) {
+      queries.push(...this.packViewedFields(fields));
     }
-    if (filter) {
-      if (filter.pre) {
-        queries.push(...this.packMatchRules(this.PreMatchPrefix, model, filter.pre));
+    if (query) {
+      if (query.pre) {
+        queries.push(...this.packMatchRules(this.PreMatchPrefix, model, query.pre));
       }
-      if (filter.post) {
-        queries.push(...this.packMatchRules(this.PostMatchPrefix, model, filter.post));
+      if (query.post) {
+        queries.push(...this.packMatchRules(this.PostMatchPrefix, model, query.post));
       }
-      if (filter.sort) {
-        queries.push(...this.packSort(model, filter.sort));
+      if (query.sort) {
+        queries.push(...this.packSort(model, query.sort));
       }
-      if (filter.limit) {
-        queries.push(...this.packLimit(filter.limit));
+      if (query.limit) {
+        queries.push(...this.packLimit(query.limit));
       }
     }
     return queries.length ? `${this.QueryPrefix}/${queries.join('/')}` : ``;
@@ -300,8 +300,8 @@ export class Filters extends Class.Null {
    * @throws Throws an error when there are unsupported data serialization in the specified URL.
    */
   @Class.Public()
-  public static fromURL(model: Mapping.Types.Model, url: string): Query {
-    const result = <Query>{ views: [] };
+  public static fromURL(model: Aliases.Model, url: string): Query {
+    const result = <Query>{ fields: [] };
     const parts = url.split('/').reverse();
     if (parts.pop() === this.QueryPrefix) {
       while (parts.length) {
@@ -318,8 +318,8 @@ export class Filters extends Class.Null {
           case this.LimitPrefix:
             result.limit = this.unpackLimit(parts);
             break;
-          case this.ViewsPrefix:
-            result.views = this.unpackViewModes(parts);
+          case this.FieldsPrefix:
+            result.fields = this.unpackViewedFields(parts);
             break;
           default:
             throw new Error(`Unsupported data serialization type.`);

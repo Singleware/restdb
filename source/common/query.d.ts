@@ -2,30 +2,30 @@
  * Copyright (C) 2018-2019 Silas B. Domingos
  * This source code is licensed under the MIT License as described in the file LICENSE.
  */
-import * as Mapping from '@singleware/mapping';
+import * as Types from '../aliases';
 
 /**
- * Search query interface.
+ * Filter query interface.
  */
 export interface Query {
   /**
-   * List of views.
+   * Viewed fields.
    */
-  views: string[];
+  fields: string[];
   /**
    * Pre-matches.
    */
-  pre?: Mapping.Statements.Match | Mapping.Statements.Match[];
+  pre?: Types.Match | Types.Match[];
   /**
    * Post-matches.
    */
-  post?: Mapping.Statements.Match | Mapping.Statements.Match[];
+  post?: Types.Match | Types.Match[];
   /**
    * Sorting order.
    */
-  sort?: Mapping.Statements.Sort;
+  sort?: Types.Sort;
   /**
    * Results limit.
    */
-  limit?: Mapping.Statements.Limit;
+  limit?: Types.Limit;
 }

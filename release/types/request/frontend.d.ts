@@ -10,13 +10,21 @@ import { Input } from './input';
  */
 export declare class Frontend extends Class.Null {
     /**
-     * Get all the response headers as a native headers map.
+     * Get all response headers as native headers map.
      * @param headers Non-native headers object.
      * @returns Returns the native headers map.
      */
-    private static getHeaders;
+    private static getResponseHeaders;
     /**
-     * Request a new response from the API using a frontend HTTP client.
+     * Gets the response output entity.
+     * @param input Request input.
+     * @param payload Response payload.
+     * @param response Response object.
+     * @returns Returns the response output entity.
+     */
+    private static getResponseOutput;
+    /**
+     * Request a new response from the API using a frontend HTTP/HTTPS client.
      * @param input Request input.
      * @returns Returns the request output.
      */

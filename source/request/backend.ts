@@ -3,6 +3,7 @@
  * This source code is licensed under the MIT License as described in the file LICENSE.
  */
 import * as Http from 'http';
+
 import * as Class from '@singleware/class';
 
 import * as Response from '../response';
@@ -15,59 +16,84 @@ import { Input } from './input';
 @Class.Describe()
 export class Backend extends Class.Null {
   /**
-   * Request a new response from the API using a backend HTTP client.
+   * Gets the request options entity.
+   * @param input Request input.
+   * @param url Request URL.
+   * @returns Return the request options entity.
+   */
+  @Class.Private()
+  private static getRequestOptions(input: Input, url: URL): Http.RequestOptions {
+    const options = {
+      method: input.method,
+      headers: input.headers,
+      protocol: url.protocol,
+      port: url.port,
+      host: url.hostname,
+      path: url.pathname
+    };
+    return options;
+  }
+
+  /**
+   * Gets the response output entity.
+   * @param input Request input.
+   * @param payload Response payload.
+   * @param response Response object.
+   * @returns Returns the response output entity.
+   */
+  @Class.Private()
+  private static getResponseOutput(input: Input, payload: string, response: Http.IncomingMessage): Response.Output {
+    const output = <Response.Output>{
+      input: input,
+      headers: response.headers,
+      status: {
+        code: response.statusCode || 0,
+        message: response.statusMessage || ''
+      }
+    };
+    if (payload.length > 0) {
+      output.payload = JSON.parse(payload);
+    }
+    return output;
+  }
+
+  /**
+   * Response, event handler.
+   * @param input Input request.
+   * @param resolve Promise resolve callback.
+   * @param reject Promise reject callback.
+   * @param response Request response.
+   */
+  @Class.Private()
+  private static responseHandler(input: Input, resolve: Class.Callable, reject: Class.Callable, response: Http.IncomingMessage): void {
+    let payload = '';
+    response.setEncoding('utf8');
+    response.on('data', (data: string) => (payload += data));
+    response.on('error', (error: Error) => reject(error));
+    response.on('end', () => resolve(this.getResponseOutput(input, payload, response)));
+  }
+
+  /**
+   * Request a new response from the API using a backend HTTP/HTTPS client.
    * @param input Request input.
    * @returns Returns the request output.
    */
   @Class.Public()
   public static async request(input: Input): Promise<Response.Output> {
     const url = new URL(input.url);
-    const client = require(url.protocol);
-    let data: string | undefined;
-    if (input.content) {
-      data = JSON.stringify(input.content);
-      input.headers['Content-Length'] = data.length.toString();
+    const client = require(url.protocol.substr(0, url.protocol.length - 1));
+    let payload: string;
+    if (input.payload) {
+      payload = JSON.stringify(input.payload);
+      input.headers['Content-Length'] = payload.length.toString();
+      input.headers['Content-Type'] = 'application/json';
     }
-    return new Promise<Response.Output>(
-      (resolve: (value: Response.Output) => void, reject: (value: any) => void): void => {
-        const options = {
-          method: input.method,
-          headers: input.headers,
-          protocol: url.protocol,
-          port: url.port,
-          host: url.hostname,
-          path: url.pathname
-        };
-        const request = client.request(
-          options,
-          (response: Http.IncomingMessage): void => {
-            let body = '';
-            response
-              .setEncoding('utf8')
-              .on('data', (data: string) => {
-                body += data;
-              })
-              .on('error', (error: string) => {
-                reject(error);
-              })
-              .on('end', () => {
-                resolve({
-                  input: input,
-                  status: {
-                    code: response.statusCode || 0,
-                    message: response.statusMessage || ''
-                  },
-                  headers: response.headers,
-                  body: body.length > 0 ? JSON.parse(body) : void 0
-                });
-              });
-          }
-        );
-        if (data) {
-          request.write(data);
-          request.end();
-        }
+    return new Promise<Response.Output>((resolve: (value: Response.Output) => void, reject: (value: Error) => void): void => {
+      const request = client.request(this.getRequestOptions(input, url), this.responseHandler.bind(this, input, resolve, reject));
+      if (payload) {
+        request.write(payload);
+        request.end();
       }
-    );
+    });
   }
 }

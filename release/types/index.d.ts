@@ -3,11 +3,24 @@
  * This source code is licensed under the MIT License as described in the file LICENSE.
  */
 export { Driver } from './driver';
-export { Entity } from './entity';
-export { Filters } from './filters';
+export { Caster } from './caster';
+export { Schema } from './schema';
 export { Headers } from './headers';
-export { Query } from './query';
+export { Route } from './route';
+export { Entity, Model, Mapper, Map } from './aliases';
+export { Query, Match, Operator, Sort, Order, Limit } from './aliases';
 import * as Request from './request';
-export import Request = Request;
 import * as Response from './response';
+import * as Common from './common';
+/**
+ * Request namespace.
+ */
+export import Request = Request;
+/**
+ * Response namespace.
+ */
 export import Response = Response;
+/**
+ * Common driver namespace.
+ */
+export import Common = Common;

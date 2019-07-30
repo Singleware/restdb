@@ -3,10 +3,10 @@
  * This source code is licensed under the MIT License as described in the file LICENSE.
  */
 import * as Class from '@singleware/class';
-import * as Mapping from '@singleware/mapping';
+import * as Aliases from '../aliases';
 import { Query } from './query';
 /**
- * Filters helper class.
+ * Common driver, filters class.
  */
 export declare class Filters extends Class.Null {
     /**
@@ -14,9 +14,9 @@ export declare class Filters extends Class.Null {
      */
     private static QueryPrefix;
     /**
-     * Magic views prefix.
+     * Magic fields prefix.
      */
-    private static ViewsPrefix;
+    private static FieldsPrefix;
     /**
      * Magic pre-match prefix.
      */
@@ -34,18 +34,18 @@ export declare class Filters extends Class.Null {
      */
     private static LimitPrefix;
     /**
-     * Packs the specified list of view modes into a parameterized array of view modes.
-     * @param views View modes.
-     * @returns Returns the parameterized array of view modes.
+     * Packs the specified list of viewed fields into a parameterized array of viewed fields.
+     * @param fields Viewed fields.
+     * @returns Returns the parameterized array of viewed fields.
      */
-    private static packViewModes;
+    private static packViewedFields;
     /**
-     * Unpacks the parameterized array of view modes into a list of view modes.
-     * @param array Parameterized array of view modes.
-     * @returns Returns the list of view modes or undefined when there no view modes.
+     * Unpacks the parameterized array of viewed fields into a list of viewed fields.
+     * @param array Parameterized array of viewed fields.
+     * @returns Returns the list of viewed fields or undefined when there no viewed fields.
      * @throws Throws an error when there are invalid serialized data.
      */
-    private static unpackViewModes;
+    private static unpackViewedFields;
     /**
      * Packs the specified matching rules into a parameterized array of matching rules.
      * @param model Model type.
@@ -91,13 +91,13 @@ export declare class Filters extends Class.Null {
      */
     private static unpackLimit;
     /**
-     * Build a query string URL from the specified view modes and field filter.
+     * Build a query string URL from the specified entity model, viewed fields and query filter.
      * @param model Model type.
-     * @param views View modes.
-     * @param filter Field filter.
+     * @param query Query filter.
+     * @param fields Viewed fields.
      * @returns Returns the generated query string URL.
      */
-    static toURL(model: Mapping.Types.Model, views?: string[], filter?: Mapping.Statements.Filter): string;
+    static toURL(model: Aliases.Model, query?: Aliases.Query, fields?: string[]): string;
     /**
      * Builds a query entity from the specified query URL.
      * @param model Model type.
@@ -105,5 +105,5 @@ export declare class Filters extends Class.Null {
      * @returns Returns the generated query entity.
      * @throws Throws an error when there are unsupported data serialization in the specified URL.
      */
-    static fromURL(model: Mapping.Types.Model, url: string): Query;
+    static fromURL(model: Aliases.Model, url: string): Query;
 }

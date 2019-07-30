@@ -7,14 +7,15 @@
   "name": "@singleware/restdb",
   "description": "Singleware RestDB driver package.",
   "license": "MIT",
-  "version": "1.3.1",
+  "version": "1.3.28",
   "main": "release/source/index.js",
   "types": "release/types/index.d.ts",
   "keywords": [
     "rest api",
     "rest driver",
     "rest mapper",
-    "async restdb client"
+    "rest client",
+    "async rest"
   ],
   "repository": {
     "type": "git",
@@ -25,7 +26,7 @@
   },
   "dependencies": {
     "@singleware/class": "^1.1.19",
-    "@singleware/mapping": "^1.3.2",
+    "@singleware/mapping": "^1.3.18",
     "@singleware/observable": "^1.0.21",
     "@singleware/path": "^1.0.7"
   },
@@ -35,7 +36,7 @@
     "typescript": "^3.5.3"
   },
   "prettier": {
-    "printWidth": 240,
+    "printWidth": 140,
     "tabWidth": 2,
     "singleQuote": true,
     "semi": true
@@ -45,9 +46,10 @@
     "clean": "rm -rf ./release",
     "make-source": "npx tsc -p ./source && npm run update",
     "make-examples": "npx tsc -p ./examples",
-    "update": "npm run update-root && npm run update-request && npm run update-response",
+    "update": "npm run update-root && npm run update-request && npm run update-response && npm run update-common",
     "update-root": "cp -Rf ./source/*.d.ts ./release/types",
     "update-request": "cp -Rf ./source/request/*.d.ts ./release/types/request",
-    "update-response": "cp -Rf ./source/response/*.d.ts ./release/types/response"
+    "update-response": "cp -Rf ./source/response/*.d.ts ./release/types/response",
+    "update-common": "cp -Rf ./source/common/*.d.ts ./release/types/common"
   }
 }

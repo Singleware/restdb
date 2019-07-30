@@ -11,38 +11,38 @@ Object.defineProperty(exports, "__esModule", { value: true });
  * This source code is licensed under the MIT License as described in the file LICENSE.
  */
 const Class = require("@singleware/class");
-const Mapping = require("@singleware/mapping");
+const Aliases = require("../aliases");
 /**
- * Filters helper class.
+ * Common driver, filters class.
  */
 let Filters = class Filters extends Class.Null {
     /**
-     * Packs the specified list of view modes into a parameterized array of view modes.
-     * @param views View modes.
-     * @returns Returns the parameterized array of view modes.
+     * Packs the specified list of viewed fields into a parameterized array of viewed fields.
+     * @param fields Viewed fields.
+     * @returns Returns the parameterized array of viewed fields.
      */
-    static packViewModes(views) {
-        return [this.ViewsPrefix, views.length, ...views];
+    static packViewedFields(fields) {
+        return [this.FieldsPrefix, fields.length, ...fields];
     }
     /**
-     * Unpacks the parameterized array of view modes into a list of view modes.
-     * @param array Parameterized array of view modes.
-     * @returns Returns the list of view modes or undefined when there no view modes.
+     * Unpacks the parameterized array of viewed fields into a list of viewed fields.
+     * @param array Parameterized array of viewed fields.
+     * @returns Returns the list of viewed fields or undefined when there no viewed fields.
      * @throws Throws an error when there are invalid serialized data.
      */
-    static unpackViewModes(array) {
-        if (this.ViewsPrefix !== array.pop()) {
-            throw new Error(`Invalid magic prefix for the given array of view modes.`);
+    static unpackViewedFields(array) {
+        if (this.FieldsPrefix !== array.pop()) {
+            throw new Error(`Invalid magic prefix for the given array of viewed fields.`);
         }
         const length = parseInt(array.pop());
         if (array.length < length) {
-            throw new Error(`Invalid size for the given array of view modes.`);
+            throw new Error(`Invalid size for the given array of viewed fields.`);
         }
-        const views = [];
+        const fields = [];
         for (let i = 0; i < length; ++i) {
-            views.push(array.pop());
+            fields.push(array.pop());
         }
-        return views;
+        return fields;
     }
     /**
      * Packs the specified matching rules into a parameterized array of matching rules.
@@ -58,28 +58,28 @@ let Filters = class Filters extends Class.Null {
             const expression = [];
             let length = 0;
             for (const name in fields) {
-                const schema = Mapping.Schema.getRealColumn(model, name);
+                const schema = Aliases.Schema.getRealColumn(model, name);
                 const operation = fields[name];
                 expression.push(schema.name, operation.operator);
                 length++;
                 switch (operation.operator) {
-                    case Mapping.Statements.Operator.LESS:
-                    case Mapping.Statements.Operator.LESS_OR_EQUAL:
-                    case Mapping.Statements.Operator.EQUAL:
-                    case Mapping.Statements.Operator.NOT_EQUAL:
-                    case Mapping.Statements.Operator.GREATER_OR_EQUAL:
-                    case Mapping.Statements.Operator.GREATER:
+                    case Aliases.Operator.Less:
+                    case Aliases.Operator.LessOrEqual:
+                    case Aliases.Operator.Equal:
+                    case Aliases.Operator.NotEqual:
+                    case Aliases.Operator.GreaterOrEqual:
+                    case Aliases.Operator.Greater:
                         expression.push(encodeURIComponent(operation.value));
                         break;
-                    case Mapping.Statements.Operator.BETWEEN:
-                    case Mapping.Statements.Operator.CONTAIN:
-                    case Mapping.Statements.Operator.NOT_CONTAIN:
+                    case Aliases.Operator.Between:
+                    case Aliases.Operator.Contain:
+                    case Aliases.Operator.NotContain:
                         if (!(operation.value instanceof Array)) {
                             throw new Error(`Match value for '${schema.name}' should be an Array object.`);
                         }
                         expression.push(operation.value.length, ...operation.value.map(item => encodeURIComponent(item)));
                         break;
-                    case Mapping.Statements.Operator.REGEX:
+                    case Aliases.Operator.RegEx:
                         if (!(operation.value instanceof RegExp)) {
                             throw new Error(`Match value for '${schema.name}' should be a RegExp object.`);
                         }
@@ -114,26 +114,26 @@ let Filters = class Filters extends Class.Null {
             for (let length = parseInt(array.pop()); length > 0; --length) {
                 const name = array.pop();
                 const operator = parseInt(array.pop());
-                const schema = Mapping.Schema.getRealColumn(model, name);
+                const schema = Aliases.Schema.getRealColumn(model, name);
                 switch (operator) {
-                    case Mapping.Statements.Operator.LESS:
-                    case Mapping.Statements.Operator.LESS_OR_EQUAL:
-                    case Mapping.Statements.Operator.EQUAL:
-                    case Mapping.Statements.Operator.NOT_EQUAL:
-                    case Mapping.Statements.Operator.GREATER_OR_EQUAL:
-                    case Mapping.Statements.Operator.GREATER:
+                    case Aliases.Operator.Less:
+                    case Aliases.Operator.LessOrEqual:
+                    case Aliases.Operator.Equal:
+                    case Aliases.Operator.NotEqual:
+                    case Aliases.Operator.GreaterOrEqual:
+                    case Aliases.Operator.Greater:
                         fields[schema.name] = { operator: operator, value: decodeURIComponent(array.pop()) };
                         break;
-                    case Mapping.Statements.Operator.BETWEEN:
-                    case Mapping.Statements.Operator.CONTAIN:
-                    case Mapping.Statements.Operator.NOT_CONTAIN:
+                    case Aliases.Operator.Between:
+                    case Aliases.Operator.Contain:
+                    case Aliases.Operator.NotContain:
                         const values = [];
                         for (let i = parseInt(array.pop()); i > 0; --i) {
                             values.push(decodeURIComponent(array.pop()));
                         }
                         fields[schema.name] = { operator: operator, value: values };
                         break;
-                    case Mapping.Statements.Operator.REGEX:
+                    case Aliases.Operator.RegEx:
                         const regexp = decodeURIComponent(array.pop());
                         const flags = decodeURIComponent(array.pop());
                         fields[schema.name] = { operator: operator, value: new RegExp(regexp, flags) };
@@ -159,7 +159,7 @@ let Filters = class Filters extends Class.Null {
         const fields = [];
         let length = 0;
         for (const name in sort) {
-            fields.push(Mapping.Schema.getRealColumn(model, name).name, sort[name]);
+            fields.push(Aliases.Schema.getRealColumn(model, name).name, sort[name]);
             length++;
         }
         return [this.SortPrefix, length, ...fields];
@@ -179,10 +179,10 @@ let Filters = class Filters extends Class.Null {
         for (let length = parseInt(array.pop()); length > 0; --length) {
             const name = array.pop();
             const order = parseInt(array.pop());
-            const schema = Mapping.Schema.getRealColumn(model, name);
+            const schema = Aliases.Schema.getRealColumn(model, name);
             switch (order) {
-                case Mapping.Statements.Order.ASCENDING:
-                case Mapping.Statements.Order.DESCENDING:
+                case Aliases.Order.Ascending:
+                case Aliases.Order.Descending:
                     fields[schema.name] = order;
                     break;
                 default:
@@ -215,29 +215,29 @@ let Filters = class Filters extends Class.Null {
         };
     }
     /**
-     * Build a query string URL from the specified view modes and field filter.
+     * Build a query string URL from the specified entity model, viewed fields and query filter.
      * @param model Model type.
-     * @param views View modes.
-     * @param filter Field filter.
+     * @param query Query filter.
+     * @param fields Viewed fields.
      * @returns Returns the generated query string URL.
      */
-    static toURL(model, views, filter) {
+    static toURL(model, query, fields) {
         const queries = [];
-        if (views && views.length > 0) {
-            queries.push(...this.packViewModes(views));
+        if (fields && fields.length > 0) {
+            queries.push(...this.packViewedFields(fields));
         }
-        if (filter) {
-            if (filter.pre) {
-                queries.push(...this.packMatchRules(this.PreMatchPrefix, model, filter.pre));
+        if (query) {
+            if (query.pre) {
+                queries.push(...this.packMatchRules(this.PreMatchPrefix, model, query.pre));
             }
-            if (filter.post) {
-                queries.push(...this.packMatchRules(this.PostMatchPrefix, model, filter.post));
+            if (query.post) {
+                queries.push(...this.packMatchRules(this.PostMatchPrefix, model, query.post));
             }
-            if (filter.sort) {
-                queries.push(...this.packSort(model, filter.sort));
+            if (query.sort) {
+                queries.push(...this.packSort(model, query.sort));
             }
-            if (filter.limit) {
-                queries.push(...this.packLimit(filter.limit));
+            if (query.limit) {
+                queries.push(...this.packLimit(query.limit));
             }
         }
         return queries.length ? `${this.QueryPrefix}/${queries.join('/')}` : ``;
@@ -250,7 +250,7 @@ let Filters = class Filters extends Class.Null {
      * @throws Throws an error when there are unsupported data serialization in the specified URL.
      */
     static fromURL(model, url) {
-        const result = { views: [] };
+        const result = { fields: [] };
         const parts = url.split('/').reverse();
         if (parts.pop() === this.QueryPrefix) {
             while (parts.length) {
@@ -267,8 +267,8 @@ let Filters = class Filters extends Class.Null {
                     case this.LimitPrefix:
                         result.limit = this.unpackLimit(parts);
                         break;
-                    case this.ViewsPrefix:
-                        result.views = this.unpackViewModes(parts);
+                    case this.FieldsPrefix:
+                        result.fields = this.unpackViewedFields(parts);
                         break;
                     default:
                         throw new Error(`Unsupported data serialization type.`);
@@ -283,9 +283,9 @@ let Filters = class Filters extends Class.Null {
  */
 Filters.QueryPrefix = 'query';
 /**
- * Magic views prefix.
+ * Magic fields prefix.
  */
-Filters.ViewsPrefix = 'views';
+Filters.FieldsPrefix = 'fields';
 /**
  * Magic pre-match prefix.
  */
@@ -307,7 +307,7 @@ __decorate([
 ], Filters, "QueryPrefix", void 0);
 __decorate([
     Class.Private()
-], Filters, "ViewsPrefix", void 0);
+], Filters, "FieldsPrefix", void 0);
 __decorate([
     Class.Private()
 ], Filters, "PreMatchPrefix", void 0);
@@ -322,10 +322,10 @@ __decorate([
 ], Filters, "LimitPrefix", void 0);
 __decorate([
     Class.Private()
-], Filters, "packViewModes", null);
+], Filters, "packViewedFields", null);
 __decorate([
     Class.Private()
-], Filters, "unpackViewModes", null);
+], Filters, "unpackViewedFields", null);
 __decorate([
     Class.Private()
 ], Filters, "packMatchRules", null);

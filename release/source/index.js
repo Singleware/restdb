@@ -6,12 +6,30 @@ Object.defineProperty(exports, "__esModule", { value: true });
  */
 var driver_1 = require("./driver");
 exports.Driver = driver_1.Driver;
-var entity_1 = require("./entity");
-exports.Entity = entity_1.Entity;
-var filters_1 = require("./filters");
-exports.Filters = filters_1.Filters;
+var caster_1 = require("./caster");
+exports.Caster = caster_1.Caster;
+var schema_1 = require("./schema");
+exports.Schema = schema_1.Schema;
+var aliases_1 = require("./aliases");
+exports.Entity = aliases_1.Entity;
+exports.Mapper = aliases_1.Mapper;
+var aliases_2 = require("./aliases");
+exports.Operator = aliases_2.Operator;
+exports.Order = aliases_2.Order;
+// Imported aliases.
 const Request = require("./request");
-exports.Request = Request;
 const Response = require("./response");
+const Common = require("./common");
+/**
+ * Request namespace.
+ */
+exports.Request = Request;
+/**
+ * Response namespace.
+ */
 exports.Response = Response;
+/**
+ * Common driver namespace.
+ */
+exports.Common = Common;
 //# sourceMappingURL=index.js.map
