@@ -27,5 +27,5 @@ export interface Output {
   /**
    * Output payload.
    */
-  payload?: Types.Entity | Types.Entity[];
+  payload?: any;
 }

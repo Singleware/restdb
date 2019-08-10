@@ -12,6 +12,18 @@ const Class = require("@singleware/class");
  */
 let Backend = class Backend extends Class.Null {
     /**
+     * Get all response headers as native headers map.
+     * @param headers Non-native headers object.
+     * @returns Returns the native headers map.
+     */
+    static getResponseHeaders(headers) {
+        const data = {};
+        for (const name in headers) {
+            data[name.toLowerCase()] = headers[name];
+        }
+        return data;
+    }
+    /**
      * Gets the request options entity.
      * @param input Request input.
      * @param url Request URL.
@@ -20,7 +32,7 @@ let Backend = class Backend extends Class.Null {
     static getRequestOptions(input, url) {
         const options = {
             method: input.method,
-            headers: input.headers,
+            headers: this.getResponseHeaders(input.headers),
             protocol: url.protocol,
             port: url.port,
             host: url.hostname,
@@ -41,11 +53,16 @@ let Backend = class Backend extends Class.Null {
             headers: response.headers,
             status: {
                 code: response.statusCode || 0,
-                message: response.statusMessage || ''
+                message: response.statusMessage || 'Undefined status'
             }
         };
         if (payload.length > 0) {
-            output.payload = JSON.parse(payload);
+            if (output.headers['content-type'] === 'application/json') {
+                output.payload = JSON.parse(payload);
+            }
+            else {
+                output.payload = payload;
+            }
         }
         return output;
     }
@@ -86,6 +103,9 @@ let Backend = class Backend extends Class.Null {
         });
     }
 };
+__decorate([
+    Class.Private()
+], Backend, "getResponseHeaders", null);
 __decorate([
     Class.Private()
 ], Backend, "getRequestOptions", null);

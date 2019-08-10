@@ -6,6 +6,12 @@ import { Input } from './input';
  */
 export declare class Backend extends Class.Null {
     /**
+     * Get all response headers as native headers map.
+     * @param headers Non-native headers object.
+     * @returns Returns the native headers map.
+     */
+    private static getResponseHeaders;
+    /**
      * Gets the request options entity.
      * @param input Request input.
      * @param url Request URL.

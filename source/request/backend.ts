@@ -16,6 +16,20 @@ import { Input } from './input';
 @Class.Describe()
 export class Backend extends Class.Null {
   /**
+   * Get all response headers as native headers map.
+   * @param headers Non-native headers object.
+   * @returns Returns the native headers map.
+   */
+  @Class.Private()
+  private static getResponseHeaders(headers: Http.IncomingHttpHeaders): Response.Headers {
+    const data = <Response.Headers>{};
+    for (const name in headers) {
+      data[name.toLowerCase()] = headers[name];
+    }
+    return data;
+  }
+
+  /**
    * Gets the request options entity.
    * @param input Request input.
    * @param url Request URL.
@@ -25,7 +39,7 @@ export class Backend extends Class.Null {
   private static getRequestOptions(input: Input, url: URL): Http.RequestOptions {
     const options = {
       method: input.method,
-      headers: input.headers,
+      headers: this.getResponseHeaders(input.headers),
       protocol: url.protocol,
       port: url.port,
       host: url.hostname,
@@ -48,11 +62,15 @@ export class Backend extends Class.Null {
       headers: response.headers,
       status: {
         code: response.statusCode || 0,
-        message: response.statusMessage || ''
+        message: response.statusMessage || 'Undefined status'
       }
     };
     if (payload.length > 0) {
-      output.payload = JSON.parse(payload);
+      if (output.headers['content-type'] === 'application/json') {
+        output.payload = JSON.parse(payload);
+      } else {
+        output.payload = payload;
+      }
     }
     return output;
   }

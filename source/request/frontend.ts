@@ -6,7 +6,6 @@ import * as Class from '@singleware/class';
 
 import * as Response from '../response';
 
-import { Headers as ResponseHeaders } from '../headers';
 import { Input } from './input';
 
 /**
@@ -20,18 +19,18 @@ export class Frontend extends Class.Null {
    * @returns Returns the native headers map.
    */
   @Class.Private()
-  private static getResponseHeaders(headers: Headers): ResponseHeaders {
-    const data = <ResponseHeaders>{};
-    const entries = headers.entries();
-    for (const entry of entries) {
-      const [name, value] = entry;
-      const current = data[name];
+  private static getResponseHeaders(headers: Headers): Response.Headers {
+    const data = <Response.Headers>{};
+    for (const pair of headers.entries()) {
+      const [name, value] = pair;
+      const entry = name.toLowerCase();
+      const current = data[entry];
       if (current === void 0) {
-        data[name] = <string>headers.get(name);
+        data[entry] = value;
       } else if (current instanceof Array) {
         current.push(value);
       } else {
-        data[name] = [current];
+        data[entry] = [current];
       }
     }
     return data;
@@ -55,7 +54,11 @@ export class Frontend extends Class.Null {
       }
     };
     if (payload.length > 0) {
-      output.payload = JSON.parse(payload);
+      if (output.headers['content-type'] === 'application/json') {
+        output.payload = JSON.parse(payload);
+      } else {
+        output.payload = payload;
+      }
     }
     return output;
   }

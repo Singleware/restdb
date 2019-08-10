@@ -4,3 +4,4 @@
  */
 export { Output } from './output';
 export { Status } from './status';
+export { Headers } from '../headers';

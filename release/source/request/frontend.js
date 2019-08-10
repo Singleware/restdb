@@ -22,18 +22,18 @@ let Frontend = class Frontend extends Class.Null {
      */
     static getResponseHeaders(headers) {
         const data = {};
-        const entries = headers.entries();
-        for (const entry of entries) {
-            const [name, value] = entry;
-            const current = data[name];
+        for (const pair of headers.entries()) {
+            const [name, value] = pair;
+            const entry = name.toLowerCase();
+            const current = data[entry];
             if (current === void 0) {
-                data[name] = headers.get(name);
+                data[entry] = value;
             }
             else if (current instanceof Array) {
                 current.push(value);
             }
             else {
-                data[name] = [current];
+                data[entry] = [current];
             }
         }
         return data;
@@ -55,7 +55,12 @@ let Frontend = class Frontend extends Class.Null {
             }
         };
         if (payload.length > 0) {
-            output.payload = JSON.parse(payload);
+            if (output.headers['content-type'] === 'application/json') {
+                output.payload = JSON.parse(payload);
+            }
+            else {
+                output.payload = payload;
+            }
         }
         return output;
     }
