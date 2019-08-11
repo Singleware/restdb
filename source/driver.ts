@@ -6,16 +6,18 @@ import * as Class from '@singleware/class';
 import * as Observable from '@singleware/observable';
 import * as Path from '@singleware/path';
 
-import * as Request from './request';
-import * as Response from './response';
+import * as Requests from './requests';
+import * as Responses from './responses';
 import * as Aliases from './aliases';
 
 import { Route } from './route';
+import { Method } from './method';
+import { Headers } from './headers';
 
 /**
- * Alias type for parsed response results.
+ * Alias type for response result.
  */
-type Parsed<T> = T | Promise<T>;
+type Response<T> = T | Promise<T>;
 
 /**
  * Generic driver class.
@@ -23,28 +25,165 @@ type Parsed<T> = T | Promise<T>;
 @Class.Describe()
 export class Driver extends Class.Null implements Aliases.Driver {
   /**
-   * Base URL for any endpoint.
+   * API base endpoint.
    */
   @Class.Private()
   private apiUrl?: string;
 
   /**
-   * Header value for authenticated requests.
+   * API base headers.
    */
   @Class.Private()
-  private apiKeyValue?: string;
+  private apiHeaders = <Headers>{};
 
   /**
-   * Header name for authenticated requests.
+   * API errors subject.
    */
   @Class.Private()
-  private apiKeyHeader = 'x-api-key';
+  private apiErrors = new Observable.Subject<Responses.Output>();
 
   /**
-   * Subject to notify any API error.
+   * Gets the request Id based on the specified entity model and entity Id.
+   * @param model Entity model.
+   * @param id Entity Id.
+   * @returns Returns the request Id.
    */
-  @Class.Private()
-  private errorSubject = new Observable.Subject<Response.Output>();
+  @Class.Protected()
+  protected getRequestId(model: Aliases.Model, id: any): string {
+    return id.toString();
+  }
+
+  /**
+   * Gets the request query string based on the specified entity model, fields and filters.
+   * @param model Entity model.
+   * @param query Query filter.
+   * @param fields Viewed fields.
+   * @returns Returns the request query string.
+   * @throws It will always throws an error because it's not implemented yet.
+   */
+  @Class.Protected()
+  protected getRequestQuery(model: Aliases.Model, query?: Aliases.Query, fields?: string[]): string {
+    throw new Error(`Method 'getRequestQuery' doesn't implemented.`);
+  }
+
+  /**
+   * Gets the request method based on the specified entity model.
+   * @param model Entity model.
+   * @param method Request method.
+   * @returns Returns the request method.
+   */
+  @Class.Protected()
+  protected getRequestMethod(model: Aliases.Model, method: Method): Method {
+    return method;
+  }
+
+  /**
+   * Gets the result Id from the given response entity.
+   * @param model Entity model.
+   * @param response Response entity.
+   * @returns Returns the result Id, a promise to get it or undefined when the result Id wasn't found.
+   * @throws It will always throws an error because it's not implemented yet.
+   */
+  @Class.Protected()
+  protected getInsertResponse(model: Aliases.Model, response: Responses.Output): Response<string | undefined> {
+    throw new Error(`Method 'getInsertResponse' doesn't implemented.`);
+  }
+
+  /**
+   * Gets the found entity list from the given response entity.
+   * @param model Entity model.
+   * @param response Response entity.
+   * @returns Returns the entity list or a promise to get it.
+   * @throws It will always throws an error because it's not implemented yet.
+   */
+  @Class.Protected()
+  protected getFindResponse<T extends Aliases.Entity>(model: Aliases.Model, response: Responses.Output): Response<T[]> {
+    throw new Error(`Method 'getFindResponse' doesn't implemented.`);
+  }
+
+  /**
+   * Gets the found entity from the given response entity.
+   * @param model Entity model.
+   * @param response Response entity.
+   * @returns Returns the entity, a promise to get it or undefined when the entity wasn't found.
+   * @throws It will always throws an error because it's not implemented yet.
+   */
+  @Class.Protected()
+  protected getFindByIdResponse<T extends Aliases.Entity>(model: Aliases.Model, response: Responses.Output): Response<T | undefined> {
+    throw new Error(`Method 'getFindByIdResponse' doesn't implemented.`);
+  }
+
+  /**
+   * Gets the number of updated entities from the given response entity.
+   * @param model Entity model.
+   * @param response Response entity.
+   * @returns Returns the number of updated entities or a promise to get it.
+   * @throws It will always throws an error because it's not implemented yet.
+   */
+  @Class.Protected()
+  protected getUpdateResponse(model: Aliases.Model, response: Responses.Output): Response<number> {
+    throw new Error(`Method 'getUpdateResponse' doesn't implemented.`);
+  }
+
+  /**
+   * Gets the updated entity status from the given response entity.
+   * @param model Entity model.
+   * @param response Response entity.
+   * @returns Returns the updated entity status or a promise to get it.
+   * @throws It will always throws an error because it's not implemented yet.
+   */
+  @Class.Protected()
+  protected getUpdateByIdResponse(model: Aliases.Model, response: Responses.Output): Response<boolean> {
+    throw new Error(`Method 'getUpdateByIdResponse' doesn't implemented.`);
+  }
+
+  /**
+   * Gets the replaced entity status from the given response entity.
+   * @param model Entity model.
+   * @param response Response entity.
+   * @returns Returns the replaced entity status or a promise to get it.
+   * @throws It will always throws an error because it's not implemented yet.
+   */
+  @Class.Protected()
+  protected getReplaceByIdResponse(model: Aliases.Model, response: Responses.Output): Response<boolean> {
+    throw new Error(`Method 'getReplaceByIdResponse' doesn't implemented.`);
+  }
+
+  /**
+   * Gets the number of deleted entities from the given response entity.
+   * @param model Entity model.
+   * @param response Response entity.
+   * @returns Returns the number of deleted entities or a promise to get it.
+   * @throws It will always throws an error because it's not implemented yet.
+   */
+  @Class.Protected()
+  protected getDeleteResponse(model: Aliases.Model, response: Responses.Output): Response<number> {
+    throw new Error(`Method 'getDeleteResponse' doesn't implemented.`);
+  }
+
+  /**
+   * Gets the deleted entity status from the given response entity.
+   * @param model Entity model.
+   * @param response Response entity.
+   * @returns Returns the deleted entity status or a promise to get it.
+   * @throws It will always throws an error because it's not implemented yet.
+   */
+  @Class.Protected()
+  protected getDeleteByIdResponse(model: Aliases.Model, response: Responses.Output): Response<boolean> {
+    throw new Error(`Method 'getDeleteByIdResponse' doesn't implemented.`);
+  }
+
+  /**
+   * Gets the number of entities from the given response entity.
+   * @param model Entity model.
+   * @param response Response entity.
+   * @returns Returns the number of entities or a promise to get it.
+   * @throws It will always throws an error because it's not implemented yet.
+   */
+  @Class.Protected()
+  protected getCountResponse(model: Aliases.Model, response: Responses.Output): Response<number> {
+    throw new Error(`Method 'getCountResponse' doesn't implemented.`);
+  }
 
   /**
    * Gets a new request path based on the specified route entity.
@@ -59,8 +198,7 @@ export class Driver extends Class.Null implements Aliases.Driver {
       const variable = match.substr(1, match.length - 2);
       const value = (<Aliases.Entity>route)[variable];
       if (value !== void 0) {
-        assigned[variable] = true;
-        return value;
+        return (assigned[variable] = true), value;
       }
       return '';
     });
@@ -70,7 +208,7 @@ export class Driver extends Class.Null implements Aliases.Driver {
     if (!assigned.query && route.query !== void 0 && route.query.length > 0) {
       path += `/${route.query}`;
     }
-    return Path.normalize(`${path}`);
+    return Path.normalize(path);
   }
 
   /**
@@ -81,205 +219,56 @@ export class Driver extends Class.Null implements Aliases.Driver {
    * @returns Returns a promise to get the response output.
    */
   @Class.Private()
-  private getRequestResponse(method: string, path: string, payload?: Aliases.Entity): Promise<Response.Output> {
-    const input = <Request.Input>{
+  private getRequestResponse(method: string, path: string, payload?: Aliases.Entity): Promise<Responses.Output> {
+    const input = <Requests.Input>{
       url: `${this.apiUrl}/${path}`,
       method: method,
-      payload: payload
+      payload: payload,
+      headers: { ...this.apiHeaders }
     };
-    if (this.apiKeyValue) {
-      input.headers = {};
-      input.headers[this.apiKeyHeader] = this.apiKeyValue;
+    if (typeof window === typeof void 0) {
+      return Requests.Backend.request(input);
     }
-    if (typeof window !== 'undefined') {
-      return Request.Frontend.request(input);
-    }
-    return Request.Backend.request(input);
+    return Requests.Frontend.request(input);
   }
 
   /**
-   * Parses the request Id based on the specified entity model and entity Id.
-   * @param model Entity model.
-   * @param id Entity Id.
-   * @returns Returns the parsed entity Id.
+   * Sets a new request header.
+   * @param name Header name.
+   * @param value Header value.
+   * @returns Returns its own instance.
    */
   @Class.Protected()
-  protected parseRequestId(model: Aliases.Model, id: any): string {
-    return id.toString();
+  protected setHeader(name: string, value: string | string[]): Driver {
+    return (this.apiHeaders[name] = value), this;
   }
 
   /**
-   * Parses the request query string based on the specified entity model, fields and filters.
-   * @param model Entity model.
-   * @param query Query filter.
-   * @param fields Viewed fields.
-   * @returns Returns the parsed query string.
-   * @throws It will always throws an error because it's not implemented yet.
+   * Removes the specified header.
+   * @param name Header name.
+   * @returns Returns its own instance.
    */
   @Class.Protected()
-  protected parseRequestQuery(model: Aliases.Model, query?: Aliases.Query, fields?: string[]): string {
-    throw new Error(`Method 'parseRequestQuery' doesn't implemented.`);
+  protected removeHeader(name: string): Driver {
+    return delete this.apiHeaders[name], this;
   }
 
   /**
-   * Parses the inserted Id from the given response entity.
-   * @param model Entity model.
-   * @param response Response entity.
-   * @returns Returns the inserted Id, a promise to get or undefined when the inserted Id was not found.
-   * @throws It will always throws an error because it's not implemented yet.
-   */
-  @Class.Protected()
-  protected parseInsertResponse(model: Aliases.Model, response: Response.Output): Parsed<string | undefined> {
-    throw new Error(`Method 'parseInsertResponse' doesn't implemented.`);
-  }
-
-  /**
-   * Parses the found entity list from the given response entity.
-   * @param model Entity model.
-   * @param response Response entity.
-   * @returns Returns the entity list or a promise to get it.
-   * @throws It will always throws an error because it's not implemented yet.
-   */
-  @Class.Protected()
-  protected parseFindResponse<T extends Aliases.Entity>(model: Aliases.Model, response: Response.Output): Parsed<T[]> {
-    throw new Error(`Method 'parseFindResponse' doesn't implemented.`);
-  }
-
-  /**
-   * Parses the found entity from the given response entity.
-   * @param model Entity model.
-   * @param response Response entity.
-   * @returns Returns the entity, a promise to get it or undefined when the entity was not found.
-   * @throws It will always throws an error because it's not implemented yet.
-   */
-  @Class.Protected()
-  protected parseFindByIdResponse<T extends Aliases.Entity>(model: Aliases.Model, response: Response.Output): Parsed<T | undefined> {
-    throw new Error(`Method 'parseFindByIdResponse' doesn't implemented.`);
-  }
-
-  /**
-   * Parses the number of updated entities from the given response entity.
-   * @param model Entity model.
-   * @param response Response entity.
-   * @returns Returns the number of updated entities or a promise to get it.
-   * @throws It will always throws an error because it's not implemented yet.
-   */
-  @Class.Protected()
-  protected parseUpdateResponse(model: Aliases.Model, response: Response.Output): Parsed<number> {
-    throw new Error(`Method 'parseUpdateResponse' doesn't implemented.`);
-  }
-
-  /**
-   * Parses the updated entity status from the given response entity.
-   * @param model Entity model.
-   * @param response Response entity.
-   * @returns Returns the updated entity status or a promise to get it.
-   * @throws It will always throws an error because it's not implemented yet.
-   */
-  @Class.Protected()
-  protected parseUpdateByIdResponse(model: Aliases.Model, response: Response.Output): Parsed<boolean> {
-    throw new Error(`Method 'parseUpdateByIdResponse' doesn't implemented.`);
-  }
-
-  /**
-   * Parses the replaced entity status from the given response entity.
-   * @param model Entity model.
-   * @param response Response entity.
-   * @returns Returns the replaced entity status or a promise to get it.
-   * @throws It will always throws an error because it's not implemented yet.
-   */
-  @Class.Protected()
-  protected parseReplaceByIdResponse(model: Aliases.Model, response: Response.Output): Parsed<boolean> {
-    throw new Error(`Method 'parseReplaceByIdResponse' doesn't implemented.`);
-  }
-
-  /**
-   * Parses the number of deleted entities from the given response entity.
-   * @param model Entity model.
-   * @param response Response entity.
-   * @returns Returns the number of deleted entities or a promise to get it.
-   * @throws It will always throws an error because it's not implemented yet.
-   */
-  @Class.Protected()
-  protected parseDeleteResponse(model: Aliases.Model, response: Response.Output): Parsed<number> {
-    throw new Error(`Method 'parseDeleteResponse' doesn't implemented.`);
-  }
-
-  /**
-   * Parses the deleted entity status from the given response entity.
-   * @param model Entity model.
-   * @param response Response entity.
-   * @returns Returns the deleted entity status or a promise to get it.
-   * @throws It will always throws an error because it's not implemented yet.
-   */
-  @Class.Protected()
-  protected parseDeleteByIdResponse(model: Aliases.Model, response: Response.Output): Parsed<boolean> {
-    throw new Error(`Method 'parseDeleteByIdResponse' doesn't implemented.`);
-  }
-
-  /**
-   * Parses the number of entities from the given response entity.
-   * @param model Entity model.
-   * @param response Response entity.
-   * @returns Returns the number of entities or a promise to get it.
-   * @throws It will always throws an error because it's not implemented yet.
-   */
-  @Class.Protected()
-  protected parseCountResponse(model: Aliases.Model, response: Response.Output): Parsed<number> {
-    throw new Error(`Method 'parseCountResponse' doesn't implemented.`);
-  }
-
-  /**
-   * Parses the error response from the given response entity.
+   * Notify an error in the given response entity for all listeners.
    * @param model Entity model.
    * @param response Response entity.
    */
   @Class.Protected()
-  protected parseErrorResponse(model: Aliases.Model, response: Response.Output): void {
-    this.errorSubject.notifyAll(response);
-  }
-
-  /**
-   * Sets a new key header name for the subsequent requests.
-   * @param name New header name.
-   * @returns Returns the own instance.
-   */
-  @Class.Protected()
-  protected setKeyHeaderName(name: string): Driver {
-    this.apiKeyHeader = name;
-    return this;
-  }
-
-  /**
-   * Sets a new key header value for the subsequent requests.
-   * @param value New header value.
-   * @returns Returns the own instance.
-   */
-  @Class.Protected()
-  protected setKeyHeaderValue(value: string): Driver {
-    this.apiKeyValue = value;
-    return this;
-  }
-
-  /**
-   * Sets a new key header name and value for the subsequent requests.
-   * @param name New header name.
-   * @param value New header value.
-   * @returns Returns the own instance.
-   */
-  @Class.Protected()
-  protected setKeyHeader(name: string, value: string): Driver {
-    this.apiKeyHeader = name;
-    this.apiKeyValue = value;
-    return this;
+  protected async notifyErrorResponse(model: Aliases.Model, response: Responses.Output): Promise<void> {
+    await this.apiErrors.notifyAll(response);
   }
 
   /**
    * Gets the error subject.
    */
   @Class.Public()
-  public get onErrors(): Observable.Subject<Response.Output> {
-    return this.errorSubject;
+  public get onError(): Observable.Subject<Responses.Output> {
+    return this.apiErrors;
   }
 
   /**
@@ -300,18 +289,19 @@ export class Driver extends Class.Null implements Aliases.Driver {
    */
   @Class.Public()
   public async insert<T extends Aliases.Entity>(model: Aliases.Model, entities: T[]): Promise<string[]> {
+    const path = this.getRequestPath({ model: model, query: this.getRequestQuery(model) });
+    const method = this.getRequestMethod(model, Method.POST);
     const list = [];
-    const path = this.getRequestPath({ model: model, query: this.parseRequestQuery(model) });
     for (const entity of entities) {
-      const payload = Aliases.Normalizer.create(model, entity, true);
-      const response = await this.getRequestResponse('POST', path, payload);
-      if (response.status.code === 200 || response.status.code === 201 || response.status.code === 202) {
-        const id = await this.parseInsertResponse(model, response);
-        if (id !== void 0) {
-          list.push(id);
+      const payload = Aliases.Normalizer.create(model, entity, true, true);
+      const response = await this.getRequestResponse(method, path, payload);
+      if (Requests.Helper.isAcceptedStatusCode(response.status.code)) {
+        const identity = await this.getInsertResponse(model, response);
+        if (identity !== void 0) {
+          list.push(identity);
         }
       } else {
-        this.parseErrorResponse(model, response);
+        await this.notifyErrorResponse(model, response);
       }
     }
     return list;
@@ -327,12 +317,13 @@ export class Driver extends Class.Null implements Aliases.Driver {
    */
   @Class.Public()
   public async find<T extends Aliases.Entity>(model: Aliases.Model<T>, query: Aliases.Query, fields: string[]): Promise<T[]> {
-    const path = this.getRequestPath({ model: model, query: this.parseRequestQuery(model, query, fields) });
-    const response = await this.getRequestResponse('GET', path);
-    if (response.status.code === 200) {
-      return await this.parseFindResponse(model, response);
+    const path = this.getRequestPath({ model: model, query: this.getRequestQuery(model, query, fields) });
+    const method = this.getRequestMethod(model, Method.GET);
+    const response = await this.getRequestResponse(method, path);
+    if (Requests.Helper.isAcceptedStatusCode(response.status.code)) {
+      return await this.getFindResponse(model, response);
     }
-    return this.parseErrorResponse(model, response), [];
+    return await this.notifyErrorResponse(model, response), [];
   }
 
   /**
@@ -344,14 +335,14 @@ export class Driver extends Class.Null implements Aliases.Driver {
    */
   @Class.Public()
   public async findById<T extends Aliases.Entity>(model: Aliases.Model<T>, id: any, fields: string[]): Promise<T | undefined> {
-    const target = this.parseRequestId(model, id);
-    const query = this.parseRequestQuery(model, void 0, fields);
-    const path = this.getRequestPath({ model: model, id: target, query: query });
-    const response = await this.getRequestResponse('GET', path);
-    if (response.status.code === 200) {
-      return await this.parseFindByIdResponse(model, response);
+    const query = this.getRequestQuery(model, void 0, fields);
+    const path = this.getRequestPath({ model: model, id: this.getRequestId(model, id), query: query });
+    const method = this.getRequestMethod(model, Method.GET);
+    const response = await this.getRequestResponse(method, path);
+    if (Requests.Helper.isAcceptedStatusCode(response.status.code)) {
+      return await this.getFindByIdResponse(model, response);
     }
-    return this.parseErrorResponse(model, response), void 0;
+    return await this.notifyErrorResponse(model, response), void 0;
   }
 
   /**
@@ -363,13 +354,14 @@ export class Driver extends Class.Null implements Aliases.Driver {
    */
   @Class.Public()
   public async update(model: Aliases.Model, match: Aliases.Match, entity: Aliases.Entity): Promise<number> {
-    const path = this.getRequestPath({ model: model, query: this.parseRequestQuery(model, { pre: match }) });
-    const payload = Aliases.Normalizer.create(model, entity, true);
-    const response = await this.getRequestResponse('PATCH', path, payload);
-    if (response.status.code === 200 || response.status.code === 202 || response.status.code === 204) {
-      return await this.parseUpdateResponse(model, response);
+    const path = this.getRequestPath({ model: model, query: this.getRequestQuery(model, { pre: match }) });
+    const method = this.getRequestMethod(model, Method.PATCH);
+    const payload = Aliases.Normalizer.create(model, entity, true, true);
+    const response = await this.getRequestResponse(method, path, payload);
+    if (Requests.Helper.isAcceptedStatusCode(response.status.code)) {
+      return await this.getUpdateResponse(model, response);
     }
-    return this.parseErrorResponse(model, response), 0;
+    return await this.notifyErrorResponse(model, response), 0;
   }
 
   /**
@@ -381,13 +373,14 @@ export class Driver extends Class.Null implements Aliases.Driver {
    */
   @Class.Public()
   public async updateById(model: Aliases.Model, id: any, entity: Aliases.Entity): Promise<boolean> {
-    const path = this.getRequestPath({ model: model, id: this.parseRequestId(model, id), query: this.parseRequestQuery(model) });
-    const payload = Aliases.Normalizer.create(model, entity, true);
-    const response = await this.getRequestResponse('PATCH', path, payload);
-    if (response.status.code === 200 || response.status.code === 202 || response.status.code === 204) {
-      return await this.parseUpdateByIdResponse(model, response);
+    const path = this.getRequestPath({ model: model, id: this.getRequestId(model, id), query: this.getRequestQuery(model) });
+    const method = this.getRequestMethod(model, Method.PATCH);
+    const payload = Aliases.Normalizer.create(model, entity, true, true);
+    const response = await this.getRequestResponse(method, path, payload);
+    if (Requests.Helper.isAcceptedStatusCode(response.status.code)) {
+      return await this.getUpdateByIdResponse(model, response);
     }
-    return this.parseErrorResponse(model, response), false;
+    return await this.notifyErrorResponse(model, response), false;
   }
 
   /**
@@ -399,13 +392,14 @@ export class Driver extends Class.Null implements Aliases.Driver {
    */
   @Class.Public()
   public async replaceById(model: Aliases.Model, id: any, entity: Aliases.Entity): Promise<boolean> {
-    const path = this.getRequestPath({ model: model, id: this.parseRequestId(model, id), query: this.parseRequestQuery(model) });
-    const payload = Aliases.Normalizer.create(model, entity, true);
-    const response = await this.getRequestResponse('PUT', path, payload);
-    if (response.status.code === 200 || response.status.code === 201 || response.status.code === 202) {
-      return await this.parseReplaceByIdResponse(model, response);
+    const path = this.getRequestPath({ model: model, id: this.getRequestId(model, id), query: this.getRequestQuery(model) });
+    const method = this.getRequestMethod(model, Method.PUT);
+    const payload = Aliases.Normalizer.create(model, entity, true, true);
+    const response = await this.getRequestResponse(method, path, payload);
+    if (Requests.Helper.isAcceptedStatusCode(response.status.code)) {
+      return await this.getReplaceByIdResponse(model, response);
     }
-    return this.parseErrorResponse(model, response), false;
+    return await this.notifyErrorResponse(model, response), false;
   }
 
   /**
@@ -416,12 +410,13 @@ export class Driver extends Class.Null implements Aliases.Driver {
    */
   @Class.Public()
   public async delete(model: Aliases.Model, match: Aliases.Match): Promise<number> {
-    const path = this.getRequestPath({ model: model, query: this.parseRequestQuery(model, { pre: match }) });
-    const response = await this.getRequestResponse('DELETE', path);
-    if (response.status.code === 200 || response.status.code === 202 || response.status.code === 204) {
-      return await this.parseDeleteResponse(model, response);
+    const path = this.getRequestPath({ model: model, query: this.getRequestQuery(model, { pre: match }) });
+    const method = this.getRequestMethod(model, Method.DELETE);
+    const response = await this.getRequestResponse(method, path);
+    if (Requests.Helper.isAcceptedStatusCode(response.status.code)) {
+      return await this.getDeleteResponse(model, response);
     }
-    return this.parseErrorResponse(model, response), 0;
+    return await this.notifyErrorResponse(model, response), 0;
   }
 
   /**
@@ -432,27 +427,29 @@ export class Driver extends Class.Null implements Aliases.Driver {
    */
   @Class.Public()
   public async deleteById(model: Aliases.Model, id: any): Promise<boolean> {
-    const path = this.getRequestPath({ model: model, id: this.parseRequestId(model, id) });
-    const response = await this.getRequestResponse('DELETE', path);
-    if (response.status.code === 200 || response.status.code === 202 || response.status.code === 204) {
-      return await this.parseDeleteByIdResponse(model, response);
+    const path = this.getRequestPath({ model: model, id: this.getRequestId(model, id) });
+    const method = this.getRequestMethod(model, Method.DELETE);
+    const response = await this.getRequestResponse(method, path);
+    if (Requests.Helper.isAcceptedStatusCode(response.status.code)) {
+      return await this.getDeleteByIdResponse(model, response);
     }
-    return this.parseErrorResponse(model, response), false;
+    return await this.notifyErrorResponse(model, response), false;
   }
 
   /**
    * Count all corresponding entities using the a HEAD request.
    * @param model Model type.
    * @param query Query filter.
-   * @returns Returns a promise to get the total amount of found entities.
+   * @returns Returns a promise to get the amount of found entities or 0 when there's an error.
    */
   @Class.Public()
   public async count(model: Aliases.Model, query: Aliases.Query): Promise<number> {
-    const path = this.getRequestPath({ model: model, query: this.parseRequestQuery(model, query) });
-    const response = await this.getRequestResponse('HEAD', path);
-    if (response.status.code === 200 || response.status.code === 204) {
-      return await this.parseCountResponse(model, response);
+    const path = this.getRequestPath({ model: model, query: this.getRequestQuery(model, query) });
+    const method = this.getRequestMethod(model, Method.HEAD);
+    const response = await this.getRequestResponse(method, path);
+    if (Requests.Helper.isAcceptedStatusCode(response.status.code)) {
+      return await this.getCountResponse(model, response);
     }
-    return this.parseErrorResponse(model, response), 0;
+    return await this.notifyErrorResponse(model, response), 0;
   }
 }

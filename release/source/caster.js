@@ -12,15 +12,16 @@ Object.defineProperty(exports, "__esModule", { value: true });
  */
 const Class = require("@singleware/class");
 const Mapping = require("@singleware/mapping");
+const coder_1 = require("./coder");
 /**
  * Caster helper class.
  */
 let Caster = class Caster extends Class.Null {
     /**
-     * Try to converts the specified value to an ISO date object or string according to the type casting.
+     * Try to convert the given value to an ISO date object or string according to the specified type casting.
      * @param value Casting value.
      * @param type Casting type.
-     * @returns Returns the converted when the conversion was successful, otherwise returns the same input.
+     * @returns Returns the converted value when the conversion was successful, otherwise returns the given input.
      */
     static ISODate(value, type) {
         if (type === Mapping.Types.Cast.Input) {
@@ -28,6 +29,24 @@ let Caster = class Caster extends Class.Null {
         }
         else if (type === Mapping.Types.Cast.Output) {
             return Mapping.Castings.ISODate.Object(value, type);
+        }
+        return value;
+    }
+    /**
+     * Try to encrypt or decrypt the given value using base64 algorithm according to the specified type casting.
+     * @param value Casting value.
+     * @param type Casting type.
+     * @returns Returns the converted value when the conversion was successful, otherwise returns the given input.
+     */
+    static Base64(value, type) {
+        if (value instanceof Array) {
+            return value.map(value => this.Base64(value, type));
+        }
+        else if (type === Mapping.Types.Cast.Input) {
+            return coder_1.Coder.toBase64(value);
+        }
+        else if (type === Mapping.Types.Cast.Output) {
+            return coder_1.Coder.fromBase64(value);
         }
         else {
             return value;
@@ -37,6 +56,9 @@ let Caster = class Caster extends Class.Null {
 __decorate([
     Class.Public()
 ], Caster, "ISODate", null);
+__decorate([
+    Class.Public()
+], Caster, "Base64", null);
 Caster = __decorate([
     Class.Describe()
 ], Caster);

@@ -23,6 +23,10 @@ let Driver = class Driver extends driver_1.Driver {
     constructor() {
         super(...arguments);
         /**
+         * Header name for the authorization key.
+         */
+        this.apiKeyHeader = 'x-api-key';
+        /**
          * Header name for the counting results.
          */
         this.apiCountingHeader = 'x-api-count';
@@ -34,21 +38,24 @@ let Driver = class Driver extends driver_1.Driver {
      * @param fields Viewed fields.
      * @returns Returns the parsed query string.
      */
-    parseRequestQuery(model, query, fields) {
+    getRequestQuery(model, query, fields) {
         return filters_1.Filters.toURL(model, query, fields);
     }
     /**
-     * Gets the inserted Id from the given response entity.
+     * Gets the result Id from the given response entity.
      * @param model Entity model.
      * @param response Response entity.
-     * @returns Returns the inserted Id or undefined when the inserted Id wasn't found.
-     * @throws Throws an error when the response payload doesn't contains the inserted Id.
+     * @returns Returns the result Id or undefined when the result Id wasn't found.
+     * @throws Throws an error when the response payload doesn't contains the result Id.
      */
-    parseInsertResponse(model, response) {
-        if (!(response.payload instanceof Object) || response.payload.id === void 0) {
-            throw new Error(`The response payload must be an object containing the inserted id.`);
+    getInsertResponse(model, response) {
+        if (response.status.code === 200 || response.status.code === 201 || response.status.code === 202) {
+            if (!(response.payload instanceof Object) || response.payload.id === void 0) {
+                throw new Error(`The response payload must be an object containing the insert id.`);
+            }
+            return response.payload.id;
         }
-        return response.payload.id;
+        return void 0;
     }
     /**
      * Gets the found entity list from the given response entity.
@@ -57,11 +64,14 @@ let Driver = class Driver extends driver_1.Driver {
      * @returns Returns the entity list.
      * @throws Throws an error when the response payload doesn't contains the entity list.
      */
-    parseFindResponse(model, response) {
-        if (!(response.payload instanceof Array)) {
-            throw new Error(`The response payload must be an array containing the search results.`);
+    getFindResponse(model, response) {
+        if (response.status.code === 200) {
+            if (!(response.payload instanceof Array)) {
+                throw new Error(`The response payload must be an array containing the search results.`);
+            }
+            return response.payload;
         }
-        return response.payload;
+        return [];
     }
     /**
      * Gets the found entity from the given response entity.
@@ -69,17 +79,31 @@ let Driver = class Driver extends driver_1.Driver {
      * @param response Response entity.
      * @returns Returns the entity or undefined when the entity was not found.
      */
-    parseFindByIdResponse(model, response) {
-        return response.payload;
+    getFindByIdResponse(model, response) {
+        if (response.status.code === 200) {
+            if (!(response.payload instanceof Object)) {
+                throw new Error(`The response payload must be an object.`);
+            }
+            return response.payload;
+        }
+        return void 0;
     }
     /**
      * Gets the number of updated entities from the given response entity.
      * @param model Entity model.
      * @param response Response entity.
      * @returns Returns the number of updated entities.
+     * @throws Throws an error when the counting header is missing or incorrect in the response.
      */
-    parseUpdateResponse(model, response) {
-        return parseInt(response.headers[this.apiCountingHeader]) || 0;
+    getUpdateResponse(model, response) {
+        if (response.status.code === 200 || response.status.code === 202 || response.status.code === 204) {
+            const amount = parseInt(response.headers[this.apiCountingHeader]);
+            if (isNaN(amount)) {
+                throw new Error(`Counting header is missing or incorrect in the update response.`);
+            }
+            return amount;
+        }
+        return 0;
     }
     /**
      * Gets the updated entity status from the given response entity.
@@ -87,8 +111,8 @@ let Driver = class Driver extends driver_1.Driver {
      * @param response Response entity.
      * @returns Returns the updated entity status.
      */
-    parseUpdateByIdResponse(model, response) {
-        return true;
+    getUpdateByIdResponse(model, response) {
+        return response.status.code === 200 || response.status.code === 202 || response.status.code === 204;
     }
     /**
      * Gets the replaced entity status from the given response entity.
@@ -97,17 +121,25 @@ let Driver = class Driver extends driver_1.Driver {
      * @returns Returns the replaced entity status.
      * @throws It will always throws an error because it's not implemented yet.
      */
-    parseReplaceByIdResponse(model, response) {
-        return true;
+    getReplaceByIdResponse(model, response) {
+        return response.status.code === 200 || response.status.code === 202 || response.status.code === 204;
     }
     /**
      * Gets the number of deleted entities from the given response entity.
      * @param model Entity model.
      * @param response Response entity.
      * @returns Returns the number of deleted entities.
+     * @throws Throws an error when the counting header is missing or incorrect in the response.
      */
-    parseDeleteResponse(model, response) {
-        return parseInt(response.headers[this.apiCountingHeader]) || 0;
+    getDeleteResponse(model, response) {
+        if (response.status.code === 200 || response.status.code === 202 || response.status.code === 204) {
+            const amount = parseInt(response.headers[this.apiCountingHeader]);
+            if (isNaN(amount)) {
+                throw new Error(`Counting header is missing or incorrect in the delete response.`);
+            }
+            return amount;
+        }
+        return 0;
     }
     /**
      * Gets the deleted entity status from the given response entity.
@@ -115,43 +147,69 @@ let Driver = class Driver extends driver_1.Driver {
      * @param response Response entity.
      * @returns Returns the deleted entity status.
      */
-    parseDeleteByIdResponse(model, response) {
-        return true;
+    getDeleteByIdResponse(model, response) {
+        return response.status.code === 200 || response.status.code === 202 || response.status.code === 204;
     }
     /**
      * Gets the number of entities from the given response entity.
      * @param model Entity model.
      * @param response Response entity.
      * @returns Returns the number of entities.
+     * @throws Throws an error when the counting header is missing or incorrect in the response.
      */
-    parseCountResponse(model, response) {
-        return parseInt(response.headers[this.apiCountingHeader]) || 0;
+    getCountResponse(model, response) {
+        if (response.status.code === 200 || response.status.code === 204) {
+            const amount = parseInt(response.headers[this.apiCountingHeader]);
+            if (isNaN(amount)) {
+                throw new Error(`Counting header missing or incorrect in the count response.`);
+            }
+            return amount;
+        }
+        return 0;
     }
     /**
-     * Parses the error response from the given response entity.
+     * Notify an error in the given response entity for all listeners.
      * @param model Entity model.
      * @param response Response entity.
      */
-    parseErrorResponse(mode, response) {
-        this.apiResponseError = response.payload;
+    async notifyErrorResponse(model, response) {
+        await super.notifyErrorResponse(model, (this.apiResponseError = response.payload));
     }
     /**
-     * Sets a new API counting header for the subsequent requests.
+     * Sets a new name for the API counting header.
      * @param name New header name.
-     * @returns Returns the own instance.
+     * @returns Returns its own instance.
      */
     setCountingHeaderName(name) {
-        this.apiCountingHeader = name.toLowerCase();
-        return this;
+        return (this.apiCountingHeader = name.toLowerCase()), this;
     }
     /**
-     * Gets the last request error response.
+     * Sets a new name for the API key header.
+     * @param name New header name.
+     * @returns Returns its own instance.
+     */
+    setKeyHeaderName(name) {
+        return (this.apiKeyHeader = name.toLowerCase()), this;
+    }
+    /**
+     * Sets a new value for the API key header.
+     * @param value New header value.
+     * @returns Returns its own instance.
+     */
+    setKeyHeaderValue(value) {
+        return this.setHeader(this.apiKeyHeader, value), this;
+    }
+    /**
+     * Gets the request error response.
      * @returns Returns the error response entity or undefined when there's no error.
      */
-    getErrorResponse() {
+    get errorResponse() {
         return this.apiResponseError;
     }
 };
+__decorate([
+    Class.Private()
+], Driver.prototype, "apiKeyHeader", void 0);
 __decorate([
     Class.Private()
 ], Driver.prototype, "apiCountingHeader", void 0);
@@ -160,43 +218,49 @@ __decorate([
 ], Driver.prototype, "apiResponseError", void 0);
 __decorate([
     Class.Protected()
-], Driver.prototype, "parseRequestQuery", null);
+], Driver.prototype, "getRequestQuery", null);
 __decorate([
     Class.Protected()
-], Driver.prototype, "parseInsertResponse", null);
+], Driver.prototype, "getInsertResponse", null);
 __decorate([
     Class.Protected()
-], Driver.prototype, "parseFindResponse", null);
+], Driver.prototype, "getFindResponse", null);
 __decorate([
     Class.Protected()
-], Driver.prototype, "parseFindByIdResponse", null);
+], Driver.prototype, "getFindByIdResponse", null);
 __decorate([
     Class.Protected()
-], Driver.prototype, "parseUpdateResponse", null);
+], Driver.prototype, "getUpdateResponse", null);
 __decorate([
     Class.Protected()
-], Driver.prototype, "parseUpdateByIdResponse", null);
+], Driver.prototype, "getUpdateByIdResponse", null);
 __decorate([
     Class.Protected()
-], Driver.prototype, "parseReplaceByIdResponse", null);
+], Driver.prototype, "getReplaceByIdResponse", null);
 __decorate([
     Class.Protected()
-], Driver.prototype, "parseDeleteResponse", null);
+], Driver.prototype, "getDeleteResponse", null);
 __decorate([
     Class.Protected()
-], Driver.prototype, "parseDeleteByIdResponse", null);
+], Driver.prototype, "getDeleteByIdResponse", null);
 __decorate([
     Class.Protected()
-], Driver.prototype, "parseCountResponse", null);
+], Driver.prototype, "getCountResponse", null);
 __decorate([
     Class.Protected()
-], Driver.prototype, "parseErrorResponse", null);
+], Driver.prototype, "notifyErrorResponse", null);
 __decorate([
     Class.Protected()
 ], Driver.prototype, "setCountingHeaderName", null);
 __decorate([
     Class.Protected()
-], Driver.prototype, "getErrorResponse", null);
+], Driver.prototype, "setKeyHeaderName", null);
+__decorate([
+    Class.Protected()
+], Driver.prototype, "setKeyHeaderValue", null);
+__decorate([
+    Class.Protected()
+], Driver.prototype, "errorResponse", null);
 Driver = __decorate([
     Class.Describe()
 ], Driver);

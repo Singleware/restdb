@@ -11,6 +11,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
  * This source code is licensed under the MIT License as described in the file LICENSE.
  */
 const Class = require("@singleware/class");
+const helper_1 = require("./helper");
 /**
  * Frontend client class.
  */
@@ -55,7 +56,7 @@ let Frontend = class Frontend extends Class.Null {
             }
         };
         if (payload.length > 0) {
-            if (output.headers['content-type'] === 'application/json') {
+            if (helper_1.Helper.isAcceptedContentType(output.headers['content-type'], 'application/json')) {
                 output.payload = JSON.parse(payload);
             }
             else {

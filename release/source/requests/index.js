@@ -8,4 +8,6 @@ var frontend_1 = require("./frontend");
 exports.Frontend = frontend_1.Frontend;
 var backend_1 = require("./backend");
 exports.Backend = backend_1.Backend;
+var helper_1 = require("./helper");
+exports.Helper = helper_1.Helper;
 //# sourceMappingURL=index.js.map

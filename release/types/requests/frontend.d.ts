@@ -3,7 +3,7 @@
  * This source code is licensed under the MIT License as described in the file LICENSE.
  */
 import * as Class from '@singleware/class';
-import * as Response from '../response';
+import * as Responses from '../responses';
 import { Input } from './input';
 /**
  * Frontend client class.
@@ -28,5 +28,5 @@ export declare class Frontend extends Class.Null {
      * @param input Request input.
      * @returns Returns the request output.
      */
-    static request(input: Input): Promise<Response.Output>;
+    static request(input: Input): Promise<Responses.Output>;
 }

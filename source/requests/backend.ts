@@ -6,9 +6,10 @@ import * as Http from 'http';
 
 import * as Class from '@singleware/class';
 
-import * as Response from '../response';
+import * as Responses from '../responses';
 
 import { Input } from './input';
+import { Helper } from './helper';
 
 /**
  * Backend client class.
@@ -21,8 +22,8 @@ export class Backend extends Class.Null {
    * @returns Returns the native headers map.
    */
   @Class.Private()
-  private static getResponseHeaders(headers: Http.IncomingHttpHeaders): Response.Headers {
-    const data = <Response.Headers>{};
+  private static getResponseHeaders(headers: Http.IncomingHttpHeaders): Responses.Headers {
+    const data = <Responses.Headers>{};
     for (const name in headers) {
       data[name.toLowerCase()] = headers[name];
     }
@@ -56,8 +57,8 @@ export class Backend extends Class.Null {
    * @returns Returns the response output entity.
    */
   @Class.Private()
-  private static getResponseOutput(input: Input, payload: string, response: Http.IncomingMessage): Response.Output {
-    const output = <Response.Output>{
+  private static getResponseOutput(input: Input, payload: string, response: Http.IncomingMessage): Responses.Output {
+    const output = <Responses.Output>{
       input: input,
       headers: response.headers,
       status: {
@@ -66,7 +67,7 @@ export class Backend extends Class.Null {
       }
     };
     if (payload.length > 0) {
-      if (output.headers['content-type'] === 'application/json') {
+      if (Helper.isAcceptedContentType(<string>output.headers['content-type'], 'application/json')) {
         output.payload = JSON.parse(payload);
       } else {
         output.payload = payload;
@@ -97,21 +98,22 @@ export class Backend extends Class.Null {
    * @returns Returns the request output.
    */
   @Class.Public()
-  public static async request(input: Input): Promise<Response.Output> {
+  public static async request(input: Input): Promise<Responses.Output> {
     const url = new URL(input.url);
     const client = require(url.protocol.substr(0, url.protocol.length - 1));
     let payload: string;
     if (input.payload) {
       payload = JSON.stringify(input.payload);
-      input.headers['Content-Length'] = payload.length.toString();
+      input.headers['Content-Length'] = Buffer.byteLength(payload).toString();
       input.headers['Content-Type'] = 'application/json';
     }
-    return new Promise<Response.Output>((resolve: (value: Response.Output) => void, reject: (value: Error) => void): void => {
-      const request = client.request(this.getRequestOptions(input, url), this.responseHandler.bind(this, input, resolve, reject));
+    return new Promise<Responses.Output>((resolve: (value: Responses.Output) => void, reject: (value: Error) => void): void => {
+      const options = this.getRequestOptions(input, url);
+      const request = <Http.ClientRequest>client.request(options, this.responseHandler.bind(this, input, resolve, reject));
       if (payload) {
         request.write(payload);
-        request.end();
       }
+      request.end();
     });
   }
 }

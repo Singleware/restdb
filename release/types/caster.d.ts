@@ -5,19 +5,21 @@
 import * as Class from '@singleware/class';
 import * as Mapping from '@singleware/mapping';
 /**
- * ISO date aliases.
- */
-declare type ISODate<T> = T | Date | string;
-/**
  * Caster helper class.
  */
 export declare class Caster extends Class.Null {
     /**
-     * Try to converts the specified value to an ISO date object or string according to the type casting.
+     * Try to convert the given value to an ISO date object or string according to the specified type casting.
      * @param value Casting value.
      * @param type Casting type.
-     * @returns Returns the converted when the conversion was successful, otherwise returns the same input.
+     * @returns Returns the converted value when the conversion was successful, otherwise returns the given input.
      */
-    static ISODate<T>(value: T | (T | T[])[], type: Mapping.Types.Cast): ISODate<T> | (ISODate<T> | ISODate<T>[])[];
+    static ISODate<T>(value: T | T[], type: Mapping.Types.Cast): (T | string | Date) | (T | string | Date)[];
+    /**
+     * Try to encrypt or decrypt the given value using base64 algorithm according to the specified type casting.
+     * @param value Casting value.
+     * @param type Casting type.
+     * @returns Returns the converted value when the conversion was successful, otherwise returns the given input.
+     */
+    static Base64<T>(value: T | T[], type: Mapping.Types.Cast): (T | string) | (T | string)[];
 }
-export {};

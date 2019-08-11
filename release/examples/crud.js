@@ -26,9 +26,8 @@ const driver = new RestDB.Common.Driver();
 let UserEntity = class UserEntity extends Class.Null {
 };
 __decorate([
-    RestDB.Schema.Id(),
     RestDB.Schema.Primary(),
-    RestDB.Schema.Alias('_id'),
+    RestDB.Schema.Id(),
     Class.Public()
 ], UserEntity.prototype, "id", void 0);
 __decorate([

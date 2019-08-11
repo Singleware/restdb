@@ -2,29 +2,31 @@
  * Copyright (C) 2018-2019 Silas B. Domingos
  * This source code is licensed under the MIT License as described in the file LICENSE.
  */
-export { Driver } from './driver';
+export { Coder } from './coder';
 export { Caster } from './caster';
+export { Driver } from './driver';
 export { Schema } from './schema';
 export { Headers } from './headers';
+export { Method } from './method';
 export { Route } from './route';
 export { Entity, Model, Mapper, Map } from './aliases';
 export { Query, Match, Operator, Sort, Order, Limit } from './aliases';
 export { Inputer, Outputer, Normalizer, Castings } from './aliases';
 
 // Imported aliases.
-import * as Request from './request';
-import * as Response from './response';
+import * as Requests from './requests';
+import * as Responses from './responses';
 import * as Common from './common';
 
 /**
  * Request namespace.
  */
-export import Request = Request;
+export import Requests = Requests;
 
 /**
  * Response namespace.
  */
-export import Response = Response;
+export import Responses = Responses;
 
 /**
  * Common driver namespace.

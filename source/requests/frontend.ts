@@ -4,9 +4,10 @@
  */
 import * as Class from '@singleware/class';
 
-import * as Response from '../response';
+import * as Responses from '../responses';
 
 import { Input } from './input';
+import { Helper } from './helper';
 
 /**
  * Frontend client class.
@@ -19,8 +20,8 @@ export class Frontend extends Class.Null {
    * @returns Returns the native headers map.
    */
   @Class.Private()
-  private static getResponseHeaders(headers: Headers): Response.Headers {
-    const data = <Response.Headers>{};
+  private static getResponseHeaders(headers: Headers): Responses.Headers {
+    const data = <Responses.Headers>{};
     for (const pair of headers.entries()) {
       const [name, value] = pair;
       const entry = name.toLowerCase();
@@ -44,8 +45,8 @@ export class Frontend extends Class.Null {
    * @returns Returns the response output entity.
    */
   @Class.Private()
-  private static getResponseOutput(input: Input, payload: string, response: Response): Response.Output {
-    const output = <Response.Output>{
+  private static getResponseOutput(input: Input, payload: string, response: Response): Responses.Output {
+    const output = <Responses.Output>{
       input: input,
       headers: this.getResponseHeaders(response.headers),
       status: {
@@ -54,7 +55,7 @@ export class Frontend extends Class.Null {
       }
     };
     if (payload.length > 0) {
-      if (output.headers['content-type'] === 'application/json') {
+      if (Helper.isAcceptedContentType(<string>output.headers['content-type'], 'application/json')) {
         output.payload = JSON.parse(payload);
       } else {
         output.payload = payload;
@@ -69,7 +70,7 @@ export class Frontend extends Class.Null {
    * @returns Returns the request output.
    */
   @Class.Public()
-  public static async request(input: Input): Promise<Response.Output> {
+  public static async request(input: Input): Promise<Responses.Output> {
     const options = <RequestInit>{
       method: input.method,
       headers: new Headers(<any>input.headers)

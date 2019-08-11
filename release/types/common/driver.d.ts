@@ -1,10 +1,14 @@
-import * as Response from '../response';
+import * as Responses from '../responses';
 import * as Aliases from '../aliases';
 import { Driver as GenericDriver } from '../driver';
 /**
  * Common driver class.
  */
 export declare class Driver extends GenericDriver implements Aliases.Driver {
+    /**
+     * Header name for the authorization key.
+     */
+    private apiKeyHeader;
     /**
      * Header name for the counting results.
      */
@@ -20,15 +24,15 @@ export declare class Driver extends GenericDriver implements Aliases.Driver {
      * @param fields Viewed fields.
      * @returns Returns the parsed query string.
      */
-    protected parseRequestQuery(model: Aliases.Model, query?: Aliases.Query, fields?: string[]): string;
+    protected getRequestQuery(model: Aliases.Model, query?: Aliases.Query, fields?: string[]): string;
     /**
-     * Gets the inserted Id from the given response entity.
+     * Gets the result Id from the given response entity.
      * @param model Entity model.
      * @param response Response entity.
-     * @returns Returns the inserted Id or undefined when the inserted Id wasn't found.
-     * @throws Throws an error when the response payload doesn't contains the inserted Id.
+     * @returns Returns the result Id or undefined when the result Id wasn't found.
+     * @throws Throws an error when the response payload doesn't contains the result Id.
      */
-    protected parseInsertResponse(model: Aliases.Model, response: Response.Output): string | undefined;
+    protected getInsertResponse(model: Aliases.Model, response: Responses.Output): string | undefined;
     /**
      * Gets the found entity list from the given response entity.
      * @param model Entity model.
@@ -36,28 +40,29 @@ export declare class Driver extends GenericDriver implements Aliases.Driver {
      * @returns Returns the entity list.
      * @throws Throws an error when the response payload doesn't contains the entity list.
      */
-    protected parseFindResponse<T extends Aliases.Entity>(model: Aliases.Model, response: Response.Output): T[];
+    protected getFindResponse<T extends Aliases.Entity>(model: Aliases.Model, response: Responses.Output): T[];
     /**
      * Gets the found entity from the given response entity.
      * @param model Entity model.
      * @param response Response entity.
      * @returns Returns the entity or undefined when the entity was not found.
      */
-    protected parseFindByIdResponse<T extends Aliases.Entity>(model: Aliases.Model, response: Response.Output): T | undefined;
+    protected getFindByIdResponse<T extends Aliases.Entity>(model: Aliases.Model, response: Responses.Output): T | undefined;
     /**
      * Gets the number of updated entities from the given response entity.
      * @param model Entity model.
      * @param response Response entity.
      * @returns Returns the number of updated entities.
+     * @throws Throws an error when the counting header is missing or incorrect in the response.
      */
-    protected parseUpdateResponse(model: Aliases.Model, response: Response.Output): number;
+    protected getUpdateResponse(model: Aliases.Model, response: Responses.Output): number;
     /**
      * Gets the updated entity status from the given response entity.
      * @param model Entity model.
      * @param response Response entity.
      * @returns Returns the updated entity status.
      */
-    protected parseUpdateByIdResponse(model: Aliases.Model, response: Response.Output): boolean;
+    protected getUpdateByIdResponse(model: Aliases.Model, response: Responses.Output): boolean;
     /**
      * Gets the replaced entity status from the given response entity.
      * @param model Entity model.
@@ -65,43 +70,57 @@ export declare class Driver extends GenericDriver implements Aliases.Driver {
      * @returns Returns the replaced entity status.
      * @throws It will always throws an error because it's not implemented yet.
      */
-    protected parseReplaceByIdResponse(model: Aliases.Model, response: Response.Output): boolean;
+    protected getReplaceByIdResponse(model: Aliases.Model, response: Responses.Output): boolean;
     /**
      * Gets the number of deleted entities from the given response entity.
      * @param model Entity model.
      * @param response Response entity.
      * @returns Returns the number of deleted entities.
+     * @throws Throws an error when the counting header is missing or incorrect in the response.
      */
-    protected parseDeleteResponse(model: Aliases.Model, response: Response.Output): number;
+    protected getDeleteResponse(model: Aliases.Model, response: Responses.Output): number;
     /**
      * Gets the deleted entity status from the given response entity.
      * @param model Entity model.
      * @param response Response entity.
      * @returns Returns the deleted entity status.
      */
-    protected parseDeleteByIdResponse(model: Aliases.Model, response: Response.Output): boolean;
+    protected getDeleteByIdResponse(model: Aliases.Model, response: Responses.Output): boolean;
     /**
      * Gets the number of entities from the given response entity.
      * @param model Entity model.
      * @param response Response entity.
      * @returns Returns the number of entities.
+     * @throws Throws an error when the counting header is missing or incorrect in the response.
      */
-    protected parseCountResponse(model: Aliases.Model, response: Response.Output): number;
+    protected getCountResponse(model: Aliases.Model, response: Responses.Output): number;
     /**
-     * Parses the error response from the given response entity.
+     * Notify an error in the given response entity for all listeners.
      * @param model Entity model.
      * @param response Response entity.
      */
-    protected parseErrorResponse(mode: Aliases.Model, response: Response.Output): void;
+    protected notifyErrorResponse(model: Aliases.Model, response: Responses.Output): Promise<void>;
     /**
-     * Sets a new API counting header for the subsequent requests.
+     * Sets a new name for the API counting header.
      * @param name New header name.
-     * @returns Returns the own instance.
+     * @returns Returns its own instance.
      */
     protected setCountingHeaderName(name: string): Driver;
     /**
-     * Gets the last request error response.
+     * Sets a new name for the API key header.
+     * @param name New header name.
+     * @returns Returns its own instance.
+     */
+    protected setKeyHeaderName(name: string): Driver;
+    /**
+     * Sets a new value for the API key header.
+     * @param value New header value.
+     * @returns Returns its own instance.
+     */
+    protected setKeyHeaderValue(value: string): Driver;
+    /**
+     * Gets the request error response.
      * @returns Returns the error response entity or undefined when there's no error.
      */
-    protected getErrorResponse(): Aliases.Entity | undefined;
+    protected readonly errorResponse: Aliases.Entity | undefined;
 }

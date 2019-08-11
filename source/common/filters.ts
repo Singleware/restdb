@@ -100,12 +100,12 @@ export class Filters extends Class.Null {
         expression.push(schema.name, operation.operator);
         length++;
         switch (operation.operator) {
-          case Aliases.Operator.Less:
-          case Aliases.Operator.LessOrEqual:
+          case Aliases.Operator.LessThan:
+          case Aliases.Operator.LessThanOrEqual:
           case Aliases.Operator.Equal:
           case Aliases.Operator.NotEqual:
-          case Aliases.Operator.GreaterOrEqual:
-          case Aliases.Operator.Greater:
+          case Aliases.Operator.GreaterThanOrEqual:
+          case Aliases.Operator.GreaterThan:
             expression.push(encodeURIComponent(operation.value));
             break;
           case Aliases.Operator.Between:
@@ -116,7 +116,7 @@ export class Filters extends Class.Null {
             }
             expression.push(operation.value.length, ...operation.value.map(item => encodeURIComponent(item)));
             break;
-          case Aliases.Operator.RegEx:
+          case Aliases.Operator.RegExp:
             if (!(operation.value instanceof RegExp)) {
               throw new Error(`Match value for '${schema.name}' should be a RegExp object.`);
             }
@@ -152,15 +152,15 @@ export class Filters extends Class.Null {
       const fields = <Aliases.Match>{};
       for (let length = parseInt(<string>array.pop()); length > 0; --length) {
         const name = <string>array.pop();
-        const operator = parseInt(<string>array.pop());
+        const operator = <string>array.pop();
         const schema = Aliases.Schema.getRealColumn(model, name);
         switch (operator) {
-          case Aliases.Operator.Less:
-          case Aliases.Operator.LessOrEqual:
+          case Aliases.Operator.LessThan:
+          case Aliases.Operator.LessThanOrEqual:
           case Aliases.Operator.Equal:
           case Aliases.Operator.NotEqual:
-          case Aliases.Operator.GreaterOrEqual:
-          case Aliases.Operator.Greater:
+          case Aliases.Operator.GreaterThanOrEqual:
+          case Aliases.Operator.GreaterThan:
             fields[schema.name] = { operator: operator, value: decodeURIComponent(<string>array.pop()) };
             break;
           case Aliases.Operator.Between:
@@ -172,7 +172,7 @@ export class Filters extends Class.Null {
             }
             fields[schema.name] = { operator: operator, value: values };
             break;
-          case Aliases.Operator.RegEx:
+          case Aliases.Operator.RegExp:
             const regexp = decodeURIComponent(<string>array.pop());
             const flags = decodeURIComponent(<string>array.pop());
             fields[schema.name] = { operator: operator, value: new RegExp(regexp, flags) };

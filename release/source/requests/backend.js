@@ -7,6 +7,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const Class = require("@singleware/class");
+const helper_1 = require("./helper");
 /**
  * Backend client class.
  */
@@ -57,7 +58,7 @@ let Backend = class Backend extends Class.Null {
             }
         };
         if (payload.length > 0) {
-            if (output.headers['content-type'] === 'application/json') {
+            if (helper_1.Helper.isAcceptedContentType(output.headers['content-type'], 'application/json')) {
                 output.payload = JSON.parse(payload);
             }
             else {
@@ -91,15 +92,16 @@ let Backend = class Backend extends Class.Null {
         let payload;
         if (input.payload) {
             payload = JSON.stringify(input.payload);
-            input.headers['Content-Length'] = payload.length.toString();
+            input.headers['Content-Length'] = Buffer.byteLength(payload).toString();
             input.headers['Content-Type'] = 'application/json';
         }
         return new Promise((resolve, reject) => {
-            const request = client.request(this.getRequestOptions(input, url), this.responseHandler.bind(this, input, resolve, reject));
+            const options = this.getRequestOptions(input, url);
+            const request = client.request(options, this.responseHandler.bind(this, input, resolve, reject));
             if (payload) {
                 request.write(payload);
-                request.end();
             }
+            request.end();
         });
     }
 };

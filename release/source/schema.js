@@ -26,13 +26,26 @@ let Schema = class Schema extends Mapping.Schema {
     static Date(minimum, maximum) {
         return (scope, property, descriptor) => {
             super.Date(minimum, maximum)(scope, property, descriptor);
-            return super.Convert(caster_1.Caster.ISODate)(scope, property, descriptor);
+            return super.Convert(caster_1.Caster.ISODate.bind(caster_1.Caster))(scope, property, descriptor);
+        };
+    }
+    /**
+     * Decorates the specified property to be a base64 column.
+     * @returns Returns the decorator method.
+     */
+    static Base64() {
+        return (scope, property, descriptor) => {
+            super.String()(scope, property, descriptor);
+            return super.Convert(caster_1.Caster.Base64.bind(caster_1.Caster))(scope, property, descriptor);
         };
     }
 };
 __decorate([
     Class.Public()
 ], Schema, "Date", null);
+__decorate([
+    Class.Public()
+], Schema, "Base64", null);
 Schema = __decorate([
     Class.Describe()
 ], Schema);

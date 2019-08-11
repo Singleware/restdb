@@ -4,32 +4,124 @@
  */
 import * as Class from '@singleware/class';
 import * as Observable from '@singleware/observable';
-import * as Response from './response';
+import * as Responses from './responses';
 import * as Aliases from './aliases';
+import { Method } from './method';
 /**
- * Alias type for parsed response results.
+ * Alias type for response result.
  */
-declare type Parsed<T> = T | Promise<T>;
+declare type Response<T> = T | Promise<T>;
 /**
  * Generic driver class.
  */
 export declare class Driver extends Class.Null implements Aliases.Driver {
     /**
-     * Base URL for any endpoint.
+     * API base endpoint.
      */
     private apiUrl?;
     /**
-     * Header value for authenticated requests.
+     * API base headers.
      */
-    private apiKeyValue?;
+    private apiHeaders;
     /**
-     * Header name for authenticated requests.
+     * API errors subject.
      */
-    private apiKeyHeader;
+    private apiErrors;
     /**
-     * Subject to notify any API error.
+     * Gets the request Id based on the specified entity model and entity Id.
+     * @param model Entity model.
+     * @param id Entity Id.
+     * @returns Returns the request Id.
      */
-    private errorSubject;
+    protected getRequestId(model: Aliases.Model, id: any): string;
+    /**
+     * Gets the request query string based on the specified entity model, fields and filters.
+     * @param model Entity model.
+     * @param query Query filter.
+     * @param fields Viewed fields.
+     * @returns Returns the request query string.
+     * @throws It will always throws an error because it's not implemented yet.
+     */
+    protected getRequestQuery(model: Aliases.Model, query?: Aliases.Query, fields?: string[]): string;
+    /**
+     * Gets the request method based on the specified entity model.
+     * @param model Entity model.
+     * @param method Request method.
+     * @returns Returns the request method.
+     */
+    protected getRequestMethod(model: Aliases.Model, method: Method): Method;
+    /**
+     * Gets the result Id from the given response entity.
+     * @param model Entity model.
+     * @param response Response entity.
+     * @returns Returns the result Id, a promise to get it or undefined when the result Id wasn't found.
+     * @throws It will always throws an error because it's not implemented yet.
+     */
+    protected getInsertResponse(model: Aliases.Model, response: Responses.Output): Response<string | undefined>;
+    /**
+     * Gets the found entity list from the given response entity.
+     * @param model Entity model.
+     * @param response Response entity.
+     * @returns Returns the entity list or a promise to get it.
+     * @throws It will always throws an error because it's not implemented yet.
+     */
+    protected getFindResponse<T extends Aliases.Entity>(model: Aliases.Model, response: Responses.Output): Response<T[]>;
+    /**
+     * Gets the found entity from the given response entity.
+     * @param model Entity model.
+     * @param response Response entity.
+     * @returns Returns the entity, a promise to get it or undefined when the entity wasn't found.
+     * @throws It will always throws an error because it's not implemented yet.
+     */
+    protected getFindByIdResponse<T extends Aliases.Entity>(model: Aliases.Model, response: Responses.Output): Response<T | undefined>;
+    /**
+     * Gets the number of updated entities from the given response entity.
+     * @param model Entity model.
+     * @param response Response entity.
+     * @returns Returns the number of updated entities or a promise to get it.
+     * @throws It will always throws an error because it's not implemented yet.
+     */
+    protected getUpdateResponse(model: Aliases.Model, response: Responses.Output): Response<number>;
+    /**
+     * Gets the updated entity status from the given response entity.
+     * @param model Entity model.
+     * @param response Response entity.
+     * @returns Returns the updated entity status or a promise to get it.
+     * @throws It will always throws an error because it's not implemented yet.
+     */
+    protected getUpdateByIdResponse(model: Aliases.Model, response: Responses.Output): Response<boolean>;
+    /**
+     * Gets the replaced entity status from the given response entity.
+     * @param model Entity model.
+     * @param response Response entity.
+     * @returns Returns the replaced entity status or a promise to get it.
+     * @throws It will always throws an error because it's not implemented yet.
+     */
+    protected getReplaceByIdResponse(model: Aliases.Model, response: Responses.Output): Response<boolean>;
+    /**
+     * Gets the number of deleted entities from the given response entity.
+     * @param model Entity model.
+     * @param response Response entity.
+     * @returns Returns the number of deleted entities or a promise to get it.
+     * @throws It will always throws an error because it's not implemented yet.
+     */
+    protected getDeleteResponse(model: Aliases.Model, response: Responses.Output): Response<number>;
+    /**
+     * Gets the deleted entity status from the given response entity.
+     * @param model Entity model.
+     * @param response Response entity.
+     * @returns Returns the deleted entity status or a promise to get it.
+     * @throws It will always throws an error because it's not implemented yet.
+     */
+    protected getDeleteByIdResponse(model: Aliases.Model, response: Responses.Output): Response<boolean>;
+    /**
+     * Gets the number of entities from the given response entity.
+     * @param model Entity model.
+     * @param response Response entity.
+     * @returns Returns the number of entities or a promise to get it.
+     * @throws It will always throws an error because it's not implemented yet.
+     */
+    protected getCountResponse(model: Aliases.Model, response: Responses.Output): Response<number>;
     /**
      * Gets a new request path based on the specified route entity.
      * @param route Route entity.
@@ -45,122 +137,28 @@ export declare class Driver extends Class.Null implements Aliases.Driver {
      */
     private getRequestResponse;
     /**
-     * Parses the request Id based on the specified entity model and entity Id.
-     * @param model Entity model.
-     * @param id Entity Id.
-     * @returns Returns the parsed entity Id.
+     * Sets a new request header.
+     * @param name Header name.
+     * @param value Header value.
+     * @returns Returns its own instance.
      */
-    protected parseRequestId(model: Aliases.Model, id: any): string;
+    protected setHeader(name: string, value: string | string[]): Driver;
     /**
-     * Parses the request query string based on the specified entity model, fields and filters.
-     * @param model Entity model.
-     * @param query Query filter.
-     * @param fields Viewed fields.
-     * @returns Returns the parsed query string.
-     * @throws It will always throws an error because it's not implemented yet.
+     * Removes the specified header.
+     * @param name Header name.
+     * @returns Returns its own instance.
      */
-    protected parseRequestQuery(model: Aliases.Model, query?: Aliases.Query, fields?: string[]): string;
+    protected removeHeader(name: string): Driver;
     /**
-     * Parses the inserted Id from the given response entity.
-     * @param model Entity model.
-     * @param response Response entity.
-     * @returns Returns the inserted Id, a promise to get or undefined when the inserted Id was not found.
-     * @throws It will always throws an error because it's not implemented yet.
-     */
-    protected parseInsertResponse(model: Aliases.Model, response: Response.Output): Parsed<string | undefined>;
-    /**
-     * Parses the found entity list from the given response entity.
-     * @param model Entity model.
-     * @param response Response entity.
-     * @returns Returns the entity list or a promise to get it.
-     * @throws It will always throws an error because it's not implemented yet.
-     */
-    protected parseFindResponse<T extends Aliases.Entity>(model: Aliases.Model, response: Response.Output): Parsed<T[]>;
-    /**
-     * Parses the found entity from the given response entity.
-     * @param model Entity model.
-     * @param response Response entity.
-     * @returns Returns the entity, a promise to get it or undefined when the entity was not found.
-     * @throws It will always throws an error because it's not implemented yet.
-     */
-    protected parseFindByIdResponse<T extends Aliases.Entity>(model: Aliases.Model, response: Response.Output): Parsed<T | undefined>;
-    /**
-     * Parses the number of updated entities from the given response entity.
-     * @param model Entity model.
-     * @param response Response entity.
-     * @returns Returns the number of updated entities or a promise to get it.
-     * @throws It will always throws an error because it's not implemented yet.
-     */
-    protected parseUpdateResponse(model: Aliases.Model, response: Response.Output): Parsed<number>;
-    /**
-     * Parses the updated entity status from the given response entity.
-     * @param model Entity model.
-     * @param response Response entity.
-     * @returns Returns the updated entity status or a promise to get it.
-     * @throws It will always throws an error because it's not implemented yet.
-     */
-    protected parseUpdateByIdResponse(model: Aliases.Model, response: Response.Output): Parsed<boolean>;
-    /**
-     * Parses the replaced entity status from the given response entity.
-     * @param model Entity model.
-     * @param response Response entity.
-     * @returns Returns the replaced entity status or a promise to get it.
-     * @throws It will always throws an error because it's not implemented yet.
-     */
-    protected parseReplaceByIdResponse(model: Aliases.Model, response: Response.Output): Parsed<boolean>;
-    /**
-     * Parses the number of deleted entities from the given response entity.
-     * @param model Entity model.
-     * @param response Response entity.
-     * @returns Returns the number of deleted entities or a promise to get it.
-     * @throws It will always throws an error because it's not implemented yet.
-     */
-    protected parseDeleteResponse(model: Aliases.Model, response: Response.Output): Parsed<number>;
-    /**
-     * Parses the deleted entity status from the given response entity.
-     * @param model Entity model.
-     * @param response Response entity.
-     * @returns Returns the deleted entity status or a promise to get it.
-     * @throws It will always throws an error because it's not implemented yet.
-     */
-    protected parseDeleteByIdResponse(model: Aliases.Model, response: Response.Output): Parsed<boolean>;
-    /**
-     * Parses the number of entities from the given response entity.
-     * @param model Entity model.
-     * @param response Response entity.
-     * @returns Returns the number of entities or a promise to get it.
-     * @throws It will always throws an error because it's not implemented yet.
-     */
-    protected parseCountResponse(model: Aliases.Model, response: Response.Output): Parsed<number>;
-    /**
-     * Parses the error response from the given response entity.
+     * Notify an error in the given response entity for all listeners.
      * @param model Entity model.
      * @param response Response entity.
      */
-    protected parseErrorResponse(model: Aliases.Model, response: Response.Output): void;
-    /**
-     * Sets a new key header name for the subsequent requests.
-     * @param name New header name.
-     * @returns Returns the own instance.
-     */
-    protected setKeyHeaderName(name: string): Driver;
-    /**
-     * Sets a new key header value for the subsequent requests.
-     * @param value New header value.
-     * @returns Returns the own instance.
-     */
-    protected setKeyHeaderValue(value: string): Driver;
-    /**
-     * Sets a new key header name and value for the subsequent requests.
-     * @param name New header name.
-     * @param value New header value.
-     * @returns Returns the own instance.
-     */
-    protected setKeyHeader(name: string, value: string): Driver;
+    protected notifyErrorResponse(model: Aliases.Model, response: Responses.Output): Promise<void>;
     /**
      * Gets the error subject.
      */
-    readonly onErrors: Observable.Subject<Response.Output>;
+    readonly onError: Observable.Subject<Responses.Output>;
     /**
      * Connect to the API.
      * @param url Api URL.
@@ -233,7 +231,7 @@ export declare class Driver extends Class.Null implements Aliases.Driver {
      * Count all corresponding entities using the a HEAD request.
      * @param model Model type.
      * @param query Query filter.
-     * @returns Returns a promise to get the total amount of found entities.
+     * @returns Returns a promise to get the amount of found entities or 0 when there's an error.
      */
     count(model: Aliases.Model, query: Aliases.Query): Promise<number>;
 }

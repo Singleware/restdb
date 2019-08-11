@@ -2,7 +2,7 @@
  * Copyright (C) 2018-2019 Silas B. Domingos
  * This source code is licensed under the MIT License as described in the file LICENSE.
  */
-import * as Request from '../request';
+import * as Requests from '../requests';
 import * as Types from '../aliases';
 
 import { Headers as ResponseHeaders } from '../headers';
@@ -15,7 +15,7 @@ export interface Output {
   /**
    * Request input.
    */
-  input: Request.Input;
+  input: Requests.Input;
   /**
    * Output status.
    */

@@ -4,5 +4,6 @@
  */
 export { Frontend } from './frontend';
 export { Backend } from './backend';
+export { Helper } from './helper';
 export { Input } from './input';
 export { Headers } from '../headers';

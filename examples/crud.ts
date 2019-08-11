@@ -25,9 +25,8 @@ class UserEntity extends Class.Null {
   /**
    * User id.
    */
-  @RestDB.Schema.Id()
   @RestDB.Schema.Primary()
-  @RestDB.Schema.Alias('_id')
+  @RestDB.Schema.Id()
   @Class.Public()
   public id?: string;
   /**

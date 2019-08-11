@@ -10,4 +10,9 @@ export declare class Schema extends Mapping.Schema {
      * @returns Returns the decorator method.
      */
     static Date(minimum?: Date, maximum?: Date): Mapping.Types.PropertyDecorator;
+    /**
+     * Decorates the specified property to be a base64 column.
+     * @returns Returns the decorator method.
+     */
+    static Base64(): Mapping.Types.PropertyDecorator;
 }

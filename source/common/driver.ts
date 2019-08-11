@@ -4,7 +4,7 @@
  */
 import * as Class from '@singleware/class';
 
-import * as Response from '../response';
+import * as Responses from '../responses';
 import * as Aliases from '../aliases';
 
 import { Driver as GenericDriver } from '../driver';
@@ -15,6 +15,12 @@ import { Filters } from './filters';
  */
 @Class.Describe()
 export class Driver extends GenericDriver implements Aliases.Driver {
+  /**
+   * Header name for the authorization key.
+   */
+  @Class.Private()
+  private apiKeyHeader = 'x-api-key';
+
   /**
    * Header name for the counting results.
    */
@@ -35,23 +41,26 @@ export class Driver extends GenericDriver implements Aliases.Driver {
    * @returns Returns the parsed query string.
    */
   @Class.Protected()
-  protected parseRequestQuery(model: Aliases.Model, query?: Aliases.Query, fields?: string[]): string {
+  protected getRequestQuery(model: Aliases.Model, query?: Aliases.Query, fields?: string[]): string {
     return Filters.toURL(model, query, fields);
   }
 
   /**
-   * Gets the inserted Id from the given response entity.
+   * Gets the result Id from the given response entity.
    * @param model Entity model.
    * @param response Response entity.
-   * @returns Returns the inserted Id or undefined when the inserted Id wasn't found.
-   * @throws Throws an error when the response payload doesn't contains the inserted Id.
+   * @returns Returns the result Id or undefined when the result Id wasn't found.
+   * @throws Throws an error when the response payload doesn't contains the result Id.
    */
   @Class.Protected()
-  protected parseInsertResponse(model: Aliases.Model, response: Response.Output): string | undefined {
-    if (!(response.payload instanceof Object) || (<Aliases.Entity>response.payload).id === void 0) {
-      throw new Error(`The response payload must be an object containing the inserted id.`);
+  protected getInsertResponse(model: Aliases.Model, response: Responses.Output): string | undefined {
+    if (response.status.code === 200 || response.status.code === 201 || response.status.code === 202) {
+      if (!(response.payload instanceof Object) || (<Aliases.Entity>response.payload).id === void 0) {
+        throw new Error(`The response payload must be an object containing the insert id.`);
+      }
+      return (<Aliases.Entity>response.payload).id;
     }
-    return (<Aliases.Entity>response.payload).id;
+    return void 0;
   }
 
   /**
@@ -62,11 +71,14 @@ export class Driver extends GenericDriver implements Aliases.Driver {
    * @throws Throws an error when the response payload doesn't contains the entity list.
    */
   @Class.Protected()
-  protected parseFindResponse<T extends Aliases.Entity>(model: Aliases.Model, response: Response.Output): T[] {
-    if (!(response.payload instanceof Array)) {
-      throw new Error(`The response payload must be an array containing the search results.`);
+  protected getFindResponse<T extends Aliases.Entity>(model: Aliases.Model, response: Responses.Output): T[] {
+    if (response.status.code === 200) {
+      if (!(response.payload instanceof Array)) {
+        throw new Error(`The response payload must be an array containing the search results.`);
+      }
+      return <T[]>response.payload;
     }
-    return <T[]>response.payload;
+    return [];
   }
 
   /**
@@ -76,8 +88,14 @@ export class Driver extends GenericDriver implements Aliases.Driver {
    * @returns Returns the entity or undefined when the entity was not found.
    */
   @Class.Protected()
-  protected parseFindByIdResponse<T extends Aliases.Entity>(model: Aliases.Model, response: Response.Output): T | undefined {
-    return <T>response.payload;
+  protected getFindByIdResponse<T extends Aliases.Entity>(model: Aliases.Model, response: Responses.Output): T | undefined {
+    if (response.status.code === 200) {
+      if (!(response.payload instanceof Object)) {
+        throw new Error(`The response payload must be an object.`);
+      }
+      return <T>response.payload;
+    }
+    return void 0;
   }
 
   /**
@@ -85,10 +103,18 @@ export class Driver extends GenericDriver implements Aliases.Driver {
    * @param model Entity model.
    * @param response Response entity.
    * @returns Returns the number of updated entities.
+   * @throws Throws an error when the counting header is missing or incorrect in the response.
    */
   @Class.Protected()
-  protected parseUpdateResponse(model: Aliases.Model, response: Response.Output): number {
-    return parseInt(<string>response.headers[this.apiCountingHeader]) || 0;
+  protected getUpdateResponse(model: Aliases.Model, response: Responses.Output): number {
+    if (response.status.code === 200 || response.status.code === 202 || response.status.code === 204) {
+      const amount = parseInt(<string>response.headers[this.apiCountingHeader]);
+      if (isNaN(amount)) {
+        throw new Error(`Counting header is missing or incorrect in the update response.`);
+      }
+      return amount;
+    }
+    return 0;
   }
 
   /**
@@ -98,8 +124,8 @@ export class Driver extends GenericDriver implements Aliases.Driver {
    * @returns Returns the updated entity status.
    */
   @Class.Protected()
-  protected parseUpdateByIdResponse(model: Aliases.Model, response: Response.Output): boolean {
-    return true;
+  protected getUpdateByIdResponse(model: Aliases.Model, response: Responses.Output): boolean {
+    return response.status.code === 200 || response.status.code === 202 || response.status.code === 204;
   }
 
   /**
@@ -110,8 +136,8 @@ export class Driver extends GenericDriver implements Aliases.Driver {
    * @throws It will always throws an error because it's not implemented yet.
    */
   @Class.Protected()
-  protected parseReplaceByIdResponse(model: Aliases.Model, response: Response.Output): boolean {
-    return true;
+  protected getReplaceByIdResponse(model: Aliases.Model, response: Responses.Output): boolean {
+    return response.status.code === 200 || response.status.code === 202 || response.status.code === 204;
   }
 
   /**
@@ -119,10 +145,18 @@ export class Driver extends GenericDriver implements Aliases.Driver {
    * @param model Entity model.
    * @param response Response entity.
    * @returns Returns the number of deleted entities.
+   * @throws Throws an error when the counting header is missing or incorrect in the response.
    */
   @Class.Protected()
-  protected parseDeleteResponse(model: Aliases.Model, response: Response.Output): number {
-    return parseInt(<string>response.headers[this.apiCountingHeader]) || 0;
+  protected getDeleteResponse(model: Aliases.Model, response: Responses.Output): number {
+    if (response.status.code === 200 || response.status.code === 202 || response.status.code === 204) {
+      const amount = parseInt(<string>response.headers[this.apiCountingHeader]);
+      if (isNaN(amount)) {
+        throw new Error(`Counting header is missing or incorrect in the delete response.`);
+      }
+      return amount;
+    }
+    return 0;
   }
 
   /**
@@ -132,8 +166,8 @@ export class Driver extends GenericDriver implements Aliases.Driver {
    * @returns Returns the deleted entity status.
    */
   @Class.Protected()
-  protected parseDeleteByIdResponse(model: Aliases.Model, response: Response.Output): boolean {
-    return true;
+  protected getDeleteByIdResponse(model: Aliases.Model, response: Responses.Output): boolean {
+    return response.status.code === 200 || response.status.code === 202 || response.status.code === 204;
   }
 
   /**
@@ -141,39 +175,66 @@ export class Driver extends GenericDriver implements Aliases.Driver {
    * @param model Entity model.
    * @param response Response entity.
    * @returns Returns the number of entities.
+   * @throws Throws an error when the counting header is missing or incorrect in the response.
    */
   @Class.Protected()
-  protected parseCountResponse(model: Aliases.Model, response: Response.Output): number {
-    return parseInt(<string>response.headers[this.apiCountingHeader]) || 0;
+  protected getCountResponse(model: Aliases.Model, response: Responses.Output): number {
+    if (response.status.code === 200 || response.status.code === 204) {
+      const amount = parseInt(<string>response.headers[this.apiCountingHeader]);
+      if (isNaN(amount)) {
+        throw new Error(`Counting header missing or incorrect in the count response.`);
+      }
+      return amount;
+    }
+    return 0;
   }
 
   /**
-   * Parses the error response from the given response entity.
+   * Notify an error in the given response entity for all listeners.
    * @param model Entity model.
    * @param response Response entity.
    */
   @Class.Protected()
-  protected parseErrorResponse(mode: Aliases.Model, response: Response.Output): void {
-    this.apiResponseError = response.payload;
+  protected async notifyErrorResponse(model: Aliases.Model, response: Responses.Output): Promise<void> {
+    await super.notifyErrorResponse(model, (this.apiResponseError = response.payload));
   }
 
   /**
-   * Sets a new API counting header for the subsequent requests.
+   * Sets a new name for the API counting header.
    * @param name New header name.
-   * @returns Returns the own instance.
+   * @returns Returns its own instance.
    */
   @Class.Protected()
   protected setCountingHeaderName(name: string): Driver {
-    this.apiCountingHeader = name.toLowerCase();
-    return this;
+    return (this.apiCountingHeader = name.toLowerCase()), this;
   }
 
   /**
-   * Gets the last request error response.
+   * Sets a new name for the API key header.
+   * @param name New header name.
+   * @returns Returns its own instance.
+   */
+  @Class.Protected()
+  protected setKeyHeaderName(name: string): Driver {
+    return (this.apiKeyHeader = name.toLowerCase()), this;
+  }
+
+  /**
+   * Sets a new value for the API key header.
+   * @param value New header value.
+   * @returns Returns its own instance.
+   */
+  @Class.Protected()
+  protected setKeyHeaderValue(value: string): Driver {
+    return this.setHeader(this.apiKeyHeader, value), this;
+  }
+
+  /**
+   * Gets the request error response.
    * @returns Returns the error response entity or undefined when there's no error.
    */
   @Class.Protected()
-  protected getErrorResponse(): Aliases.Entity | undefined {
+  protected get errorResponse(): Aliases.Entity | undefined {
     return this.apiResponseError;
   }
 }
