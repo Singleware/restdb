@@ -9,6 +9,7 @@ export { Headers } from './headers';
 export { Route } from './route';
 export { Entity, Model, Mapper, Map } from './aliases';
 export { Query, Match, Operator, Sort, Order, Limit } from './aliases';
+export { Inputer, Outputer, Normalizer, Castings } from './aliases';
 import * as Request from './request';
 import * as Response from './response';
 import * as Common from './common';

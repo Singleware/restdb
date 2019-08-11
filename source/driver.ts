@@ -303,7 +303,7 @@ export class Driver extends Class.Null implements Aliases.Driver {
     const list = [];
     const path = this.getRequestPath({ model: model, query: this.parseRequestQuery(model) });
     for (const entity of entities) {
-      const payload = Aliases.Entity.normalize(model, entity);
+      const payload = Aliases.Normalizer.create(model, entity, true);
       const response = await this.getRequestResponse('POST', path, payload);
       if (response.status.code === 200 || response.status.code === 201 || response.status.code === 202) {
         const id = await this.parseInsertResponse(model, response);
@@ -364,7 +364,7 @@ export class Driver extends Class.Null implements Aliases.Driver {
   @Class.Public()
   public async update(model: Aliases.Model, match: Aliases.Match, entity: Aliases.Entity): Promise<number> {
     const path = this.getRequestPath({ model: model, query: this.parseRequestQuery(model, { pre: match }) });
-    const payload = Aliases.Entity.normalize(model, entity);
+    const payload = Aliases.Normalizer.create(model, entity, true);
     const response = await this.getRequestResponse('PATCH', path, payload);
     if (response.status.code === 200 || response.status.code === 202 || response.status.code === 204) {
       return await this.parseUpdateResponse(model, response);
@@ -382,7 +382,7 @@ export class Driver extends Class.Null implements Aliases.Driver {
   @Class.Public()
   public async updateById(model: Aliases.Model, id: any, entity: Aliases.Entity): Promise<boolean> {
     const path = this.getRequestPath({ model: model, id: this.parseRequestId(model, id), query: this.parseRequestQuery(model) });
-    const payload = Aliases.Entity.normalize(model, entity);
+    const payload = Aliases.Normalizer.create(model, entity, true);
     const response = await this.getRequestResponse('PATCH', path, payload);
     if (response.status.code === 200 || response.status.code === 202 || response.status.code === 204) {
       return await this.parseUpdateByIdResponse(model, response);
@@ -400,7 +400,7 @@ export class Driver extends Class.Null implements Aliases.Driver {
   @Class.Public()
   public async replaceById(model: Aliases.Model, id: any, entity: Aliases.Entity): Promise<boolean> {
     const path = this.getRequestPath({ model: model, id: this.parseRequestId(model, id), query: this.parseRequestQuery(model) });
-    const payload = Aliases.Entity.normalize(model, entity);
+    const payload = Aliases.Normalizer.create(model, entity, true);
     const response = await this.getRequestResponse('PUT', path, payload);
     if (response.status.code === 200 || response.status.code === 201 || response.status.code === 202) {
       return await this.parseReplaceByIdResponse(model, response);
