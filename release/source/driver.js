@@ -20,9 +20,6 @@ const method_1 = require("./method");
  * Generic driver class.
  */
 let Driver = class Driver extends Class.Null {
-    /**
-     * Generic driver class.
-     */
     constructor() {
         super(...arguments);
         /**

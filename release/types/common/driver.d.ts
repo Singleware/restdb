@@ -122,5 +122,5 @@ export declare class Driver extends GenericDriver implements Aliases.Driver {
      * Gets the request error response.
      * @returns Returns the error response entity or undefined when there's no error.
      */
-    protected readonly errorResponse: Aliases.Entity | undefined;
+    protected get errorResponse(): Aliases.Entity | undefined;
 }

@@ -84,7 +84,12 @@ export class Backend extends Class.Null {
    * @param response Request response.
    */
   @Class.Private()
-  private static responseHandler(input: Input, resolve: Class.Callable, reject: Class.Callable, response: Http.IncomingMessage): void {
+  private static responseHandler(
+    input: Input,
+    resolve: Class.Callable,
+    reject: Class.Callable,
+    response: Http.IncomingMessage
+  ): void {
     let payload = '';
     response.setEncoding('utf8');
     response.on('data', (data: string) => (payload += data));
@@ -107,13 +112,15 @@ export class Backend extends Class.Null {
       input.headers['Content-Length'] = Buffer.byteLength(payload).toString();
       input.headers['Content-Type'] = 'application/json';
     }
-    return new Promise<Responses.Output>((resolve: (value: Responses.Output) => void, reject: (value: Error) => void): void => {
-      const options = this.getRequestOptions(input, url);
-      const request = <Http.ClientRequest>client.request(options, this.responseHandler.bind(this, input, resolve, reject));
-      if (payload) {
-        request.write(payload);
+    return new Promise<Responses.Output>(
+      (resolve: (value: Responses.Output) => void, reject: (value: Error) => void): void => {
+        const options = this.getRequestOptions(input, url);
+        const request = <Http.ClientRequest>client.request(options, this.responseHandler.bind(this, input, resolve, reject));
+        if (payload) {
+          request.write(payload);
+        }
+        request.end();
       }
-      request.end();
-    });
+    );
   }
 }

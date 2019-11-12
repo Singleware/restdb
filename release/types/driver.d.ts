@@ -158,7 +158,7 @@ export declare class Driver extends Class.Null implements Aliases.Driver {
     /**
      * Gets the error subject.
      */
-    readonly onError: Observable.Subject<Responses.Output>;
+    get onError(): Observable.Subject<Responses.Output>;
     /**
      * Connect to the API.
      * @param url Api URL.

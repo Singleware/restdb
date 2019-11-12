@@ -109,7 +109,10 @@ export class Driver extends Class.Null implements Aliases.Driver {
    * @throws It will always throws an error because it's not implemented yet.
    */
   @Class.Protected()
-  protected getFindByIdResponse<T extends Aliases.Entity>(model: Aliases.Model, response: Responses.Output): Response<T | undefined> {
+  protected getFindByIdResponse<T extends Aliases.Entity>(
+    model: Aliases.Model,
+    response: Responses.Output
+  ): Response<T | undefined> {
     throw new Error(`Method 'getFindByIdResponse' doesn't implemented.`);
   }
 
@@ -316,7 +319,11 @@ export class Driver extends Class.Null implements Aliases.Driver {
    * @throws Throws an error when the result payload isn't an array.
    */
   @Class.Public()
-  public async find<T extends Aliases.Entity>(model: Aliases.Model<T>, query: Aliases.Query, fields: string[]): Promise<T[]> {
+  public async find<T extends Aliases.Entity>(
+    model: Aliases.Model<T>,
+    query: Aliases.Query,
+    fields: string[]
+  ): Promise<T[]> {
     const path = this.getRequestPath({ model: model, query: this.getRequestQuery(model, query, fields) });
     const method = this.getRequestMethod(model, Method.GET);
     const response = await this.getRequestResponse(method, path);
@@ -334,7 +341,11 @@ export class Driver extends Class.Null implements Aliases.Driver {
    * @returns Returns a promise to get the found entity or undefined when the entity was not found.
    */
   @Class.Public()
-  public async findById<T extends Aliases.Entity>(model: Aliases.Model<T>, id: any, fields: string[]): Promise<T | undefined> {
+  public async findById<T extends Aliases.Entity>(
+    model: Aliases.Model<T>,
+    id: any,
+    fields: string[]
+  ): Promise<T | undefined> {
     const query = this.getRequestQuery(model, void 0, fields);
     const path = this.getRequestPath({ model: model, id: this.getRequestId(model, id), query: query });
     const method = this.getRequestMethod(model, Method.GET);

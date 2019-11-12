@@ -17,9 +17,6 @@ const filters_1 = require("./filters");
  * Common driver class.
  */
 let Driver = class Driver extends driver_1.Driver {
-    /**
-     * Common driver class.
-     */
     constructor() {
         super(...arguments);
         /**
