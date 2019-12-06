@@ -24,10 +24,10 @@ let Caster = class Caster extends Class.Null {
      * @returns Returns the converted value when the conversion was successful, otherwise returns the given input.
      */
     static ISODate(value, type) {
-        if (type === Mapping.Types.Cast.Input) {
+        if (type === "input" /* Input */) {
             return Mapping.Castings.ISODate.String(value, type);
         }
-        else if (type === Mapping.Types.Cast.Output) {
+        else if (type === "output" /* Output */) {
             return Mapping.Castings.ISODate.Object(value, type);
         }
         return value;
@@ -42,10 +42,10 @@ let Caster = class Caster extends Class.Null {
         if (value instanceof Array) {
             return value.map(value => this.Base64(value, type));
         }
-        else if (type === Mapping.Types.Cast.Input) {
+        else if (type === "input" /* Input */) {
             return coder_1.Coder.toBase64(value);
         }
-        else if (type === Mapping.Types.Cast.Output) {
+        else if (type === "output" /* Output */) {
             return coder_1.Coder.fromBase64(value);
         }
         else {

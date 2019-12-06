@@ -88,7 +88,10 @@ export class Driver extends GenericDriver implements Aliases.Driver {
    * @returns Returns the entity or undefined when the entity was not found.
    */
   @Class.Protected()
-  protected getFindByIdResponse<T extends Aliases.Entity>(model: Aliases.Model, response: Responses.Output): T | undefined {
+  protected getFindByIdResponse<T extends Aliases.Entity>(
+    model: Aliases.Model,
+    response: Responses.Output
+  ): T | undefined {
     if (response.status.code === 200) {
       if (!(response.payload instanceof Object)) {
         throw new Error(`The response payload must be an object.`);

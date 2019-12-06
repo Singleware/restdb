@@ -88,7 +88,11 @@ export class Filters extends Class.Null {
    * @throws Throws an error when there are invalid matching operator codes.
    */
   @Class.Private()
-  private static packMatchRules(prefix: string, model: Aliases.Model, match: Aliases.Match | Aliases.Match[]): (number | string)[] {
+  private static packMatchRules(
+    prefix: string,
+    model: Aliases.Model,
+    match: Aliases.Match | Aliases.Match[]
+  ): (number | string)[] {
     const rules = [];
     let total = 0;
     for (const fields of match instanceof Array ? match : [match]) {
@@ -143,7 +147,11 @@ export class Filters extends Class.Null {
    * @throws Throws an error when there are invalid serialized data.
    */
   @Class.Private()
-  private static unpackMatchRules(prefix: string, model: Aliases.Model, array: string[]): Aliases.Match | Aliases.Match[] | undefined {
+  private static unpackMatchRules(
+    prefix: string,
+    model: Aliases.Model,
+    array: string[]
+  ): Aliases.Match | Aliases.Match[] | undefined {
     if (prefix !== array.pop()) {
       throw new Error(`Invalid magic prefix for the given array of matching lists.`);
     }

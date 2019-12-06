@@ -20,9 +20,9 @@ export class Schema extends Mapping.Schema {
    */
   @Class.Public()
   public static Date(minimum?: Date, maximum?: Date): Mapping.Types.PropertyDecorator {
-    return (scope: Object, property: PropertyKey, descriptor?: PropertyDescriptor): PropertyDescriptor => {
-      super.Date(minimum, maximum)(scope, <string>property, descriptor);
-      return super.Convert(Caster.ISODate.bind(Caster))(scope, <string>property, descriptor);
+    return (target: Object, property: PropertyKey, descriptor?: PropertyDescriptor): PropertyDescriptor => {
+      super.Date(minimum, maximum)(target, <string>property, descriptor);
+      return super.Convert(Caster.ISODate.bind(Caster))(target, <string>property, descriptor);
     };
   }
 
@@ -32,9 +32,9 @@ export class Schema extends Mapping.Schema {
    */
   @Class.Public()
   public static Base64(): Mapping.Types.PropertyDecorator {
-    return (scope: Object, property: PropertyKey, descriptor?: PropertyDescriptor): PropertyDescriptor => {
-      super.String()(scope, <string>property, descriptor);
-      return super.Convert(Caster.Base64.bind(Caster))(scope, <string>property, descriptor);
+    return (target: Object, property: PropertyKey, descriptor?: PropertyDescriptor): PropertyDescriptor => {
+      super.String()(target, <string>property, descriptor);
+      return super.Convert(Caster.Base64.bind(Caster))(target, <string>property, descriptor);
     };
   }
 }

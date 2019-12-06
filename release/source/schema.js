@@ -24,9 +24,9 @@ let Schema = class Schema extends Mapping.Schema {
      * @returns Returns the decorator method.
      */
     static Date(minimum, maximum) {
-        return (scope, property, descriptor) => {
-            super.Date(minimum, maximum)(scope, property, descriptor);
-            return super.Convert(caster_1.Caster.ISODate.bind(caster_1.Caster))(scope, property, descriptor);
+        return (target, property, descriptor) => {
+            super.Date(minimum, maximum)(target, property, descriptor);
+            return super.Convert(caster_1.Caster.ISODate.bind(caster_1.Caster))(target, property, descriptor);
         };
     }
     /**
@@ -34,9 +34,9 @@ let Schema = class Schema extends Mapping.Schema {
      * @returns Returns the decorator method.
      */
     static Base64() {
-        return (scope, property, descriptor) => {
-            super.String()(scope, property, descriptor);
-            return super.Convert(caster_1.Caster.Base64.bind(caster_1.Caster))(scope, property, descriptor);
+        return (target, property, descriptor) => {
+            super.String()(target, property, descriptor);
+            return super.Convert(caster_1.Caster.Base64.bind(caster_1.Caster))(target, property, descriptor);
         };
     }
 };
