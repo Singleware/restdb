@@ -8,7 +8,7 @@ import * as Path from '@singleware/path';
 
 import * as Requests from './requests';
 import * as Responses from './responses';
-import * as Aliases from './aliases';
+import * as Types from './types';
 
 import { Route } from './route';
 import { Method } from './method';
@@ -23,7 +23,7 @@ type Response<T> = T | Promise<T>;
  * Generic driver class.
  */
 @Class.Describe()
-export class Driver extends Class.Null implements Aliases.Driver {
+export class Driver extends Class.Null implements Types.Driver {
   /**
    * API base endpoint.
    */
@@ -49,7 +49,7 @@ export class Driver extends Class.Null implements Aliases.Driver {
    * @returns Returns the request Id.
    */
   @Class.Protected()
-  protected getRequestId(model: Aliases.Model, id: any): string {
+  protected getRequestId(model: Types.Model, id: any): string {
     return id.toString();
   }
 
@@ -62,7 +62,7 @@ export class Driver extends Class.Null implements Aliases.Driver {
    * @throws It will always throws an error because it's not implemented yet.
    */
   @Class.Protected()
-  protected getRequestQuery(model: Aliases.Model, query?: Aliases.Query, fields?: string[]): string {
+  protected getRequestQuery(model: Types.Model, query?: Types.Query, fields?: string[]): string {
     throw new Error(`Method 'getRequestQuery' doesn't implemented.`);
   }
 
@@ -73,7 +73,7 @@ export class Driver extends Class.Null implements Aliases.Driver {
    * @returns Returns the request method.
    */
   @Class.Protected()
-  protected getRequestMethod(model: Aliases.Model, method: Method): Method {
+  protected getRequestMethod(model: Types.Model, method: Method): Method {
     return method;
   }
 
@@ -85,7 +85,7 @@ export class Driver extends Class.Null implements Aliases.Driver {
    * @throws It will always throws an error because it's not implemented yet.
    */
   @Class.Protected()
-  protected getInsertResponse(model: Aliases.Model, response: Responses.Output): Response<string | undefined> {
+  protected getInsertResponse(model: Types.Model, response: Responses.Output): Response<string | undefined> {
     throw new Error(`Method 'getInsertResponse' doesn't implemented.`);
   }
 
@@ -97,7 +97,7 @@ export class Driver extends Class.Null implements Aliases.Driver {
    * @throws It will always throws an error because it's not implemented yet.
    */
   @Class.Protected()
-  protected getFindResponse<T extends Aliases.Entity>(model: Aliases.Model, response: Responses.Output): Response<T[]> {
+  protected getFindResponse<T extends Types.Entity>(model: Types.Model, response: Responses.Output): Response<T[]> {
     throw new Error(`Method 'getFindResponse' doesn't implemented.`);
   }
 
@@ -109,8 +109,8 @@ export class Driver extends Class.Null implements Aliases.Driver {
    * @throws It will always throws an error because it's not implemented yet.
    */
   @Class.Protected()
-  protected getFindByIdResponse<T extends Aliases.Entity>(
-    model: Aliases.Model,
+  protected getFindByIdResponse<T extends Types.Entity>(
+    model: Types.Model,
     response: Responses.Output
   ): Response<T | undefined> {
     throw new Error(`Method 'getFindByIdResponse' doesn't implemented.`);
@@ -124,7 +124,7 @@ export class Driver extends Class.Null implements Aliases.Driver {
    * @throws It will always throws an error because it's not implemented yet.
    */
   @Class.Protected()
-  protected getUpdateResponse(model: Aliases.Model, response: Responses.Output): Response<number> {
+  protected getUpdateResponse(model: Types.Model, response: Responses.Output): Response<number> {
     throw new Error(`Method 'getUpdateResponse' doesn't implemented.`);
   }
 
@@ -136,7 +136,7 @@ export class Driver extends Class.Null implements Aliases.Driver {
    * @throws It will always throws an error because it's not implemented yet.
    */
   @Class.Protected()
-  protected getUpdateByIdResponse(model: Aliases.Model, response: Responses.Output): Response<boolean> {
+  protected getUpdateByIdResponse(model: Types.Model, response: Responses.Output): Response<boolean> {
     throw new Error(`Method 'getUpdateByIdResponse' doesn't implemented.`);
   }
 
@@ -148,7 +148,7 @@ export class Driver extends Class.Null implements Aliases.Driver {
    * @throws It will always throws an error because it's not implemented yet.
    */
   @Class.Protected()
-  protected getReplaceByIdResponse(model: Aliases.Model, response: Responses.Output): Response<boolean> {
+  protected getReplaceByIdResponse(model: Types.Model, response: Responses.Output): Response<boolean> {
     throw new Error(`Method 'getReplaceByIdResponse' doesn't implemented.`);
   }
 
@@ -160,7 +160,7 @@ export class Driver extends Class.Null implements Aliases.Driver {
    * @throws It will always throws an error because it's not implemented yet.
    */
   @Class.Protected()
-  protected getDeleteResponse(model: Aliases.Model, response: Responses.Output): Response<number> {
+  protected getDeleteResponse(model: Types.Model, response: Responses.Output): Response<number> {
     throw new Error(`Method 'getDeleteResponse' doesn't implemented.`);
   }
 
@@ -172,7 +172,7 @@ export class Driver extends Class.Null implements Aliases.Driver {
    * @throws It will always throws an error because it's not implemented yet.
    */
   @Class.Protected()
-  protected getDeleteByIdResponse(model: Aliases.Model, response: Responses.Output): Response<boolean> {
+  protected getDeleteByIdResponse(model: Types.Model, response: Responses.Output): Response<boolean> {
     throw new Error(`Method 'getDeleteByIdResponse' doesn't implemented.`);
   }
 
@@ -184,7 +184,7 @@ export class Driver extends Class.Null implements Aliases.Driver {
    * @throws It will always throws an error because it's not implemented yet.
    */
   @Class.Protected()
-  protected getCountResponse(model: Aliases.Model, response: Responses.Output): Response<number> {
+  protected getCountResponse(model: Types.Model, response: Responses.Output): Response<number> {
     throw new Error(`Method 'getCountResponse' doesn't implemented.`);
   }
 
@@ -195,11 +195,11 @@ export class Driver extends Class.Null implements Aliases.Driver {
    */
   @Class.Private()
   private getRequestPath(route: Route): string {
-    const assigned = <Aliases.Entity>{};
-    const endpoint = Aliases.Schema.getStorageName(route.model);
+    const assigned = <Types.Entity>{};
+    const endpoint = Types.Schema.getStorageName(route.model);
     let path = endpoint.replace(/{query}|{id}/gi, (match: string) => {
       const variable = match.substr(1, match.length - 2);
-      const value = (<Aliases.Entity>route)[variable];
+      const value = (<Types.Entity>route)[variable];
       if (value !== void 0) {
         return (assigned[variable] = true), value;
       }
@@ -222,7 +222,7 @@ export class Driver extends Class.Null implements Aliases.Driver {
    * @returns Returns a promise to get the response output.
    */
   @Class.Private()
-  private getRequestResponse(method: string, path: string, payload?: Aliases.Entity): Promise<Responses.Output> {
+  private getRequestResponse(method: string, path: string, payload?: Types.Entity): Promise<Responses.Output> {
     const input = <Requests.Input>{
       url: `${this.apiUrl}/${path}`,
       method: method,
@@ -262,7 +262,7 @@ export class Driver extends Class.Null implements Aliases.Driver {
    * @param response Response entity.
    */
   @Class.Protected()
-  protected async notifyErrorResponse(model: Aliases.Model, response: Responses.Output): Promise<void> {
+  protected async notifyErrorResponse(model: Types.Model, response: Responses.Output): Promise<void> {
     await this.apiErrors.notifyAll(response);
   }
 
@@ -291,12 +291,12 @@ export class Driver extends Class.Null implements Aliases.Driver {
    * @throws Throws an error when the result payload doesn't contains the insertion id.
    */
   @Class.Public()
-  public async insert<T extends Aliases.Entity>(model: Aliases.Model, entities: T[]): Promise<string[]> {
+  public async insert<T extends Types.Entity>(model: Types.Model, entities: T[]): Promise<string[]> {
     const path = this.getRequestPath({ model: model, query: this.getRequestQuery(model) });
     const method = this.getRequestMethod(model, Method.POST);
     const list = [];
     for (const entity of entities) {
-      const payload = Aliases.Normalizer.create(model, entity, true, true);
+      const payload = Types.Normalizer.create(model, entity, true, true);
       const response = await this.getRequestResponse(method, path, payload);
       if (Requests.Helper.isAcceptedStatusCode(response.status.code)) {
         const identity = await this.getInsertResponse(model, response);
@@ -319,11 +319,7 @@ export class Driver extends Class.Null implements Aliases.Driver {
    * @throws Throws an error when the result payload isn't an array.
    */
   @Class.Public()
-  public async find<T extends Aliases.Entity>(
-    model: Aliases.Model<T>,
-    query: Aliases.Query,
-    fields: string[]
-  ): Promise<T[]> {
+  public async find<T extends Types.Entity>(model: Types.Model<T>, query: Types.Query, fields: string[]): Promise<T[]> {
     const path = this.getRequestPath({ model: model, query: this.getRequestQuery(model, query, fields) });
     const method = this.getRequestMethod(model, Method.GET);
     const response = await this.getRequestResponse(method, path);
@@ -341,11 +337,7 @@ export class Driver extends Class.Null implements Aliases.Driver {
    * @returns Returns a promise to get the found entity or undefined when the entity was not found.
    */
   @Class.Public()
-  public async findById<T extends Aliases.Entity>(
-    model: Aliases.Model<T>,
-    id: any,
-    fields: string[]
-  ): Promise<T | undefined> {
+  public async findById<T extends Types.Entity>(model: Types.Model<T>, id: any, fields: string[]): Promise<T | undefined> {
     const query = this.getRequestQuery(model, void 0, fields);
     const path = this.getRequestPath({ model: model, id: this.getRequestId(model, id), query: query });
     const method = this.getRequestMethod(model, Method.GET);
@@ -364,10 +356,10 @@ export class Driver extends Class.Null implements Aliases.Driver {
    * @returns Returns a promise to get the number of updated entities.
    */
   @Class.Public()
-  public async update(model: Aliases.Model, match: Aliases.Match, entity: Aliases.Entity): Promise<number> {
+  public async update(model: Types.Model, match: Types.Match, entity: Types.Entity): Promise<number> {
     const path = this.getRequestPath({ model: model, query: this.getRequestQuery(model, { pre: match }) });
     const method = this.getRequestMethod(model, Method.PATCH);
-    const payload = Aliases.Normalizer.create(model, entity, true, true);
+    const payload = Types.Normalizer.create(model, entity, true, true);
     const response = await this.getRequestResponse(method, path, payload);
     if (Requests.Helper.isAcceptedStatusCode(response.status.code)) {
       return await this.getUpdateResponse(model, response);
@@ -383,10 +375,10 @@ export class Driver extends Class.Null implements Aliases.Driver {
    * @returns Returns a promise to get the true when the entity has been updated or false otherwise.
    */
   @Class.Public()
-  public async updateById(model: Aliases.Model, id: any, entity: Aliases.Entity): Promise<boolean> {
+  public async updateById(model: Types.Model, id: any, entity: Types.Entity): Promise<boolean> {
     const path = this.getRequestPath({ model: model, id: this.getRequestId(model, id), query: this.getRequestQuery(model) });
     const method = this.getRequestMethod(model, Method.PATCH);
-    const payload = Aliases.Normalizer.create(model, entity, true, true);
+    const payload = Types.Normalizer.create(model, entity, true, true);
     const response = await this.getRequestResponse(method, path, payload);
     if (Requests.Helper.isAcceptedStatusCode(response.status.code)) {
       return await this.getUpdateByIdResponse(model, response);
@@ -402,10 +394,10 @@ export class Driver extends Class.Null implements Aliases.Driver {
    * @returns Returns a promise to get the true when the entity has been replaced or false otherwise.
    */
   @Class.Public()
-  public async replaceById(model: Aliases.Model, id: any, entity: Aliases.Entity): Promise<boolean> {
+  public async replaceById(model: Types.Model, id: any, entity: Types.Entity): Promise<boolean> {
     const path = this.getRequestPath({ model: model, id: this.getRequestId(model, id), query: this.getRequestQuery(model) });
     const method = this.getRequestMethod(model, Method.PUT);
-    const payload = Aliases.Normalizer.create(model, entity, true, true);
+    const payload = Types.Normalizer.create(model, entity, true, true);
     const response = await this.getRequestResponse(method, path, payload);
     if (Requests.Helper.isAcceptedStatusCode(response.status.code)) {
       return await this.getReplaceByIdResponse(model, response);
@@ -420,7 +412,7 @@ export class Driver extends Class.Null implements Aliases.Driver {
    * @return Returns a promise to get the number of deleted entities.
    */
   @Class.Public()
-  public async delete(model: Aliases.Model, match: Aliases.Match): Promise<number> {
+  public async delete(model: Types.Model, match: Types.Match): Promise<number> {
     const path = this.getRequestPath({ model: model, query: this.getRequestQuery(model, { pre: match }) });
     const method = this.getRequestMethod(model, Method.DELETE);
     const response = await this.getRequestResponse(method, path);
@@ -437,7 +429,7 @@ export class Driver extends Class.Null implements Aliases.Driver {
    * @return Returns a promise to get the true when the entity has been deleted or false otherwise.
    */
   @Class.Public()
-  public async deleteById(model: Aliases.Model, id: any): Promise<boolean> {
+  public async deleteById(model: Types.Model, id: any): Promise<boolean> {
     const path = this.getRequestPath({ model: model, id: this.getRequestId(model, id) });
     const method = this.getRequestMethod(model, Method.DELETE);
     const response = await this.getRequestResponse(method, path);
@@ -454,7 +446,7 @@ export class Driver extends Class.Null implements Aliases.Driver {
    * @returns Returns a promise to get the amount of found entities or 0 when there's an error.
    */
   @Class.Public()
-  public async count(model: Aliases.Model, query: Aliases.Query): Promise<number> {
+  public async count(model: Types.Model, query: Types.Query): Promise<number> {
     const path = this.getRequestPath({ model: model, query: this.getRequestQuery(model, query) });
     const method = this.getRequestMethod(model, Method.HEAD);
     const response = await this.getRequestResponse(method, path);

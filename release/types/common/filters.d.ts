@@ -3,7 +3,7 @@
  * This source code is licensed under the MIT License as described in the file LICENSE.
  */
 import * as Class from '@singleware/class';
-import * as Aliases from '../aliases';
+import * as Types from '../types';
 import { Query } from './query';
 /**
  * Common driver, filters class.
@@ -46,6 +46,14 @@ export declare class Filters extends Class.Null {
      * @throws Throws an error when there are invalid serialized data.
      */
     private static unpackViewedFields;
+    /**
+     * Pack a new operation in the given operations list based on the specified path, operator and value.
+     * @param operations Operations list.
+     * @param path Operation path.
+     * @param operator Operator type.
+     * @param value Operation value.
+     */
+    private static packOperation;
     /**
      * Packs the specified matching rules into a parameterized array of matching rules.
      * @param model Model type.
@@ -97,7 +105,7 @@ export declare class Filters extends Class.Null {
      * @param fields Viewed fields.
      * @returns Returns the generated query string URL.
      */
-    static toURL(model: Aliases.Model, query?: Aliases.Query, fields?: string[]): string;
+    static toURL(model: Types.Model, query?: Types.Query, fields?: string[]): string;
     /**
      * Builds a query entity from the specified query URL.
      * @param model Model type.
@@ -105,5 +113,5 @@ export declare class Filters extends Class.Null {
      * @returns Returns the generated query entity.
      * @throws Throws an error when there are unsupported data serialization in the specified URL.
      */
-    static fromURL(model: Aliases.Model, url: string): Query;
+    static fromURL(model: Types.Model, url: string): Query;
 }

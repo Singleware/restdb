@@ -11,7 +11,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
  * This source code is licensed under the MIT License as described in the file LICENSE.
  */
 const Class = require("@singleware/class");
-const Aliases = require("../aliases");
+const Mapping = require("@singleware/mapping");
+const Types = require("../types");
 /**
  * Common driver, filters class.
  */
@@ -22,7 +23,7 @@ let Filters = class Filters extends Class.Null {
      * @returns Returns the parameterized array of viewed fields.
      */
     static packViewedFields(fields) {
-        return [this.FieldsPrefix, fields.length, ...fields];
+        return [this.FieldsPrefix, fields.length, ...new Set(fields).values()];
     }
     /**
      * Unpacks the parameterized array of viewed fields into a list of viewed fields.
@@ -34,15 +35,56 @@ let Filters = class Filters extends Class.Null {
         if (this.FieldsPrefix !== array.pop()) {
             throw new Error(`Invalid magic prefix for the given array of viewed fields.`);
         }
-        const length = parseInt(array.pop());
-        if (array.length < length) {
-            throw new Error(`Invalid size for the given array of viewed fields.`);
+        else {
+            const length = parseInt(array.pop());
+            if (array.length < length) {
+                throw new Error(`Invalid size for the given array of viewed fields.`);
+            }
+            else {
+                const fields = [];
+                for (let i = 0; i < length; ++i) {
+                    fields.push(array.pop());
+                }
+                return fields;
+            }
         }
-        const fields = [];
-        for (let i = 0; i < length; ++i) {
-            fields.push(array.pop());
+    }
+    /**
+     * Pack a new operation in the given operations list based on the specified path, operator and value.
+     * @param operations Operations list.
+     * @param path Operation path.
+     * @param operator Operator type.
+     * @param value Operation value.
+     */
+    static packOperation(operations, path, operator, value) {
+        operations.push(path, operator);
+        switch (operator) {
+            case "lt" /* LessThan */:
+            case "lte" /* LessThanOrEqual */:
+            case "eq" /* Equal */:
+            case "ne" /* NotEqual */:
+            case "gte" /* GreaterThanOrEqual */:
+            case "gt" /* GreaterThan */:
+                operations.push(encodeURIComponent(value));
+                break;
+            case "bt" /* Between */:
+            case "in" /* Contain */:
+            case "nin" /* NotContain */:
+                if (!(value instanceof Array)) {
+                    throw new Error(`Match value for the given path '${path}' should be an Array object.`);
+                }
+                operations.push(value.length, ...value.map(item => encodeURIComponent(item)));
+                break;
+            case "re" /* RegExp */:
+                if (!(value instanceof RegExp)) {
+                    throw new Error(`Match value for the given path '${path}' should be a RegExp object.`);
+                }
+                operations.push(encodeURIComponent(value.source));
+                operations.push(encodeURIComponent(value.flags));
+                break;
+            default:
+                throw new TypeError(`Invalid operator '${operator}' for the given path '${path}'.`);
         }
-        return fields;
     }
     /**
      * Packs the specified matching rules into a parameterized array of matching rules.
@@ -52,50 +94,33 @@ let Filters = class Filters extends Class.Null {
      * @throws Throws an error when there are invalid matching operator codes.
      */
     static packMatchRules(prefix, model, match) {
-        const rules = [];
-        let total = 0;
-        for (const fields of match instanceof Array ? match : [match]) {
-            const expression = [];
-            let length = 0;
-            for (const name in fields) {
-                const schema = Aliases.Schema.getRealColumn(model, name);
-                const operation = fields[name];
-                expression.push(schema.name, operation.operator);
-                length++;
-                switch (operation.operator) {
-                    case Aliases.Operator.LessThan:
-                    case Aliases.Operator.LessThanOrEqual:
-                    case Aliases.Operator.Equal:
-                    case Aliases.Operator.NotEqual:
-                    case Aliases.Operator.GreaterThanOrEqual:
-                    case Aliases.Operator.GreaterThan:
-                        expression.push(encodeURIComponent(operation.value));
-                        break;
-                    case Aliases.Operator.Between:
-                    case Aliases.Operator.Contain:
-                    case Aliases.Operator.NotContain:
-                        if (!(operation.value instanceof Array)) {
-                            throw new Error(`Match value for '${schema.name}' should be an Array object.`);
-                        }
-                        expression.push(operation.value.length, ...operation.value.map(item => encodeURIComponent(item)));
-                        break;
-                    case Aliases.Operator.RegExp:
-                        if (!(operation.value instanceof RegExp)) {
-                            throw new Error(`Match value for '${schema.name}' should be a RegExp object.`);
-                        }
-                        expression.push(encodeURIComponent(operation.value.source));
-                        expression.push(encodeURIComponent(operation.value.flags));
-                        break;
-                    default:
-                        throw new TypeError(`Invalid operator '${operation.operator}' for the match operation.`);
+        const rulesList = [];
+        let rulesCounter = 0;
+        for (const expression of match instanceof Array ? match : [match]) {
+            const operationsList = [];
+            let operationsCounter = 0;
+            for (const path in expression) {
+                if (!Mapping.Helper.tryPathColumns(model, path)) {
+                    throw new Error(`Invalid matching path '${path}' for the given model.`);
+                }
+                else {
+                    operationsCounter++;
+                    const operation = expression[path];
+                    if (Mapping.Filters.Helper.isOperation(operation)) {
+                        this.packOperation(operationsList, path, operation.operator, operation.value);
+                    }
+                    else {
+                        const entry = Object.entries(operation)[0];
+                        this.packOperation(operationsList, path, entry[0], entry[1]);
+                    }
                 }
             }
-            if (length > 0) {
-                rules.push(length, ...expression);
-                total++;
+            if (operationsCounter > 0) {
+                rulesList.push(operationsCounter, ...operationsList);
+                rulesCounter++;
             }
         }
-        return [prefix, total, ...rules];
+        return [prefix, rulesCounter, ...rulesList];
     }
     /**
      * Unpacks the parameterized array of matching rules into the matching rules.
@@ -108,46 +133,61 @@ let Filters = class Filters extends Class.Null {
         if (prefix !== array.pop()) {
             throw new Error(`Invalid magic prefix for the given array of matching lists.`);
         }
-        const match = [];
-        for (let total = parseInt(array.pop()); total > 0; --total) {
-            const fields = {};
-            for (let length = parseInt(array.pop()); length > 0; --length) {
-                const name = array.pop();
-                const operator = array.pop();
-                const schema = Aliases.Schema.getRealColumn(model, name);
-                switch (operator) {
-                    case Aliases.Operator.LessThan:
-                    case Aliases.Operator.LessThanOrEqual:
-                    case Aliases.Operator.Equal:
-                    case Aliases.Operator.NotEqual:
-                    case Aliases.Operator.GreaterThanOrEqual:
-                    case Aliases.Operator.GreaterThan:
-                        fields[schema.name] = { operator: operator, value: decodeURIComponent(array.pop()) };
-                        break;
-                    case Aliases.Operator.Between:
-                    case Aliases.Operator.Contain:
-                    case Aliases.Operator.NotContain:
-                        const values = [];
-                        for (let i = parseInt(array.pop()); i > 0; --i) {
-                            values.push(decodeURIComponent(array.pop()));
+        else {
+            const rulesList = [];
+            for (let rulesCounter = parseInt(array.pop()); rulesCounter > 0; --rulesCounter) {
+                const operationsMap = {};
+                for (let operationsCounter = parseInt(array.pop()); operationsCounter > 0; --operationsCounter) {
+                    const path = array.pop();
+                    if (!Mapping.Helper.tryPathColumns(model, path)) {
+                        throw new Error(`Invalid matching path '${path}' for the given model.`);
+                    }
+                    else {
+                        const operator = array.pop();
+                        switch (operator) {
+                            case "lt" /* LessThan */:
+                            case "lte" /* LessThanOrEqual */:
+                            case "eq" /* Equal */:
+                            case "ne" /* NotEqual */:
+                            case "gte" /* GreaterThanOrEqual */:
+                            case "gt" /* GreaterThan */:
+                                operationsMap[path] = {
+                                    operator: operator,
+                                    value: decodeURIComponent(array.pop())
+                                };
+                                break;
+                            case "bt" /* Between */:
+                            case "in" /* Contain */:
+                            case "nin" /* NotContain */:
+                                const values = [];
+                                for (let total = parseInt(array.pop()); total > 0; --total) {
+                                    values.push(decodeURIComponent(array.pop()));
+                                }
+                                operationsMap[path] = {
+                                    operator: operator,
+                                    value: values
+                                };
+                                break;
+                            case "re" /* RegExp */:
+                                const regexp = decodeURIComponent(array.pop());
+                                const flags = decodeURIComponent(array.pop());
+                                operationsMap[path] = {
+                                    operator: operator,
+                                    value: new RegExp(regexp, flags)
+                                };
+                                break;
+                            default:
+                                throw new TypeError(`Invalid operator '${operator}' for the given path '${path}'.`);
                         }
-                        fields[schema.name] = { operator: operator, value: values };
-                        break;
-                    case Aliases.Operator.RegExp:
-                        const regexp = decodeURIComponent(array.pop());
-                        const flags = decodeURIComponent(array.pop());
-                        fields[schema.name] = { operator: operator, value: new RegExp(regexp, flags) };
-                        break;
-                    default:
-                        throw new TypeError(`Invalid operator code for the match operation.`);
+                    }
                 }
+                rulesList.push(operationsMap);
             }
-            match.push(fields);
+            if (rulesList.length > 0) {
+                return rulesList.length === 1 ? rulesList[0] : rulesList;
+            }
+            return void 0;
         }
-        if (match.length > 0) {
-            return match.length === 1 ? match[0] : match;
-        }
-        return void 0;
     }
     /**
      * Packs the specified sorting fields into a parameterized array of sorting fields.
@@ -157,12 +197,13 @@ let Filters = class Filters extends Class.Null {
      */
     static packSort(model, sort) {
         const fields = [];
-        let length = 0;
-        for (const name in sort) {
-            fields.push(Aliases.Schema.getRealColumn(model, name).name, sort[name]);
-            length++;
+        for (const path in sort) {
+            if (!Mapping.Helper.tryPathColumns(model, path)) {
+                throw new Error(`Invalid sorting path '${path}' for the given model.`);
+            }
+            fields.push(path, sort[path]);
         }
-        return [this.SortPrefix, length, ...fields];
+        return [this.SortPrefix, fields.length / 2, ...fields];
     }
     /**
      * Unpacks the parameterized array of sorting fields into the sorting fields.
@@ -175,21 +216,27 @@ let Filters = class Filters extends Class.Null {
         if (this.SortPrefix !== array.pop()) {
             throw new Error(`Invalid magic prefix for the given array of sorting list.`);
         }
-        const fields = {};
-        for (let length = parseInt(array.pop()); length > 0; --length) {
-            const name = array.pop();
-            const order = parseInt(array.pop());
-            const schema = Aliases.Schema.getRealColumn(model, name);
-            switch (order) {
-                case Aliases.Order.Ascending:
-                case Aliases.Order.Descending:
-                    fields[schema.name] = order;
-                    break;
-                default:
-                    throw new Error(`Invalid sorting order code.`);
+        else {
+            const fields = {};
+            for (let length = parseInt(array.pop()); length > 0; --length) {
+                const path = array.pop();
+                const order = array.pop();
+                if (!Mapping.Helper.tryPathColumns(model, path)) {
+                    throw new Error(`Invalid sorting path '${path}' for the given model.`);
+                }
+                else {
+                    switch (order) {
+                        case "asc" /* Ascending */:
+                        case "desc" /* Descending */:
+                            fields[path] = order;
+                            break;
+                        default:
+                            throw new Error(`Invalid sorting order ${order} for the given path '${path}'..`);
+                    }
+                }
             }
+            return fields;
         }
-        return fields;
     }
     /**
      * Packs the specified limit entity into a parameterized array of limits.
@@ -209,10 +256,12 @@ let Filters = class Filters extends Class.Null {
         if (this.LimitPrefix !== array.pop()) {
             throw new Error(`Invalid magic prefix for the given array of limits.`);
         }
-        return {
-            start: parseInt(array.pop()) || 0,
-            count: parseInt(array.pop()) || 0
-        };
+        else {
+            return {
+                start: parseInt(array.pop()) || 0,
+                count: parseInt(array.pop()) || 0
+            };
+        }
     }
     /**
      * Build a query string URL from the specified entity model, viewed fields and query filter.
@@ -254,7 +303,8 @@ let Filters = class Filters extends Class.Null {
         const parts = url.split('/').reverse();
         if (parts.pop() === this.QueryPrefix) {
             while (parts.length) {
-                switch (parts[parts.length - 1]) {
+                const prefix = parts[parts.length - 1];
+                switch (prefix) {
                     case this.PreMatchPrefix:
                         result.pre = this.unpackMatchRules(this.PreMatchPrefix, model, parts);
                         break;
@@ -326,6 +376,9 @@ __decorate([
 __decorate([
     Class.Private()
 ], Filters, "unpackViewedFields", null);
+__decorate([
+    Class.Private()
+], Filters, "packOperation", null);
 __decorate([
     Class.Private()
 ], Filters, "packMatchRules", null);

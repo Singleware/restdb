@@ -3,7 +3,9 @@
  * This source code is licensed under the MIT License as described in the file LICENSE.
  */
 import * as Class from '@singleware/class';
-import * as Aliases from '../aliases';
+import * as Mapping from '@singleware/mapping';
+
+import * as Types from '../types';
 
 import { Query } from './query';
 
@@ -55,7 +57,7 @@ export class Filters extends Class.Null {
    */
   @Class.Private()
   private static packViewedFields(fields: string[]): (string | number)[] {
-    return [this.FieldsPrefix, fields.length, ...fields];
+    return [this.FieldsPrefix, fields.length, ...new Set(fields).values()];
   }
 
   /**
@@ -68,16 +70,62 @@ export class Filters extends Class.Null {
   private static unpackViewedFields(array: string[]): string[] {
     if (this.FieldsPrefix !== array.pop()) {
       throw new Error(`Invalid magic prefix for the given array of viewed fields.`);
+    } else {
+      const length = parseInt(array.pop()!);
+      if (array.length < length) {
+        throw new Error(`Invalid size for the given array of viewed fields.`);
+      } else {
+        const fields = [];
+        for (let i = 0; i < length; ++i) {
+          fields.push(array.pop()!);
+        }
+        return fields;
+      }
     }
-    const length = parseInt(<string>array.pop());
-    if (array.length < length) {
-      throw new Error(`Invalid size for the given array of viewed fields.`);
+  }
+
+  /**
+   * Pack a new operation in the given operations list based on the specified path, operator and value.
+   * @param operations Operations list.
+   * @param path Operation path.
+   * @param operator Operator type.
+   * @param value Operation value.
+   */
+  @Class.Private()
+  private static packOperation(
+    operations: (string | number)[],
+    path: string,
+    operator: Mapping.Filters.Operator,
+    value: any
+  ): void {
+    operations.push(path, operator);
+    switch (operator) {
+      case Types.Operator.LessThan:
+      case Types.Operator.LessThanOrEqual:
+      case Types.Operator.Equal:
+      case Types.Operator.NotEqual:
+      case Types.Operator.GreaterThanOrEqual:
+      case Types.Operator.GreaterThan:
+        operations.push(encodeURIComponent(value));
+        break;
+      case Types.Operator.Between:
+      case Types.Operator.Contain:
+      case Types.Operator.NotContain:
+        if (!(value instanceof Array)) {
+          throw new Error(`Match value for the given path '${path}' should be an Array object.`);
+        }
+        operations.push(value.length, ...value.map(item => encodeURIComponent(item)));
+        break;
+      case Types.Operator.RegExp:
+        if (!(value instanceof RegExp)) {
+          throw new Error(`Match value for the given path '${path}' should be a RegExp object.`);
+        }
+        operations.push(encodeURIComponent(value.source));
+        operations.push(encodeURIComponent(value.flags));
+        break;
+      default:
+        throw new TypeError(`Invalid operator '${operator}' for the given path '${path}'.`);
     }
-    const fields = [];
-    for (let i = 0; i < length; ++i) {
-      fields.push(<string>array.pop());
-    }
-    return fields;
   }
 
   /**
@@ -90,53 +138,34 @@ export class Filters extends Class.Null {
   @Class.Private()
   private static packMatchRules(
     prefix: string,
-    model: Aliases.Model,
-    match: Aliases.Match | Aliases.Match[]
+    model: Types.Model,
+    match: Types.Match | Types.Match[]
   ): (number | string)[] {
-    const rules = [];
-    let total = 0;
-    for (const fields of match instanceof Array ? match : [match]) {
-      const expression = [];
-      let length = 0;
-      for (const name in fields) {
-        const schema = Aliases.Schema.getRealColumn(model, name);
-        const operation = fields[name];
-        expression.push(schema.name, operation.operator);
-        length++;
-        switch (operation.operator) {
-          case Aliases.Operator.LessThan:
-          case Aliases.Operator.LessThanOrEqual:
-          case Aliases.Operator.Equal:
-          case Aliases.Operator.NotEqual:
-          case Aliases.Operator.GreaterThanOrEqual:
-          case Aliases.Operator.GreaterThan:
-            expression.push(encodeURIComponent(operation.value));
-            break;
-          case Aliases.Operator.Between:
-          case Aliases.Operator.Contain:
-          case Aliases.Operator.NotContain:
-            if (!(operation.value instanceof Array)) {
-              throw new Error(`Match value for '${schema.name}' should be an Array object.`);
-            }
-            expression.push(operation.value.length, ...operation.value.map(item => encodeURIComponent(item)));
-            break;
-          case Aliases.Operator.RegExp:
-            if (!(operation.value instanceof RegExp)) {
-              throw new Error(`Match value for '${schema.name}' should be a RegExp object.`);
-            }
-            expression.push(encodeURIComponent(operation.value.source));
-            expression.push(encodeURIComponent(operation.value.flags));
-            break;
-          default:
-            throw new TypeError(`Invalid operator '${operation.operator}' for the match operation.`);
+    const rulesList = [];
+    let rulesCounter = 0;
+    for (const expression of match instanceof Array ? match : [match]) {
+      const operationsList = <(string | number)[]>[];
+      let operationsCounter = 0;
+      for (const path in expression) {
+        if (!Mapping.Helper.tryPathColumns(model, path)) {
+          throw new Error(`Invalid matching path '${path}' for the given model.`);
+        } else {
+          operationsCounter++;
+          const operation = expression[path];
+          if (Mapping.Filters.Helper.isOperation(operation)) {
+            this.packOperation(operationsList, path, operation.operator, operation.value);
+          } else {
+            const entry = Object.entries(operation)[0];
+            this.packOperation(operationsList, path, <Mapping.Filters.Operator>entry[0], entry[1]);
+          }
         }
       }
-      if (length > 0) {
-        rules.push(length, ...expression);
-        total++;
+      if (operationsCounter > 0) {
+        rulesList.push(operationsCounter, ...operationsList);
+        rulesCounter++;
       }
     }
-    return [prefix, total, ...rules];
+    return [prefix, rulesCounter, ...rulesList];
   }
 
   /**
@@ -149,52 +178,65 @@ export class Filters extends Class.Null {
   @Class.Private()
   private static unpackMatchRules(
     prefix: string,
-    model: Aliases.Model,
+    model: Types.Model,
     array: string[]
-  ): Aliases.Match | Aliases.Match[] | undefined {
+  ): Types.Match | Types.Match[] | undefined {
     if (prefix !== array.pop()) {
       throw new Error(`Invalid magic prefix for the given array of matching lists.`);
-    }
-    const match = [];
-    for (let total = parseInt(<string>array.pop()); total > 0; --total) {
-      const fields = <Aliases.Match>{};
-      for (let length = parseInt(<string>array.pop()); length > 0; --length) {
-        const name = <string>array.pop();
-        const operator = <string>array.pop();
-        const schema = Aliases.Schema.getRealColumn(model, name);
-        switch (operator) {
-          case Aliases.Operator.LessThan:
-          case Aliases.Operator.LessThanOrEqual:
-          case Aliases.Operator.Equal:
-          case Aliases.Operator.NotEqual:
-          case Aliases.Operator.GreaterThanOrEqual:
-          case Aliases.Operator.GreaterThan:
-            fields[schema.name] = { operator: operator, value: decodeURIComponent(<string>array.pop()) };
-            break;
-          case Aliases.Operator.Between:
-          case Aliases.Operator.Contain:
-          case Aliases.Operator.NotContain:
-            const values = [];
-            for (let i = parseInt(<string>array.pop()); i > 0; --i) {
-              values.push(decodeURIComponent(<string>array.pop()));
+    } else {
+      const rulesList = [];
+      for (let rulesCounter = parseInt(array.pop()!); rulesCounter > 0; --rulesCounter) {
+        const operationsMap = <Types.Match>{};
+        for (let operationsCounter = parseInt(array.pop()!); operationsCounter > 0; --operationsCounter) {
+          const path = array.pop()!;
+          if (!Mapping.Helper.tryPathColumns(model, path)) {
+            throw new Error(`Invalid matching path '${path}' for the given model.`);
+          } else {
+            const operator = array.pop()!;
+            switch (operator) {
+              case Types.Operator.LessThan:
+              case Types.Operator.LessThanOrEqual:
+              case Types.Operator.Equal:
+              case Types.Operator.NotEqual:
+              case Types.Operator.GreaterThanOrEqual:
+              case Types.Operator.GreaterThan:
+                operationsMap[path] = {
+                  operator: operator,
+                  value: decodeURIComponent(array.pop()!)
+                };
+                break;
+              case Types.Operator.Between:
+              case Types.Operator.Contain:
+              case Types.Operator.NotContain:
+                const values = [];
+                for (let total = parseInt(array.pop()!); total > 0; --total) {
+                  values.push(decodeURIComponent(array.pop()!));
+                }
+                operationsMap[path] = {
+                  operator: operator,
+                  value: values
+                };
+                break;
+              case Types.Operator.RegExp:
+                const regexp = decodeURIComponent(array.pop()!);
+                const flags = decodeURIComponent(array.pop()!);
+                operationsMap[path] = {
+                  operator: operator,
+                  value: new RegExp(regexp, flags)
+                };
+                break;
+              default:
+                throw new TypeError(`Invalid operator '${operator}' for the given path '${path}'.`);
             }
-            fields[schema.name] = { operator: operator, value: values };
-            break;
-          case Aliases.Operator.RegExp:
-            const regexp = decodeURIComponent(<string>array.pop());
-            const flags = decodeURIComponent(<string>array.pop());
-            fields[schema.name] = { operator: operator, value: new RegExp(regexp, flags) };
-            break;
-          default:
-            throw new TypeError(`Invalid operator code for the match operation.`);
+          }
         }
+        rulesList.push(operationsMap);
       }
-      match.push(fields);
+      if (rulesList.length > 0) {
+        return rulesList.length === 1 ? rulesList[0] : rulesList;
+      }
+      return void 0;
     }
-    if (match.length > 0) {
-      return match.length === 1 ? match[0] : match;
-    }
-    return void 0;
   }
 
   /**
@@ -204,14 +246,15 @@ export class Filters extends Class.Null {
    * @returns Returns the parameterized array of sorting fields.
    */
   @Class.Private()
-  private static packSort(model: Aliases.Model, sort: Aliases.Sort): (number | string)[] {
+  private static packSort(model: Types.Model, sort: Types.Sort): (number | string)[] {
     const fields = [];
-    let length = 0;
-    for (const name in sort) {
-      fields.push(Aliases.Schema.getRealColumn(model, name).name, sort[name]);
-      length++;
+    for (const path in sort) {
+      if (!Mapping.Helper.tryPathColumns(model, path)) {
+        throw new Error(`Invalid sorting path '${path}' for the given model.`);
+      }
+      fields.push(path, sort[path]);
     }
-    return [this.SortPrefix, length, ...fields];
+    return [this.SortPrefix, fields.length / 2, ...fields];
   }
 
   /**
@@ -222,25 +265,29 @@ export class Filters extends Class.Null {
    * @throws Throws an error when there are invalid serialized data.
    */
   @Class.Private()
-  private static unpackSort(model: Aliases.Model, array: string[]): Aliases.Sort {
+  private static unpackSort(model: Types.Model, array: string[]): Types.Sort {
     if (this.SortPrefix !== array.pop()) {
       throw new Error(`Invalid magic prefix for the given array of sorting list.`);
-    }
-    const fields = <Aliases.Sort>{};
-    for (let length = parseInt(<string>array.pop()); length > 0; --length) {
-      const name = <string>array.pop();
-      const order = parseInt(<string>array.pop());
-      const schema = Aliases.Schema.getRealColumn(model, name);
-      switch (order) {
-        case Aliases.Order.Ascending:
-        case Aliases.Order.Descending:
-          fields[schema.name] = order;
-          break;
-        default:
-          throw new Error(`Invalid sorting order code.`);
+    } else {
+      const fields = <Types.Sort>{};
+      for (let length = parseInt(array.pop()!); length > 0; --length) {
+        const path = array.pop()!;
+        const order = array.pop()!;
+        if (!Mapping.Helper.tryPathColumns(model, path)) {
+          throw new Error(`Invalid sorting path '${path}' for the given model.`);
+        } else {
+          switch (order) {
+            case Types.Order.Ascending:
+            case Types.Order.Descending:
+              fields[path] = order;
+              break;
+            default:
+              throw new Error(`Invalid sorting order ${order} for the given path '${path}'..`);
+          }
+        }
       }
+      return fields;
     }
-    return fields;
   }
 
   /**
@@ -249,7 +296,7 @@ export class Filters extends Class.Null {
    * @returns Returns the parameterized array of limits.
    */
   @Class.Private()
-  private static packLimit(limit: Aliases.Limit): (string | number)[] {
+  private static packLimit(limit: Types.Limit): (string | number)[] {
     return [this.LimitPrefix, limit.start || 0, limit.count || 0];
   }
 
@@ -260,14 +307,15 @@ export class Filters extends Class.Null {
    * @throws Throws an error when there are invalid serialized data.
    */
   @Class.Private()
-  private static unpackLimit(array: string[]): Aliases.Limit {
+  private static unpackLimit(array: string[]): Types.Limit {
     if (this.LimitPrefix !== array.pop()) {
       throw new Error(`Invalid magic prefix for the given array of limits.`);
+    } else {
+      return {
+        start: parseInt(array.pop()!) || 0,
+        count: parseInt(array.pop()!) || 0
+      };
     }
-    return {
-      start: parseInt(<string>array.pop()) || 0,
-      count: parseInt(<string>array.pop()) || 0
-    };
   }
 
   /**
@@ -278,7 +326,7 @@ export class Filters extends Class.Null {
    * @returns Returns the generated query string URL.
    */
   @Class.Public()
-  public static toURL(model: Aliases.Model, query?: Aliases.Query, fields?: string[]): string {
+  public static toURL(model: Types.Model, query?: Types.Query, fields?: string[]): string {
     const queries = <(string | number)[]>[];
     if (fields && fields.length > 0) {
       queries.push(...this.packViewedFields(fields));
@@ -308,12 +356,13 @@ export class Filters extends Class.Null {
    * @throws Throws an error when there are unsupported data serialization in the specified URL.
    */
   @Class.Public()
-  public static fromURL(model: Aliases.Model, url: string): Query {
+  public static fromURL(model: Types.Model, url: string): Query {
     const result = <Query>{ fields: [] };
     const parts = url.split('/').reverse();
     if (parts.pop() === this.QueryPrefix) {
       while (parts.length) {
-        switch (parts[parts.length - 1]) {
+        const prefix = parts[parts.length - 1];
+        switch (prefix) {
           case this.PreMatchPrefix:
             result.pre = this.unpackMatchRules(this.PreMatchPrefix, model, parts);
             break;

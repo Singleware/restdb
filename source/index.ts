@@ -9,9 +9,9 @@ export { Schema } from './schema';
 export { Headers } from './headers';
 export { Method } from './method';
 export { Route } from './route';
-export { Entity, Model, Mapper, Map } from './aliases';
-export { Query, Match, Operator, Sort, Order, Limit } from './aliases';
-export { Inputer, Outputer, Normalizer, Castings } from './aliases';
+export { Entity, Model, Mapper, Map } from './types';
+export { Query, Match, Operator, Sort, Order, Limit } from './types';
+export { Inputer, Outputer, Normalizer, Castings } from './types';
 
 // Imported aliases.
 import * as Requests from './requests';

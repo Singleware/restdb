@@ -2,9 +2,9 @@
  * Copyright (C) 2018-2019 Silas B. Domingos
  * This source code is licensed under the MIT License as described in the file LICENSE.
  */
-import * as Types from '../aliases';
+import * as Types from '../types';
 
-import { Headers as RequestHeaders } from '../headers';
+import { Headers } from '../headers';
 
 /**
  * Input request interface.
@@ -21,7 +21,7 @@ export interface Input {
   /**
    * Input headers.
    */
-  headers: RequestHeaders;
+  headers: Headers;
   /**
    * Input payload.
    */

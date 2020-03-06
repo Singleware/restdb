@@ -65,7 +65,7 @@ let UserMapper = class UserMapper extends RestDB.Mapper {
      * @returns Returns a promise to get the number of updated users.
      */
     async change(id) {
-        return await this.update({ id: { operator: RestDB.Operator.Equal, value: id } }, { firstName: 'Changed!' });
+        return await this.update({ id: { operator: "eq" /* Equal */, value: id } }, { firstName: 'Changed!' });
     }
     /**
      * Replace the test user.
@@ -83,10 +83,10 @@ let UserMapper = class UserMapper extends RestDB.Mapper {
     async read(id) {
         return await this.find({
             pre: {
-                id: { operator: RestDB.Operator.Equal, value: id }
+                id: { operator: "eq" /* Equal */, value: id }
             },
             sort: {
-                id: RestDB.Order.Ascending
+                id: "asc" /* Ascending */
             },
             limit: {
                 start: 0,
@@ -100,7 +100,7 @@ let UserMapper = class UserMapper extends RestDB.Mapper {
      * @returns Returns a promise to get the number of removed users.
      */
     async remove(id) {
-        return await this.delete({ id: { operator: RestDB.Operator.Equal, value: id } });
+        return await this.delete({ id: { operator: "eq" /* Equal */, value: id } });
     }
 };
 __decorate([

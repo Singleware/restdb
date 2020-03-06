@@ -5,7 +5,7 @@
 import * as Class from '@singleware/class';
 import * as Observable from '@singleware/observable';
 import * as Responses from './responses';
-import * as Aliases from './aliases';
+import * as Types from './types';
 import { Method } from './method';
 /**
  * Alias type for response result.
@@ -14,7 +14,7 @@ declare type Response<T> = T | Promise<T>;
 /**
  * Generic driver class.
  */
-export declare class Driver extends Class.Null implements Aliases.Driver {
+export declare class Driver extends Class.Null implements Types.Driver {
     /**
      * API base endpoint.
      */
@@ -33,7 +33,7 @@ export declare class Driver extends Class.Null implements Aliases.Driver {
      * @param id Entity Id.
      * @returns Returns the request Id.
      */
-    protected getRequestId(model: Aliases.Model, id: any): string;
+    protected getRequestId(model: Types.Model, id: any): string;
     /**
      * Gets the request query string based on the specified entity model, fields and filters.
      * @param model Entity model.
@@ -42,14 +42,14 @@ export declare class Driver extends Class.Null implements Aliases.Driver {
      * @returns Returns the request query string.
      * @throws It will always throws an error because it's not implemented yet.
      */
-    protected getRequestQuery(model: Aliases.Model, query?: Aliases.Query, fields?: string[]): string;
+    protected getRequestQuery(model: Types.Model, query?: Types.Query, fields?: string[]): string;
     /**
      * Gets the request method based on the specified entity model.
      * @param model Entity model.
      * @param method Request method.
      * @returns Returns the request method.
      */
-    protected getRequestMethod(model: Aliases.Model, method: Method): Method;
+    protected getRequestMethod(model: Types.Model, method: Method): Method;
     /**
      * Gets the result Id from the given response entity.
      * @param model Entity model.
@@ -57,7 +57,7 @@ export declare class Driver extends Class.Null implements Aliases.Driver {
      * @returns Returns the result Id, a promise to get it or undefined when the result Id wasn't found.
      * @throws It will always throws an error because it's not implemented yet.
      */
-    protected getInsertResponse(model: Aliases.Model, response: Responses.Output): Response<string | undefined>;
+    protected getInsertResponse(model: Types.Model, response: Responses.Output): Response<string | undefined>;
     /**
      * Gets the found entity list from the given response entity.
      * @param model Entity model.
@@ -65,7 +65,7 @@ export declare class Driver extends Class.Null implements Aliases.Driver {
      * @returns Returns the entity list or a promise to get it.
      * @throws It will always throws an error because it's not implemented yet.
      */
-    protected getFindResponse<T extends Aliases.Entity>(model: Aliases.Model, response: Responses.Output): Response<T[]>;
+    protected getFindResponse<T extends Types.Entity>(model: Types.Model, response: Responses.Output): Response<T[]>;
     /**
      * Gets the found entity from the given response entity.
      * @param model Entity model.
@@ -73,7 +73,7 @@ export declare class Driver extends Class.Null implements Aliases.Driver {
      * @returns Returns the entity, a promise to get it or undefined when the entity wasn't found.
      * @throws It will always throws an error because it's not implemented yet.
      */
-    protected getFindByIdResponse<T extends Aliases.Entity>(model: Aliases.Model, response: Responses.Output): Response<T | undefined>;
+    protected getFindByIdResponse<T extends Types.Entity>(model: Types.Model, response: Responses.Output): Response<T | undefined>;
     /**
      * Gets the number of updated entities from the given response entity.
      * @param model Entity model.
@@ -81,7 +81,7 @@ export declare class Driver extends Class.Null implements Aliases.Driver {
      * @returns Returns the number of updated entities or a promise to get it.
      * @throws It will always throws an error because it's not implemented yet.
      */
-    protected getUpdateResponse(model: Aliases.Model, response: Responses.Output): Response<number>;
+    protected getUpdateResponse(model: Types.Model, response: Responses.Output): Response<number>;
     /**
      * Gets the updated entity status from the given response entity.
      * @param model Entity model.
@@ -89,7 +89,7 @@ export declare class Driver extends Class.Null implements Aliases.Driver {
      * @returns Returns the updated entity status or a promise to get it.
      * @throws It will always throws an error because it's not implemented yet.
      */
-    protected getUpdateByIdResponse(model: Aliases.Model, response: Responses.Output): Response<boolean>;
+    protected getUpdateByIdResponse(model: Types.Model, response: Responses.Output): Response<boolean>;
     /**
      * Gets the replaced entity status from the given response entity.
      * @param model Entity model.
@@ -97,7 +97,7 @@ export declare class Driver extends Class.Null implements Aliases.Driver {
      * @returns Returns the replaced entity status or a promise to get it.
      * @throws It will always throws an error because it's not implemented yet.
      */
-    protected getReplaceByIdResponse(model: Aliases.Model, response: Responses.Output): Response<boolean>;
+    protected getReplaceByIdResponse(model: Types.Model, response: Responses.Output): Response<boolean>;
     /**
      * Gets the number of deleted entities from the given response entity.
      * @param model Entity model.
@@ -105,7 +105,7 @@ export declare class Driver extends Class.Null implements Aliases.Driver {
      * @returns Returns the number of deleted entities or a promise to get it.
      * @throws It will always throws an error because it's not implemented yet.
      */
-    protected getDeleteResponse(model: Aliases.Model, response: Responses.Output): Response<number>;
+    protected getDeleteResponse(model: Types.Model, response: Responses.Output): Response<number>;
     /**
      * Gets the deleted entity status from the given response entity.
      * @param model Entity model.
@@ -113,7 +113,7 @@ export declare class Driver extends Class.Null implements Aliases.Driver {
      * @returns Returns the deleted entity status or a promise to get it.
      * @throws It will always throws an error because it's not implemented yet.
      */
-    protected getDeleteByIdResponse(model: Aliases.Model, response: Responses.Output): Response<boolean>;
+    protected getDeleteByIdResponse(model: Types.Model, response: Responses.Output): Response<boolean>;
     /**
      * Gets the number of entities from the given response entity.
      * @param model Entity model.
@@ -121,7 +121,7 @@ export declare class Driver extends Class.Null implements Aliases.Driver {
      * @returns Returns the number of entities or a promise to get it.
      * @throws It will always throws an error because it's not implemented yet.
      */
-    protected getCountResponse(model: Aliases.Model, response: Responses.Output): Response<number>;
+    protected getCountResponse(model: Types.Model, response: Responses.Output): Response<number>;
     /**
      * Gets a new request path based on the specified route entity.
      * @param route Route entity.
@@ -154,7 +154,7 @@ export declare class Driver extends Class.Null implements Aliases.Driver {
      * @param model Entity model.
      * @param response Response entity.
      */
-    protected notifyErrorResponse(model: Aliases.Model, response: Responses.Output): Promise<void>;
+    protected notifyErrorResponse(model: Types.Model, response: Responses.Output): Promise<void>;
     /**
      * Gets the error subject.
      */
@@ -171,7 +171,7 @@ export declare class Driver extends Class.Null implements Aliases.Driver {
      * @returns Returns a promise to get the id list of all inserted entities.
      * @throws Throws an error when the result payload doesn't contains the insertion id.
      */
-    insert<T extends Aliases.Entity>(model: Aliases.Model, entities: T[]): Promise<string[]>;
+    insert<T extends Types.Entity>(model: Types.Model, entities: T[]): Promise<string[]>;
     /**
      * Search for all entities that corresponds to the specified filter using a GET request.
      * @param model Model type.
@@ -180,7 +180,7 @@ export declare class Driver extends Class.Null implements Aliases.Driver {
      * @returns Returns a promise to get the list of found entities.
      * @throws Throws an error when the result payload isn't an array.
      */
-    find<T extends Aliases.Entity>(model: Aliases.Model<T>, query: Aliases.Query, fields: string[]): Promise<T[]>;
+    find<T extends Types.Entity>(model: Types.Model<T>, query: Types.Query, fields: string[]): Promise<T[]>;
     /**
      * Find the entity that corresponds to the specified Id using a GET request.
      * @param model Model type.
@@ -188,7 +188,7 @@ export declare class Driver extends Class.Null implements Aliases.Driver {
      * @param fields Viewed fields.
      * @returns Returns a promise to get the found entity or undefined when the entity was not found.
      */
-    findById<T extends Aliases.Entity>(model: Aliases.Model<T>, id: any, fields: string[]): Promise<T | undefined>;
+    findById<T extends Types.Entity>(model: Types.Model<T>, id: any, fields: string[]): Promise<T | undefined>;
     /**
      * Update all entities that corresponds to the specified matching fields using a PATCH request.
      * @param model Model type.
@@ -196,7 +196,7 @@ export declare class Driver extends Class.Null implements Aliases.Driver {
      * @param entity Entity data.
      * @returns Returns a promise to get the number of updated entities.
      */
-    update(model: Aliases.Model, match: Aliases.Match, entity: Aliases.Entity): Promise<number>;
+    update(model: Types.Model, match: Types.Match, entity: Types.Entity): Promise<number>;
     /**
      * Update the entity that corresponds to the specified Id using a PATCH request.
      * @param model Model type.
@@ -204,7 +204,7 @@ export declare class Driver extends Class.Null implements Aliases.Driver {
      * @param entity Entity data.
      * @returns Returns a promise to get the true when the entity has been updated or false otherwise.
      */
-    updateById(model: Aliases.Model, id: any, entity: Aliases.Entity): Promise<boolean>;
+    updateById(model: Types.Model, id: any, entity: Types.Entity): Promise<boolean>;
     /**
      * Replace the entity that corresponds to the specified Id using a PUT request.
      * @param model Model type.
@@ -212,27 +212,27 @@ export declare class Driver extends Class.Null implements Aliases.Driver {
      * @param entity Entity data.
      * @returns Returns a promise to get the true when the entity has been replaced or false otherwise.
      */
-    replaceById(model: Aliases.Model, id: any, entity: Aliases.Entity): Promise<boolean>;
+    replaceById(model: Types.Model, id: any, entity: Types.Entity): Promise<boolean>;
     /**
      * Delete all entities that corresponds to the specified matching fields using a DELETE request.
      * @param model Model type.
      * @param match Matching fields.
      * @return Returns a promise to get the number of deleted entities.
      */
-    delete(model: Aliases.Model, match: Aliases.Match): Promise<number>;
+    delete(model: Types.Model, match: Types.Match): Promise<number>;
     /**
      * Delete the entity that corresponds to the specified Id using a DELETE request.
      * @param model Model type.
      * @param id Entity Id.
      * @return Returns a promise to get the true when the entity has been deleted or false otherwise.
      */
-    deleteById(model: Aliases.Model, id: any): Promise<boolean>;
+    deleteById(model: Types.Model, id: any): Promise<boolean>;
     /**
      * Count all corresponding entities using the a HEAD request.
      * @param model Model type.
      * @param query Query filter.
      * @returns Returns a promise to get the amount of found entities or 0 when there's an error.
      */
-    count(model: Aliases.Model, query: Aliases.Query): Promise<number>;
+    count(model: Types.Model, query: Types.Query): Promise<number>;
 }
 export {};

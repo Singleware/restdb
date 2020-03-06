@@ -14,7 +14,7 @@ const Class = require("@singleware/class");
 const Observable = require("@singleware/observable");
 const Path = require("@singleware/path");
 const Requests = require("./requests");
-const Aliases = require("./aliases");
+const Types = require("./types");
 const method_1 = require("./method");
 /**
  * Generic driver class.
@@ -157,7 +157,7 @@ let Driver = class Driver extends Class.Null {
      */
     getRequestPath(route) {
         const assigned = {};
-        const endpoint = Aliases.Schema.getStorageName(route.model);
+        const endpoint = Types.Schema.getStorageName(route.model);
         let path = endpoint.replace(/{query}|{id}/gi, (match) => {
             const variable = match.substr(1, match.length - 2);
             const value = route[variable];
@@ -243,7 +243,7 @@ let Driver = class Driver extends Class.Null {
         const method = this.getRequestMethod(model, method_1.Method.POST);
         const list = [];
         for (const entity of entities) {
-            const payload = Aliases.Normalizer.create(model, entity, true, true);
+            const payload = Types.Normalizer.create(model, entity, true, true);
             const response = await this.getRequestResponse(method, path, payload);
             if (Requests.Helper.isAcceptedStatusCode(response.status.code)) {
                 const identity = await this.getInsertResponse(model, response);
@@ -301,7 +301,7 @@ let Driver = class Driver extends Class.Null {
     async update(model, match, entity) {
         const path = this.getRequestPath({ model: model, query: this.getRequestQuery(model, { pre: match }) });
         const method = this.getRequestMethod(model, method_1.Method.PATCH);
-        const payload = Aliases.Normalizer.create(model, entity, true, true);
+        const payload = Types.Normalizer.create(model, entity, true, true);
         const response = await this.getRequestResponse(method, path, payload);
         if (Requests.Helper.isAcceptedStatusCode(response.status.code)) {
             return await this.getUpdateResponse(model, response);
@@ -318,7 +318,7 @@ let Driver = class Driver extends Class.Null {
     async updateById(model, id, entity) {
         const path = this.getRequestPath({ model: model, id: this.getRequestId(model, id), query: this.getRequestQuery(model) });
         const method = this.getRequestMethod(model, method_1.Method.PATCH);
-        const payload = Aliases.Normalizer.create(model, entity, true, true);
+        const payload = Types.Normalizer.create(model, entity, true, true);
         const response = await this.getRequestResponse(method, path, payload);
         if (Requests.Helper.isAcceptedStatusCode(response.status.code)) {
             return await this.getUpdateByIdResponse(model, response);
@@ -335,7 +335,7 @@ let Driver = class Driver extends Class.Null {
     async replaceById(model, id, entity) {
         const path = this.getRequestPath({ model: model, id: this.getRequestId(model, id), query: this.getRequestQuery(model) });
         const method = this.getRequestMethod(model, method_1.Method.PUT);
-        const payload = Aliases.Normalizer.create(model, entity, true, true);
+        const payload = Types.Normalizer.create(model, entity, true, true);
         const response = await this.getRequestResponse(method, path, payload);
         if (Requests.Helper.isAcceptedStatusCode(response.status.code)) {
             return await this.getReplaceByIdResponse(model, response);

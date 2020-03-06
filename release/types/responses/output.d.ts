@@ -3,9 +3,8 @@
  * This source code is licensed under the MIT License as described in the file LICENSE.
  */
 import * as Requests from '../requests';
-import * as Types from '../aliases';
 
-import { Headers as ResponseHeaders } from '../headers';
+import { Headers } from '../headers';
 import { Status } from './status';
 
 /**
@@ -23,7 +22,7 @@ export interface Output {
   /**
    * Output headers.
    */
-  headers: ResponseHeaders;
+  headers: Headers;
   /**
    * Output payload.
    */
