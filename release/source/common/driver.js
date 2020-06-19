@@ -6,6 +6,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.Driver = void 0;
 /*!
  * Copyright (C) 2018-2019 Silas B. Domingos
  * This source code is licensed under the MIT License as described in the file LICENSE.
@@ -42,17 +43,20 @@ let Driver = class Driver extends driver_1.Driver {
      * Gets the result Id from the given response entity.
      * @param model Entity model.
      * @param response Response entity.
-     * @returns Returns the result Id or undefined when the result Id wasn't found.
-     * @throws Throws an error when the response payload doesn't contains the result Id.
+     * @returns Returns the insert result.
+     * @throws Throws an exception when the request ends without success.
      */
     getInsertResponse(model, response) {
-        if (response.status.code === 200 || response.status.code === 201 || response.status.code === 202) {
-            if (!(response.payload instanceof Object) || response.payload.id === void 0) {
-                throw new Error(`The response payload must be an object containing the insert id.`);
-            }
-            return response.payload.id;
+        if (response.status.code !== 200 && response.status.code !== 201 && response.status.code !== 202) {
+            throw new Error(`Unexpected response status ${response.status.code}`);
         }
-        return void 0;
+        else if (!(response.payload instanceof Object) || response.payload.id === void 0) {
+            throw new Error(`Response payload must contains an object with Id property.`);
+        }
+        else if (response.payload?.id === void 0) {
+            throw new Error(`Response Id property doesn't found.`);
+        }
+        return response.payload.id;
     }
     /**
      * Gets the found entity list from the given response entity.
@@ -62,13 +66,13 @@ let Driver = class Driver extends driver_1.Driver {
      * @throws Throws an error when the response payload doesn't contains the entity list.
      */
     getFindResponse(model, response) {
-        if (response.status.code === 200) {
-            if (!(response.payload instanceof Array)) {
-                throw new Error(`The response payload must be an array containing the search results.`);
-            }
-            return response.payload;
+        if (response.status.code !== 200) {
+            throw new Error(`Unexpected response status ${response.status.code}`);
         }
-        return [];
+        else if (!(response.payload instanceof Array)) {
+            throw new Error(`Response payload must contains an array.`);
+        }
+        return response.payload;
     }
     /**
      * Gets the found entity from the given response entity.
@@ -77,13 +81,13 @@ let Driver = class Driver extends driver_1.Driver {
      * @returns Returns the entity or undefined when the entity was not found.
      */
     getFindByIdResponse(model, response) {
-        if (response.status.code === 200) {
-            if (!(response.payload instanceof Object)) {
-                throw new Error(`The response payload must be an object.`);
-            }
-            return response.payload;
+        if (response.status.code !== 200) {
+            throw new Error(`Unexpected response status ${response.status.code}`);
         }
-        return void 0;
+        else if (!(response.payload instanceof Object)) {
+            throw new Error(`Response payload contains an object.`);
+        }
+        return response.payload;
     }
     /**
      * Gets the number of updated entities from the given response entity.
@@ -93,14 +97,14 @@ let Driver = class Driver extends driver_1.Driver {
      * @throws Throws an error when the counting header is missing or incorrect in the response.
      */
     getUpdateResponse(model, response) {
-        if (response.status.code === 200 || response.status.code === 202 || response.status.code === 204) {
-            const amount = parseInt(response.headers[this.apiCountingHeader]);
-            if (isNaN(amount)) {
-                throw new Error(`Counting header is missing or incorrect in the update response.`);
-            }
-            return amount;
+        if (response.status.code !== 200 && response.status.code !== 202 && response.status.code !== 204) {
+            throw new Error(`Unexpected response status ${response.status.code}`);
         }
-        return 0;
+        const amount = parseInt(response.headers[this.apiCountingHeader]);
+        if (isNaN(amount)) {
+            throw new Error(`Header '${this.apiCountingHeader}' is missing in the update response.`);
+        }
+        return amount;
     }
     /**
      * Gets the updated entity status from the given response entity.
@@ -129,14 +133,14 @@ let Driver = class Driver extends driver_1.Driver {
      * @throws Throws an error when the counting header is missing or incorrect in the response.
      */
     getDeleteResponse(model, response) {
-        if (response.status.code === 200 || response.status.code === 202 || response.status.code === 204) {
-            const amount = parseInt(response.headers[this.apiCountingHeader]);
-            if (isNaN(amount)) {
-                throw new Error(`Counting header is missing or incorrect in the delete response.`);
-            }
-            return amount;
+        if (response.status.code !== 200 && response.status.code !== 202 && response.status.code !== 204) {
+            throw new Error(`Unexpected response status ${response.status.code}`);
         }
-        return 0;
+        const amount = parseInt(response.headers[this.apiCountingHeader]);
+        if (isNaN(amount)) {
+            throw new Error(`Header '${this.apiCountingHeader}' is missing in the delete response.`);
+        }
+        return amount;
     }
     /**
      * Gets the deleted entity status from the given response entity.
@@ -155,14 +159,14 @@ let Driver = class Driver extends driver_1.Driver {
      * @throws Throws an error when the counting header is missing or incorrect in the response.
      */
     getCountResponse(model, response) {
-        if (response.status.code === 200 || response.status.code === 204) {
-            const amount = parseInt(response.headers[this.apiCountingHeader]);
-            if (isNaN(amount)) {
-                throw new Error(`Counting header missing or incorrect in the count response.`);
-            }
-            return amount;
+        if (response.status.code !== 200 && response.status.code !== 204) {
+            throw new Error(`Unexpected response status ${response.status.code}`);
         }
-        return 0;
+        const amount = parseInt(response.headers[this.apiCountingHeader]);
+        if (isNaN(amount)) {
+            throw new Error(`Header '${this.apiCountingHeader}' missing or incorrect in the count response.`);
+        }
+        return amount;
     }
     /**
      * Notify an error in the given response entity for all listeners.

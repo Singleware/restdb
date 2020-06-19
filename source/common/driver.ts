@@ -49,18 +49,19 @@ export class Driver extends GenericDriver implements Types.Driver {
    * Gets the result Id from the given response entity.
    * @param model Entity model.
    * @param response Response entity.
-   * @returns Returns the result Id or undefined when the result Id wasn't found.
-   * @throws Throws an error when the response payload doesn't contains the result Id.
+   * @returns Returns the insert result.
+   * @throws Throws an exception when the request ends without success.
    */
   @Class.Protected()
-  protected getInsertResponse(model: Types.Model, response: Responses.Output): string | undefined {
-    if (response.status.code === 200 || response.status.code === 201 || response.status.code === 202) {
-      if (!(response.payload instanceof Object) || (<Types.Entity>response.payload).id === void 0) {
-        throw new Error(`The response payload must be an object containing the insert id.`);
-      }
-      return (<Types.Entity>response.payload).id;
+  protected getInsertResponse<R>(model: Types.Model, response: Responses.Output): R {
+    if (response.status.code !== 200 && response.status.code !== 201 && response.status.code !== 202) {
+      throw new Error(`Unexpected response status ${response.status.code}`);
+    } else if (!(response.payload instanceof Object) || (<Types.Entity>response.payload).id === void 0) {
+      throw new Error(`Response payload must contains an object with Id property.`);
+    } else if (response.payload?.id === void 0) {
+      throw new Error(`Response Id property doesn't found.`);
     }
-    return void 0;
+    return response.payload.id;
   }
 
   /**
@@ -72,13 +73,12 @@ export class Driver extends GenericDriver implements Types.Driver {
    */
   @Class.Protected()
   protected getFindResponse<T extends Types.Entity>(model: Types.Model, response: Responses.Output): T[] {
-    if (response.status.code === 200) {
-      if (!(response.payload instanceof Array)) {
-        throw new Error(`The response payload must be an array containing the search results.`);
-      }
-      return <T[]>response.payload;
+    if (response.status.code !== 200) {
+      throw new Error(`Unexpected response status ${response.status.code}`);
+    } else if (!(response.payload instanceof Array)) {
+      throw new Error(`Response payload must contains an array.`);
     }
-    return [];
+    return <T[]>response.payload;
   }
 
   /**
@@ -89,13 +89,12 @@ export class Driver extends GenericDriver implements Types.Driver {
    */
   @Class.Protected()
   protected getFindByIdResponse<T extends Types.Entity>(model: Types.Model, response: Responses.Output): T | undefined {
-    if (response.status.code === 200) {
-      if (!(response.payload instanceof Object)) {
-        throw new Error(`The response payload must be an object.`);
-      }
-      return <T>response.payload;
+    if (response.status.code !== 200) {
+      throw new Error(`Unexpected response status ${response.status.code}`);
+    } else if (!(response.payload instanceof Object)) {
+      throw new Error(`Response payload contains an object.`);
     }
-    return void 0;
+    return <T>response.payload;
   }
 
   /**
@@ -107,14 +106,14 @@ export class Driver extends GenericDriver implements Types.Driver {
    */
   @Class.Protected()
   protected getUpdateResponse(model: Types.Model, response: Responses.Output): number {
-    if (response.status.code === 200 || response.status.code === 202 || response.status.code === 204) {
-      const amount = parseInt(<string>response.headers[this.apiCountingHeader]);
-      if (isNaN(amount)) {
-        throw new Error(`Counting header is missing or incorrect in the update response.`);
-      }
-      return amount;
+    if (response.status.code !== 200 && response.status.code !== 202 && response.status.code !== 204) {
+      throw new Error(`Unexpected response status ${response.status.code}`);
     }
-    return 0;
+    const amount = parseInt(<string>response.headers[this.apiCountingHeader]);
+    if (isNaN(amount)) {
+      throw new Error(`Header '${this.apiCountingHeader}' is missing in the update response.`);
+    }
+    return amount;
   }
 
   /**
@@ -149,14 +148,14 @@ export class Driver extends GenericDriver implements Types.Driver {
    */
   @Class.Protected()
   protected getDeleteResponse(model: Types.Model, response: Responses.Output): number {
-    if (response.status.code === 200 || response.status.code === 202 || response.status.code === 204) {
-      const amount = parseInt(<string>response.headers[this.apiCountingHeader]);
-      if (isNaN(amount)) {
-        throw new Error(`Counting header is missing or incorrect in the delete response.`);
-      }
-      return amount;
+    if (response.status.code !== 200 && response.status.code !== 202 && response.status.code !== 204) {
+      throw new Error(`Unexpected response status ${response.status.code}`);
     }
-    return 0;
+    const amount = parseInt(<string>response.headers[this.apiCountingHeader]);
+    if (isNaN(amount)) {
+      throw new Error(`Header '${this.apiCountingHeader}' is missing in the delete response.`);
+    }
+    return amount;
   }
 
   /**
@@ -179,14 +178,14 @@ export class Driver extends GenericDriver implements Types.Driver {
    */
   @Class.Protected()
   protected getCountResponse(model: Types.Model, response: Responses.Output): number {
-    if (response.status.code === 200 || response.status.code === 204) {
-      const amount = parseInt(<string>response.headers[this.apiCountingHeader]);
-      if (isNaN(amount)) {
-        throw new Error(`Counting header missing or incorrect in the count response.`);
-      }
-      return amount;
+    if (response.status.code !== 200 && response.status.code !== 204) {
+      throw new Error(`Unexpected response status ${response.status.code}`);
     }
-    return 0;
+    const amount = parseInt(<string>response.headers[this.apiCountingHeader]);
+    if (isNaN(amount)) {
+      throw new Error(`Header '${this.apiCountingHeader}' missing or incorrect in the count response.`);
+    }
+    return amount;
   }
 
   /**

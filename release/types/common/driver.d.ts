@@ -29,10 +29,10 @@ export declare class Driver extends GenericDriver implements Types.Driver {
      * Gets the result Id from the given response entity.
      * @param model Entity model.
      * @param response Response entity.
-     * @returns Returns the result Id or undefined when the result Id wasn't found.
-     * @throws Throws an error when the response payload doesn't contains the result Id.
+     * @returns Returns the insert result.
+     * @throws Throws an exception when the request ends without success.
      */
-    protected getInsertResponse(model: Types.Model, response: Responses.Output): string | undefined;
+    protected getInsertResponse<R>(model: Types.Model, response: Responses.Output): R;
     /**
      * Gets the found entity list from the given response entity.
      * @param model Entity model.

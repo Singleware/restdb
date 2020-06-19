@@ -13,6 +13,10 @@ export interface Route {
    */
   model: Types.Model;
   /**
+   * Route path.
+   */
+  path?: string;
+  /**
    * Query data.
    */
   query?: string;

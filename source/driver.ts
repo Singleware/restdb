@@ -13,6 +13,7 @@ import * as Types from './types';
 import { Route } from './route';
 import { Method } from './method';
 import { Headers } from './headers';
+import { Options } from './options';
 
 /**
  * Alias type for response result.
@@ -81,11 +82,11 @@ export class Driver extends Class.Null implements Types.Driver {
    * Gets the result Id from the given response entity.
    * @param model Entity model.
    * @param response Response entity.
-   * @returns Returns the result Id, a promise to get it or undefined when the result Id wasn't found.
+   * @returns Returns the insert result or a promise to get it.
    * @throws It will always throws an error because it's not implemented yet.
    */
   @Class.Protected()
-  protected getInsertResponse(model: Types.Model, response: Responses.Output): Response<string | undefined> {
+  protected getInsertResponse<R>(model: Types.Model, response: Responses.Output): Response<R> {
     throw new Error(`Method 'getInsertResponse' doesn't implemented.`);
   }
 
@@ -196,7 +197,7 @@ export class Driver extends Class.Null implements Types.Driver {
   @Class.Private()
   private getRequestPath(route: Route): string {
     const assigned = <Types.Entity>{};
-    const endpoint = Types.Schema.getStorageName(route.model);
+    const endpoint = route.path ?? Types.Schema.getStorageName(route.model);
     let path = endpoint.replace(/{query}|{id}/gi, (match: string) => {
       const variable = match.substr(1, match.length - 2);
       const value = (<Types.Entity>route)[variable];
@@ -287,21 +288,26 @@ export class Driver extends Class.Null implements Types.Driver {
    * Insert the specified entity using a POST request.
    * @param model Model type.
    * @param entities Entity list.
-   * @returns Returns a promise to get the id list of all inserted entities.
+   * @param options Insert options.
+   * @returns Returns a promise to get the insert results.
    * @throws Throws an error when the result payload doesn't contains the insertion id.
    */
   @Class.Public()
-  public async insert<T extends Types.Entity>(model: Types.Model, entities: T[]): Promise<string[]> {
-    const path = this.getRequestPath({ model: model, query: this.getRequestQuery(model) });
-    const method = this.getRequestMethod(model, Method.POST);
-    const list = [];
+  public async insert<T extends Types.Entity, R>(model: Types.Model, entities: T[], options: Options): Promise<R[]> {
+    const method = this.getRequestMethod(model, options.method ?? Method.POST);
+    const path = this.getRequestPath({
+      model: model,
+      path: options.path,
+      query: this.getRequestQuery(model)
+    });
+    const list = <R[]>[];
     for (const entity of entities) {
       const payload = Types.Normalizer.create(model, entity, true, true);
       const response = await this.getRequestResponse(method, path, payload);
       if (Requests.Helper.isAcceptedStatusCode(response.status.code)) {
-        const identity = await this.getInsertResponse(model, response);
-        if (identity !== void 0) {
-          list.push(identity);
+        const result = await this.getInsertResponse<R>(model, response);
+        if (result !== void 0) {
+          list.push(result);
         }
       } else {
         await this.notifyErrorResponse(model, response);
@@ -315,14 +321,25 @@ export class Driver extends Class.Null implements Types.Driver {
    * @param model Model type.
    * @param query Query filter.
    * @param fields Viewed fields.
+   * @param options Find options.
    * @returns Returns a promise to get the list of found entities.
    * @throws Throws an error when the result payload isn't an array.
    */
   @Class.Public()
-  public async find<T extends Types.Entity>(model: Types.Model<T>, query: Types.Query, fields: string[]): Promise<T[]> {
-    const path = this.getRequestPath({ model: model, query: this.getRequestQuery(model, query, fields) });
-    const method = this.getRequestMethod(model, Method.GET);
-    const response = await this.getRequestResponse(method, path);
+  public async find<T extends Types.Entity>(
+    model: Types.Model<T>,
+    query: Types.Query,
+    fields: string[],
+    options: Options
+  ): Promise<T[]> {
+    const response = await this.getRequestResponse(
+      this.getRequestMethod(model, options.method ?? Method.GET),
+      this.getRequestPath({
+        model: model,
+        path: options.path,
+        query: this.getRequestQuery(model, query, fields)
+      })
+    );
     if (Requests.Helper.isAcceptedStatusCode(response.status.code)) {
       return await this.getFindResponse(model, response);
     }
@@ -334,14 +351,25 @@ export class Driver extends Class.Null implements Types.Driver {
    * @param model Model type.
    * @param id Entity Id.
    * @param fields Viewed fields.
+   * @param options Find options.
    * @returns Returns a promise to get the found entity or undefined when the entity was not found.
    */
   @Class.Public()
-  public async findById<T extends Types.Entity>(model: Types.Model<T>, id: any, fields: string[]): Promise<T | undefined> {
-    const query = this.getRequestQuery(model, void 0, fields);
-    const path = this.getRequestPath({ model: model, id: this.getRequestId(model, id), query: query });
-    const method = this.getRequestMethod(model, Method.GET);
-    const response = await this.getRequestResponse(method, path);
+  public async findById<T extends Types.Entity>(
+    model: Types.Model<T>,
+    id: any,
+    fields: string[],
+    options: Options
+  ): Promise<T | undefined> {
+    const response = await this.getRequestResponse(
+      this.getRequestMethod(model, options.method ?? Method.GET),
+      this.getRequestPath({
+        model: model,
+        path: options.path,
+        query: this.getRequestQuery(model, void 0, fields),
+        id: this.getRequestId(model, id)
+      })
+    );
     if (Requests.Helper.isAcceptedStatusCode(response.status.code)) {
       return await this.getFindByIdResponse(model, response);
     }
@@ -353,14 +381,21 @@ export class Driver extends Class.Null implements Types.Driver {
    * @param model Model type.
    * @param match Matching fields.
    * @param entity Entity data.
+   * @param options Update options.
    * @returns Returns a promise to get the number of updated entities.
    */
   @Class.Public()
-  public async update(model: Types.Model, match: Types.Match, entity: Types.Entity): Promise<number> {
-    const path = this.getRequestPath({ model: model, query: this.getRequestQuery(model, { pre: match }) });
-    const method = this.getRequestMethod(model, Method.PATCH);
+  public async update(model: Types.Model, match: Types.Match, entity: Types.Entity, options: Options): Promise<number> {
     const payload = Types.Normalizer.create(model, entity, true, true);
-    const response = await this.getRequestResponse(method, path, payload);
+    const response = await this.getRequestResponse(
+      this.getRequestMethod(model, options.method ?? Method.PATCH),
+      this.getRequestPath({
+        model: model,
+        path: options.path,
+        query: this.getRequestQuery(model, { pre: match })
+      }),
+      payload
+    );
     if (Requests.Helper.isAcceptedStatusCode(response.status.code)) {
       return await this.getUpdateResponse(model, response);
     }
@@ -372,14 +407,22 @@ export class Driver extends Class.Null implements Types.Driver {
    * @param model Model type.
    * @param id Entity Id.
    * @param entity Entity data.
+   * @param options Update options.
    * @returns Returns a promise to get the true when the entity has been updated or false otherwise.
    */
   @Class.Public()
-  public async updateById(model: Types.Model, id: any, entity: Types.Entity): Promise<boolean> {
-    const path = this.getRequestPath({ model: model, id: this.getRequestId(model, id), query: this.getRequestQuery(model) });
-    const method = this.getRequestMethod(model, Method.PATCH);
+  public async updateById(model: Types.Model, id: any, entity: Types.Entity, options: Options): Promise<boolean> {
     const payload = Types.Normalizer.create(model, entity, true, true);
-    const response = await this.getRequestResponse(method, path, payload);
+    const response = await this.getRequestResponse(
+      this.getRequestMethod(model, options.method ?? Method.PATCH),
+      this.getRequestPath({
+        model: model,
+        path: options.path,
+        query: this.getRequestQuery(model),
+        id: this.getRequestId(model, id)
+      }),
+      payload
+    );
     if (Requests.Helper.isAcceptedStatusCode(response.status.code)) {
       return await this.getUpdateByIdResponse(model, response);
     }
@@ -391,14 +434,22 @@ export class Driver extends Class.Null implements Types.Driver {
    * @param model Model type.
    * @param id Entity Id.
    * @param entity Entity data.
+   * @param options Replace options.
    * @returns Returns a promise to get the true when the entity has been replaced or false otherwise.
    */
   @Class.Public()
-  public async replaceById(model: Types.Model, id: any, entity: Types.Entity): Promise<boolean> {
-    const path = this.getRequestPath({ model: model, id: this.getRequestId(model, id), query: this.getRequestQuery(model) });
-    const method = this.getRequestMethod(model, Method.PUT);
+  public async replaceById(model: Types.Model, id: any, entity: Types.Entity, options: Options): Promise<boolean> {
     const payload = Types.Normalizer.create(model, entity, true, true);
-    const response = await this.getRequestResponse(method, path, payload);
+    const response = await this.getRequestResponse(
+      this.getRequestMethod(model, options.method ?? Method.PUT),
+      this.getRequestPath({
+        model: model,
+        path: options.path,
+        query: this.getRequestQuery(model),
+        id: this.getRequestId(model, id)
+      }),
+      payload
+    );
     if (Requests.Helper.isAcceptedStatusCode(response.status.code)) {
       return await this.getReplaceByIdResponse(model, response);
     }
@@ -409,13 +460,19 @@ export class Driver extends Class.Null implements Types.Driver {
    * Delete all entities that corresponds to the specified matching fields using a DELETE request.
    * @param model Model type.
    * @param match Matching fields.
+   * @param options Delete options.
    * @return Returns a promise to get the number of deleted entities.
    */
   @Class.Public()
-  public async delete(model: Types.Model, match: Types.Match): Promise<number> {
-    const path = this.getRequestPath({ model: model, query: this.getRequestQuery(model, { pre: match }) });
-    const method = this.getRequestMethod(model, Method.DELETE);
-    const response = await this.getRequestResponse(method, path);
+  public async delete(model: Types.Model, match: Types.Match, options: Options): Promise<number> {
+    const response = await this.getRequestResponse(
+      this.getRequestMethod(model, options.method ?? Method.DELETE),
+      this.getRequestPath({
+        model: model,
+        path: options.path,
+        query: this.getRequestQuery(model, { pre: match })
+      })
+    );
     if (Requests.Helper.isAcceptedStatusCode(response.status.code)) {
       return await this.getDeleteResponse(model, response);
     }
@@ -426,13 +483,19 @@ export class Driver extends Class.Null implements Types.Driver {
    * Delete the entity that corresponds to the specified Id using a DELETE request.
    * @param model Model type.
    * @param id Entity Id.
+   * @param options Delete options.
    * @return Returns a promise to get the true when the entity has been deleted or false otherwise.
    */
   @Class.Public()
-  public async deleteById(model: Types.Model, id: any): Promise<boolean> {
-    const path = this.getRequestPath({ model: model, id: this.getRequestId(model, id) });
-    const method = this.getRequestMethod(model, Method.DELETE);
-    const response = await this.getRequestResponse(method, path);
+  public async deleteById(model: Types.Model, id: any, options: Options): Promise<boolean> {
+    const response = await this.getRequestResponse(
+      this.getRequestMethod(model, options.method ?? Method.DELETE),
+      this.getRequestPath({
+        model: model,
+        path: options.path,
+        id: this.getRequestId(model, id)
+      })
+    );
     if (Requests.Helper.isAcceptedStatusCode(response.status.code)) {
       return await this.getDeleteByIdResponse(model, response);
     }
@@ -443,13 +506,19 @@ export class Driver extends Class.Null implements Types.Driver {
    * Count all corresponding entities using the a HEAD request.
    * @param model Model type.
    * @param query Query filter.
+   * @param options Count options.
    * @returns Returns a promise to get the amount of found entities or 0 when there's an error.
    */
   @Class.Public()
-  public async count(model: Types.Model, query: Types.Query): Promise<number> {
-    const path = this.getRequestPath({ model: model, query: this.getRequestQuery(model, query) });
-    const method = this.getRequestMethod(model, Method.HEAD);
-    const response = await this.getRequestResponse(method, path);
+  public async count(model: Types.Model, query: Types.Query, options: Options): Promise<number> {
+    const response = await this.getRequestResponse(
+      this.getRequestMethod(model, options.method ?? Method.HEAD),
+      this.getRequestPath({
+        model: model,
+        path: options.path,
+        query: this.getRequestQuery(model, query)
+      })
+    );
     if (Requests.Helper.isAcceptedStatusCode(response.status.code)) {
       return await this.getCountResponse(model, response);
     }

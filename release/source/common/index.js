@@ -5,7 +5,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
  * This source code is licensed under the MIT License as described in the file LICENSE.
  */
 var driver_1 = require("./driver");
-exports.Driver = driver_1.Driver;
+Object.defineProperty(exports, "Driver", { enumerable: true, get: function () { return driver_1.Driver; } });
 var filters_1 = require("./filters");
-exports.Filters = filters_1.Filters;
+Object.defineProperty(exports, "Filters", { enumerable: true, get: function () { return filters_1.Filters; } });
 //# sourceMappingURL=index.js.map

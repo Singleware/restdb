@@ -7,6 +7,7 @@ import * as Observable from '@singleware/observable';
 import * as Responses from './responses';
 import * as Types from './types';
 import { Method } from './method';
+import { Options } from './options';
 /**
  * Alias type for response result.
  */
@@ -54,10 +55,10 @@ export declare class Driver extends Class.Null implements Types.Driver {
      * Gets the result Id from the given response entity.
      * @param model Entity model.
      * @param response Response entity.
-     * @returns Returns the result Id, a promise to get it or undefined when the result Id wasn't found.
+     * @returns Returns the insert result or a promise to get it.
      * @throws It will always throws an error because it's not implemented yet.
      */
-    protected getInsertResponse(model: Types.Model, response: Responses.Output): Response<string | undefined>;
+    protected getInsertResponse<R>(model: Types.Model, response: Responses.Output): Response<R>;
     /**
      * Gets the found entity list from the given response entity.
      * @param model Entity model.
@@ -168,71 +169,80 @@ export declare class Driver extends Class.Null implements Types.Driver {
      * Insert the specified entity using a POST request.
      * @param model Model type.
      * @param entities Entity list.
-     * @returns Returns a promise to get the id list of all inserted entities.
+     * @param options Insert options.
+     * @returns Returns a promise to get the insert results.
      * @throws Throws an error when the result payload doesn't contains the insertion id.
      */
-    insert<T extends Types.Entity>(model: Types.Model, entities: T[]): Promise<string[]>;
+    insert<T extends Types.Entity, R>(model: Types.Model, entities: T[], options: Options): Promise<R[]>;
     /**
      * Search for all entities that corresponds to the specified filter using a GET request.
      * @param model Model type.
      * @param query Query filter.
      * @param fields Viewed fields.
+     * @param options Find options.
      * @returns Returns a promise to get the list of found entities.
      * @throws Throws an error when the result payload isn't an array.
      */
-    find<T extends Types.Entity>(model: Types.Model<T>, query: Types.Query, fields: string[]): Promise<T[]>;
+    find<T extends Types.Entity>(model: Types.Model<T>, query: Types.Query, fields: string[], options: Options): Promise<T[]>;
     /**
      * Find the entity that corresponds to the specified Id using a GET request.
      * @param model Model type.
      * @param id Entity Id.
      * @param fields Viewed fields.
+     * @param options Find options.
      * @returns Returns a promise to get the found entity or undefined when the entity was not found.
      */
-    findById<T extends Types.Entity>(model: Types.Model<T>, id: any, fields: string[]): Promise<T | undefined>;
+    findById<T extends Types.Entity>(model: Types.Model<T>, id: any, fields: string[], options: Options): Promise<T | undefined>;
     /**
      * Update all entities that corresponds to the specified matching fields using a PATCH request.
      * @param model Model type.
      * @param match Matching fields.
      * @param entity Entity data.
+     * @param options Update options.
      * @returns Returns a promise to get the number of updated entities.
      */
-    update(model: Types.Model, match: Types.Match, entity: Types.Entity): Promise<number>;
+    update(model: Types.Model, match: Types.Match, entity: Types.Entity, options: Options): Promise<number>;
     /**
      * Update the entity that corresponds to the specified Id using a PATCH request.
      * @param model Model type.
      * @param id Entity Id.
      * @param entity Entity data.
+     * @param options Update options.
      * @returns Returns a promise to get the true when the entity has been updated or false otherwise.
      */
-    updateById(model: Types.Model, id: any, entity: Types.Entity): Promise<boolean>;
+    updateById(model: Types.Model, id: any, entity: Types.Entity, options: Options): Promise<boolean>;
     /**
      * Replace the entity that corresponds to the specified Id using a PUT request.
      * @param model Model type.
      * @param id Entity Id.
      * @param entity Entity data.
+     * @param options Replace options.
      * @returns Returns a promise to get the true when the entity has been replaced or false otherwise.
      */
-    replaceById(model: Types.Model, id: any, entity: Types.Entity): Promise<boolean>;
+    replaceById(model: Types.Model, id: any, entity: Types.Entity, options: Options): Promise<boolean>;
     /**
      * Delete all entities that corresponds to the specified matching fields using a DELETE request.
      * @param model Model type.
      * @param match Matching fields.
+     * @param options Delete options.
      * @return Returns a promise to get the number of deleted entities.
      */
-    delete(model: Types.Model, match: Types.Match): Promise<number>;
+    delete(model: Types.Model, match: Types.Match, options: Options): Promise<number>;
     /**
      * Delete the entity that corresponds to the specified Id using a DELETE request.
      * @param model Model type.
      * @param id Entity Id.
+     * @param options Delete options.
      * @return Returns a promise to get the true when the entity has been deleted or false otherwise.
      */
-    deleteById(model: Types.Model, id: any): Promise<boolean>;
+    deleteById(model: Types.Model, id: any, options: Options): Promise<boolean>;
     /**
      * Count all corresponding entities using the a HEAD request.
      * @param model Model type.
      * @param query Query filter.
+     * @param options Count options.
      * @returns Returns a promise to get the amount of found entities or 0 when there's an error.
      */
-    count(model: Types.Model, query: Types.Query): Promise<number>;
+    count(model: Types.Model, query: Types.Query, options: Options): Promise<number>;
 }
 export {};

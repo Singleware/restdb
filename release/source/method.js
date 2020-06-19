@@ -4,6 +4,7 @@
  * This source code is licensed under the MIT License as described in the file LICENSE.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.Method = void 0;
 /**
  * Method types.
  */
