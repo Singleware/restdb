@@ -157,8 +157,9 @@ let Driver = class Driver extends Class.Null {
      * @returns Returns the generated request path.
      */
     getRequestPath(route) {
+        var _a;
         const assigned = {};
-        const endpoint = route.path ?? Types.Schema.getStorageName(route.model);
+        const endpoint = (_a = route.path) !== null && _a !== void 0 ? _a : Types.Schema.getStorageName(route.model);
         let path = endpoint.replace(/{query}|{id}/gi, (match) => {
             const variable = match.substr(1, match.length - 2);
             const value = route[variable];
@@ -241,7 +242,8 @@ let Driver = class Driver extends Class.Null {
      * @throws Throws an error when the result payload doesn't contains the insertion id.
      */
     async insert(model, entities, options) {
-        const method = this.getRequestMethod(model, options.method ?? method_1.Method.POST);
+        var _a;
+        const method = this.getRequestMethod(model, (_a = options.method) !== null && _a !== void 0 ? _a : method_1.Method.POST);
         const path = this.getRequestPath({
             model: model,
             path: options.path,
@@ -273,7 +275,8 @@ let Driver = class Driver extends Class.Null {
      * @throws Throws an error when the result payload isn't an array.
      */
     async find(model, query, fields, options) {
-        const response = await this.getRequestResponse(this.getRequestMethod(model, options.method ?? method_1.Method.GET), this.getRequestPath({
+        var _a;
+        const response = await this.getRequestResponse(this.getRequestMethod(model, (_a = options.method) !== null && _a !== void 0 ? _a : method_1.Method.GET), this.getRequestPath({
             model: model,
             path: options.path,
             query: this.getRequestQuery(model, query, fields)
@@ -292,7 +295,8 @@ let Driver = class Driver extends Class.Null {
      * @returns Returns a promise to get the found entity or undefined when the entity was not found.
      */
     async findById(model, id, fields, options) {
-        const response = await this.getRequestResponse(this.getRequestMethod(model, options.method ?? method_1.Method.GET), this.getRequestPath({
+        var _a;
+        const response = await this.getRequestResponse(this.getRequestMethod(model, (_a = options.method) !== null && _a !== void 0 ? _a : method_1.Method.GET), this.getRequestPath({
             model: model,
             path: options.path,
             query: this.getRequestQuery(model, void 0, fields),
@@ -312,8 +316,9 @@ let Driver = class Driver extends Class.Null {
      * @returns Returns a promise to get the number of updated entities.
      */
     async update(model, match, entity, options) {
+        var _a;
         const payload = Types.Normalizer.create(model, entity, true, true);
-        const response = await this.getRequestResponse(this.getRequestMethod(model, options.method ?? method_1.Method.PATCH), this.getRequestPath({
+        const response = await this.getRequestResponse(this.getRequestMethod(model, (_a = options.method) !== null && _a !== void 0 ? _a : method_1.Method.PATCH), this.getRequestPath({
             model: model,
             path: options.path,
             query: this.getRequestQuery(model, { pre: match })
@@ -332,8 +337,9 @@ let Driver = class Driver extends Class.Null {
      * @returns Returns a promise to get the true when the entity has been updated or false otherwise.
      */
     async updateById(model, id, entity, options) {
+        var _a;
         const payload = Types.Normalizer.create(model, entity, true, true);
-        const response = await this.getRequestResponse(this.getRequestMethod(model, options.method ?? method_1.Method.PATCH), this.getRequestPath({
+        const response = await this.getRequestResponse(this.getRequestMethod(model, (_a = options.method) !== null && _a !== void 0 ? _a : method_1.Method.PATCH), this.getRequestPath({
             model: model,
             path: options.path,
             query: this.getRequestQuery(model),
@@ -353,8 +359,9 @@ let Driver = class Driver extends Class.Null {
      * @returns Returns a promise to get the true when the entity has been replaced or false otherwise.
      */
     async replaceById(model, id, entity, options) {
+        var _a;
         const payload = Types.Normalizer.create(model, entity, true, true);
-        const response = await this.getRequestResponse(this.getRequestMethod(model, options.method ?? method_1.Method.PUT), this.getRequestPath({
+        const response = await this.getRequestResponse(this.getRequestMethod(model, (_a = options.method) !== null && _a !== void 0 ? _a : method_1.Method.PUT), this.getRequestPath({
             model: model,
             path: options.path,
             query: this.getRequestQuery(model),
@@ -373,7 +380,8 @@ let Driver = class Driver extends Class.Null {
      * @return Returns a promise to get the number of deleted entities.
      */
     async delete(model, match, options) {
-        const response = await this.getRequestResponse(this.getRequestMethod(model, options.method ?? method_1.Method.DELETE), this.getRequestPath({
+        var _a;
+        const response = await this.getRequestResponse(this.getRequestMethod(model, (_a = options.method) !== null && _a !== void 0 ? _a : method_1.Method.DELETE), this.getRequestPath({
             model: model,
             path: options.path,
             query: this.getRequestQuery(model, { pre: match })
@@ -391,7 +399,8 @@ let Driver = class Driver extends Class.Null {
      * @return Returns a promise to get the true when the entity has been deleted or false otherwise.
      */
     async deleteById(model, id, options) {
-        const response = await this.getRequestResponse(this.getRequestMethod(model, options.method ?? method_1.Method.DELETE), this.getRequestPath({
+        var _a;
+        const response = await this.getRequestResponse(this.getRequestMethod(model, (_a = options.method) !== null && _a !== void 0 ? _a : method_1.Method.DELETE), this.getRequestPath({
             model: model,
             path: options.path,
             id: this.getRequestId(model, id)
@@ -409,7 +418,8 @@ let Driver = class Driver extends Class.Null {
      * @returns Returns a promise to get the amount of found entities or 0 when there's an error.
      */
     async count(model, query, options) {
-        const response = await this.getRequestResponse(this.getRequestMethod(model, options.method ?? method_1.Method.HEAD), this.getRequestPath({
+        var _a;
+        const response = await this.getRequestResponse(this.getRequestMethod(model, (_a = options.method) !== null && _a !== void 0 ? _a : method_1.Method.HEAD), this.getRequestPath({
             model: model,
             path: options.path,
             query: this.getRequestQuery(model, query)

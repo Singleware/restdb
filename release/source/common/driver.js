@@ -47,13 +47,14 @@ let Driver = class Driver extends driver_1.Driver {
      * @throws Throws an exception when the request ends without success.
      */
     getInsertResponse(model, response) {
+        var _a;
         if (response.status.code !== 200 && response.status.code !== 201 && response.status.code !== 202) {
             throw new Error(`Unexpected response status ${response.status.code}`);
         }
         else if (!(response.payload instanceof Object) || response.payload.id === void 0) {
             throw new Error(`Response payload must contains an object with Id property.`);
         }
-        else if (response.payload?.id === void 0) {
+        else if (((_a = response.payload) === null || _a === void 0 ? void 0 : _a.id) === void 0) {
             throw new Error(`Response Id property doesn't found.`);
         }
         return response.payload.id;
