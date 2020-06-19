@@ -13,6 +13,7 @@ exports.Filters = void 0;
  */
 const Class = require("@singleware/class");
 const Mapping = require("@singleware/mapping");
+const Path = require("@singleware/path");
 const Types = require("../types");
 /**
  * Common driver, filters class.
@@ -300,8 +301,9 @@ let Filters = class Filters extends Class.Null {
      * @throws Throws an error when there are unsupported data serialization in the specified URL.
      */
     static fromURL(model, url) {
+        const path = Path.normalize(`./${url}`);
+        const parts = path.split('/').reverse();
         const result = { fields: [] };
-        const parts = url.split('/').reverse();
         if (parts.pop() === this.QueryPrefix) {
             while (parts.length) {
                 const prefix = parts[parts.length - 1];

@@ -4,6 +4,7 @@
  */
 import * as Class from '@singleware/class';
 import * as Mapping from '@singleware/mapping';
+import * as Path from '@singleware/path';
 
 import * as Types from '../types';
 
@@ -357,8 +358,9 @@ export class Filters extends Class.Null {
    */
   @Class.Public()
   public static fromURL(model: Types.Model, url: string): Query {
+    const path = Path.normalize(`./${url}`);
+    const parts = path.split('/').reverse();
     const result = <Query>{ fields: [] };
-    const parts = url.split('/').reverse();
     if (parts.pop() === this.QueryPrefix) {
       while (parts.length) {
         const prefix = parts[parts.length - 1];
