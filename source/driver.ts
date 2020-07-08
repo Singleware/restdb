@@ -285,6 +285,21 @@ export class Driver extends Class.Null implements Types.Driver {
   }
 
   /**
+   * Request data from the API using the given details.
+   * @param details Request details.
+   * @returns Returns a promise to get the payload data.
+   * @throws Throw an error when the status code isn't acceptable.
+   */
+  @Class.Public()
+  public async read(details: Omit<Required<Options>, 'method'> & Options): Promise<Blob | Buffer | undefined> {
+    const response = await this.getRequestResponse(details.method ?? Method.GET, details.path);
+    if (Requests.Helper.isAcceptedStatusCode(response.status.code)) {
+      throw new Error(`Unexpected status code: ${response.status.code}`);
+    }
+    return response.payload;
+  }
+
+  /**
    * Insert the specified entity using a POST request.
    * @param model Model type.
    * @param entities Entity list.

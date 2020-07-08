@@ -50,17 +50,18 @@ let Backend = class Backend extends Class.Null {
      * @returns Returns the response output entity.
      */
     static getResponseOutput(input, payload, response) {
+        var _a, _b;
         const output = {
             input: input,
             headers: response.headers,
             status: {
-                code: response.statusCode || 0,
-                message: response.statusMessage || 'Undefined status'
+                code: (_a = response.statusCode) !== null && _a !== void 0 ? _a : 0,
+                message: (_b = response.statusMessage) !== null && _b !== void 0 ? _b : 'Undefined status'
             }
         };
         if (payload.length > 0) {
             if (helper_1.Helper.isAcceptedContentType(output.headers['content-type'], 'application/json')) {
-                output.payload = JSON.parse(payload);
+                output.payload = JSON.parse(payload.toString('utf-8'));
             }
             else {
                 output.payload = payload;
@@ -76,11 +77,10 @@ let Backend = class Backend extends Class.Null {
      * @param response Request response.
      */
     static responseHandler(input, resolve, reject, response) {
-        let payload = '';
-        response.setEncoding('utf8');
-        response.on('data', (data) => (payload += data));
-        response.on('error', (error) => reject(error));
-        response.on('end', () => resolve(this.getResponseOutput(input, payload, response)));
+        let chunks = [];
+        response.on('data', chunk => chunks.push(new Uint8Array(chunk)));
+        response.on('error', error => reject(error));
+        response.on('end', () => resolve(this.getResponseOutput(input, Buffer.concat(chunks), response)));
     }
     /**
      * Request a new response from the API using a backend HTTP/HTTPS client.

@@ -45,7 +45,7 @@ export class Frontend extends Class.Null {
    * @returns Returns the response output entity.
    */
   @Class.Private()
-  private static getResponseOutput(input: Input, payload: string, response: Response): Responses.Output {
+  private static async getResponseOutput(input: Input, payload: Blob, response: Response): Promise<Responses.Output> {
     const output = <Responses.Output>{
       input: input,
       headers: this.getResponseHeaders(response.headers),
@@ -54,9 +54,9 @@ export class Frontend extends Class.Null {
         message: response.statusText
       }
     };
-    if (payload.length > 0) {
+    if (payload.size > 0) {
       if (Helper.isAcceptedContentType(<string>output.headers['content-type'], 'application/json')) {
-        output.payload = JSON.parse(payload);
+        output.payload = JSON.parse(await payload.text());
       } else {
         output.payload = payload;
       }
@@ -80,7 +80,7 @@ export class Frontend extends Class.Null {
       (<Headers>options.headers).set('Content-Type', 'application/json');
     }
     const response = await fetch(input.url, options);
-    const payload = await response.text();
-    return this.getResponseOutput(input, payload, response);
+    const payload = await response.blob();
+    return await this.getResponseOutput(input, payload, response);
   }
 }

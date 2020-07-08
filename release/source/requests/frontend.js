@@ -47,7 +47,7 @@ let Frontend = class Frontend extends Class.Null {
      * @param response Response object.
      * @returns Returns the response output entity.
      */
-    static getResponseOutput(input, payload, response) {
+    static async getResponseOutput(input, payload, response) {
         const output = {
             input: input,
             headers: this.getResponseHeaders(response.headers),
@@ -56,9 +56,9 @@ let Frontend = class Frontend extends Class.Null {
                 message: response.statusText
             }
         };
-        if (payload.length > 0) {
+        if (payload.size > 0) {
             if (helper_1.Helper.isAcceptedContentType(output.headers['content-type'], 'application/json')) {
-                output.payload = JSON.parse(payload);
+                output.payload = JSON.parse(await payload.text());
             }
             else {
                 output.payload = payload;
@@ -81,8 +81,8 @@ let Frontend = class Frontend extends Class.Null {
             options.headers.set('Content-Type', 'application/json');
         }
         const response = await fetch(input.url, options);
-        const payload = await response.text();
-        return this.getResponseOutput(input, payload, response);
+        const payload = await response.blob();
+        return await this.getResponseOutput(input, payload, response);
     }
 };
 __decorate([

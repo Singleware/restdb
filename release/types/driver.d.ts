@@ -1,3 +1,4 @@
+/// <reference types="node" />
 /*!
  * Copyright (C) 2018-2019 Silas B. Domingos
  * This source code is licensed under the MIT License as described in the file LICENSE.
@@ -165,6 +166,13 @@ export declare class Driver extends Class.Null implements Types.Driver {
      * @param url Api URL.
      */
     connect(url: string): Promise<void>;
+    /**
+     * Request data from the API using the given details.
+     * @param details Request details.
+     * @returns Returns a promise to get the payload data.
+     * @throws Throw an error when the status code isn't acceptable.
+     */
+    read(details: Omit<Required<Options>, 'method'> & Options): Promise<Blob | Buffer | undefined>;
     /**
      * Insert the specified entity using a POST request.
      * @param model Model type.

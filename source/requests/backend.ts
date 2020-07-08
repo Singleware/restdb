@@ -57,18 +57,18 @@ export class Backend extends Class.Null {
    * @returns Returns the response output entity.
    */
   @Class.Private()
-  private static getResponseOutput(input: Input, payload: string, response: Http.IncomingMessage): Responses.Output {
+  private static getResponseOutput(input: Input, payload: Buffer, response: Http.IncomingMessage): Responses.Output {
     const output = <Responses.Output>{
       input: input,
       headers: response.headers,
       status: {
-        code: response.statusCode || 0,
-        message: response.statusMessage || 'Undefined status'
+        code: response.statusCode ?? 0,
+        message: response.statusMessage ?? 'Undefined status'
       }
     };
     if (payload.length > 0) {
       if (Helper.isAcceptedContentType(<string>output.headers['content-type'], 'application/json')) {
-        output.payload = JSON.parse(payload);
+        output.payload = JSON.parse(payload.toString('utf-8'));
       } else {
         output.payload = payload;
       }
@@ -90,11 +90,10 @@ export class Backend extends Class.Null {
     reject: Class.Callable,
     response: Http.IncomingMessage
   ): void {
-    let payload = '';
-    response.setEncoding('utf8');
-    response.on('data', (data: string) => (payload += data));
-    response.on('error', (error: Error) => reject(error));
-    response.on('end', () => resolve(this.getResponseOutput(input, payload, response)));
+    let chunks = <Uint8Array[]>[];
+    response.on('data', chunk => chunks.push(new Uint8Array(chunk)));
+    response.on('error', error => reject(error));
+    response.on('end', () => resolve(this.getResponseOutput(input, Buffer.concat(chunks), response)));
   }
 
   /**

@@ -234,6 +234,20 @@ let Driver = class Driver extends Class.Null {
         this.apiUrl = url;
     }
     /**
+     * Request data from the API using the given details.
+     * @param details Request details.
+     * @returns Returns a promise to get the payload data.
+     * @throws Throw an error when the status code isn't acceptable.
+     */
+    async read(details) {
+        var _a;
+        const response = await this.getRequestResponse((_a = details.method) !== null && _a !== void 0 ? _a : method_1.Method.GET, details.path);
+        if (Requests.Helper.isAcceptedStatusCode(response.status.code)) {
+            throw new Error(`Unexpected status code: ${response.status.code}`);
+        }
+        return response.payload;
+    }
+    /**
      * Insert the specified entity using a POST request.
      * @param model Model type.
      * @param entities Entity list.
@@ -496,6 +510,9 @@ __decorate([
 __decorate([
     Class.Public()
 ], Driver.prototype, "connect", null);
+__decorate([
+    Class.Public()
+], Driver.prototype, "read", null);
 __decorate([
     Class.Public()
 ], Driver.prototype, "insert", null);
