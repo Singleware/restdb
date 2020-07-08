@@ -8,11 +8,10 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Driver = void 0;
 /*!
- * Copyright (C) 2018-2019 Silas B. Domingos
+ * Copyright (C) 2018-2020 Silas B. Domingos
  * This source code is licensed under the MIT License as described in the file LICENSE.
  */
 const Class = require("@singleware/class");
-const Observable = require("@singleware/observable");
 const Path = require("@singleware/path");
 const Requests = require("./requests");
 const Types = require("./types");
@@ -28,12 +27,113 @@ let Driver = class Driver extends Class.Null {
          */
         this.apiHeaders = {};
         /**
-         * API errors subject.
+         * API auth headers.
          */
-        this.apiErrors = new Observable.Subject();
+        this.apiAuthHeaders = {};
     }
     /**
-     * Gets the request Id based on the specified entity model and entity Id.
+     * Get the insert result from the given response entity.
+     * @param model Entity model.
+     * @param response Response entity.
+     * @returns Returns the insert result or a promise to get it.
+     * @throws It will always throws an error because it's not implemented yet.
+     */
+    getInsertResponse(model, response) {
+        throw new Error(`Method 'getInsertResponse' isn't implemented.`);
+    }
+    /**
+     * Get the found entity list from the given response entity.
+     * @param model Entity model.
+     * @param response Response entity.
+     * @returns Returns the entity list or a promise to get it.
+     * @throws It will always throws an error because it's not implemented yet.
+     */
+    getFindResponse(model, response) {
+        throw new Error(`Method 'getFindResponse' isn't implemented.`);
+    }
+    /**
+     * Get the found entity from the given response entity.
+     * @param model Entity model.
+     * @param response Response entity.
+     * @returns Returns the entity, a promise to get it or undefined when the entity wasn't found.
+     * @throws It will always throws an error because it's not implemented yet.
+     */
+    getFindByIdResponse(model, response) {
+        throw new Error(`Method 'getFindByIdResponse' isn't implemented.`);
+    }
+    /**
+     * Get the number of updated entities from the given response entity.
+     * @param model Entity model.
+     * @param response Response entity.
+     * @returns Returns the number of updated entities or a promise to get it.
+     * @throws It will always throws an error because it's not implemented yet.
+     */
+    getUpdateResponse(model, response) {
+        throw new Error(`Method 'getUpdateResponse' isn't implemented.`);
+    }
+    /**
+     * Get the updated entity status from the given response entity.
+     * @param model Entity model.
+     * @param response Response entity.
+     * @returns Returns the updated entity status or a promise to get it.
+     * @throws It will always throws an error because it's not implemented yet.
+     */
+    getUpdateByIdResponse(model, response) {
+        throw new Error(`Method 'getUpdateByIdResponse' isn't implemented.`);
+    }
+    /**
+     * Get the replaced entity status from the given response entity.
+     * @param model Entity model.
+     * @param response Response entity.
+     * @returns Returns the replaced entity status or a promise to get it.
+     * @throws It will always throws an error because it's not implemented yet.
+     */
+    getReplaceByIdResponse(model, response) {
+        throw new Error(`Method 'getReplaceByIdResponse' isn't implemented.`);
+    }
+    /**
+     * Get the number of deleted entities from the given response entity.
+     * @param model Entity model.
+     * @param response Response entity.
+     * @returns Returns the number of deleted entities or a promise to get it.
+     * @throws It will always throws an error because it's not implemented yet.
+     */
+    getDeleteResponse(model, response) {
+        throw new Error(`Method 'getDeleteResponse' isn't implemented.`);
+    }
+    /**
+     * Get the deleted entity status from the given response entity.
+     * @param model Entity model.
+     * @param response Response entity.
+     * @returns Returns the deleted entity status or a promise to get it.
+     * @throws It will always throws an error because it's not implemented yet.
+     */
+    getDeleteByIdResponse(model, response) {
+        throw new Error(`Method 'getDeleteByIdResponse' isn't implemented.`);
+    }
+    /**
+     * Get the number of entities from the given response entity.
+     * @param model Entity model.
+     * @param response Response entity.
+     * @returns Returns the number of entities or a promise to get it.
+     * @throws It will always throws an error because it's not implemented yet.
+     */
+    getCountResponse(model, response) {
+        throw new Error(`Method 'getCountResponse' isn't implemented.`);
+    }
+    /**
+     * Get the request query string based on the specified entity model, filters and fields.
+     * @param model Entity model.
+     * @param query Query filter.
+     * @param fields Fields to select.
+     * @returns Returns the request query string.
+     * @throws It will always throws an error because it's not implemented yet.
+     */
+    getRequestQuery(model, query, fields) {
+        throw new Error(`Method 'getRequestQuery' isn't implemented.`);
+    }
+    /**
+     * Get the request Id based on the specified entity model and entity Id.
      * @param model Entity model.
      * @param id Entity Id.
      * @returns Returns the request Id.
@@ -42,117 +142,7 @@ let Driver = class Driver extends Class.Null {
         return id.toString();
     }
     /**
-     * Gets the request query string based on the specified entity model, fields and filters.
-     * @param model Entity model.
-     * @param query Query filter.
-     * @param fields Viewed fields.
-     * @returns Returns the request query string.
-     * @throws It will always throws an error because it's not implemented yet.
-     */
-    getRequestQuery(model, query, fields) {
-        throw new Error(`Method 'getRequestQuery' doesn't implemented.`);
-    }
-    /**
-     * Gets the request method based on the specified entity model.
-     * @param model Entity model.
-     * @param method Request method.
-     * @returns Returns the request method.
-     */
-    getRequestMethod(model, method) {
-        return method;
-    }
-    /**
-     * Gets the result Id from the given response entity.
-     * @param model Entity model.
-     * @param response Response entity.
-     * @returns Returns the insert result or a promise to get it.
-     * @throws It will always throws an error because it's not implemented yet.
-     */
-    getInsertResponse(model, response) {
-        throw new Error(`Method 'getInsertResponse' doesn't implemented.`);
-    }
-    /**
-     * Gets the found entity list from the given response entity.
-     * @param model Entity model.
-     * @param response Response entity.
-     * @returns Returns the entity list or a promise to get it.
-     * @throws It will always throws an error because it's not implemented yet.
-     */
-    getFindResponse(model, response) {
-        throw new Error(`Method 'getFindResponse' doesn't implemented.`);
-    }
-    /**
-     * Gets the found entity from the given response entity.
-     * @param model Entity model.
-     * @param response Response entity.
-     * @returns Returns the entity, a promise to get it or undefined when the entity wasn't found.
-     * @throws It will always throws an error because it's not implemented yet.
-     */
-    getFindByIdResponse(model, response) {
-        throw new Error(`Method 'getFindByIdResponse' doesn't implemented.`);
-    }
-    /**
-     * Gets the number of updated entities from the given response entity.
-     * @param model Entity model.
-     * @param response Response entity.
-     * @returns Returns the number of updated entities or a promise to get it.
-     * @throws It will always throws an error because it's not implemented yet.
-     */
-    getUpdateResponse(model, response) {
-        throw new Error(`Method 'getUpdateResponse' doesn't implemented.`);
-    }
-    /**
-     * Gets the updated entity status from the given response entity.
-     * @param model Entity model.
-     * @param response Response entity.
-     * @returns Returns the updated entity status or a promise to get it.
-     * @throws It will always throws an error because it's not implemented yet.
-     */
-    getUpdateByIdResponse(model, response) {
-        throw new Error(`Method 'getUpdateByIdResponse' doesn't implemented.`);
-    }
-    /**
-     * Gets the replaced entity status from the given response entity.
-     * @param model Entity model.
-     * @param response Response entity.
-     * @returns Returns the replaced entity status or a promise to get it.
-     * @throws It will always throws an error because it's not implemented yet.
-     */
-    getReplaceByIdResponse(model, response) {
-        throw new Error(`Method 'getReplaceByIdResponse' doesn't implemented.`);
-    }
-    /**
-     * Gets the number of deleted entities from the given response entity.
-     * @param model Entity model.
-     * @param response Response entity.
-     * @returns Returns the number of deleted entities or a promise to get it.
-     * @throws It will always throws an error because it's not implemented yet.
-     */
-    getDeleteResponse(model, response) {
-        throw new Error(`Method 'getDeleteResponse' doesn't implemented.`);
-    }
-    /**
-     * Gets the deleted entity status from the given response entity.
-     * @param model Entity model.
-     * @param response Response entity.
-     * @returns Returns the deleted entity status or a promise to get it.
-     * @throws It will always throws an error because it's not implemented yet.
-     */
-    getDeleteByIdResponse(model, response) {
-        throw new Error(`Method 'getDeleteByIdResponse' doesn't implemented.`);
-    }
-    /**
-     * Gets the number of entities from the given response entity.
-     * @param model Entity model.
-     * @param response Response entity.
-     * @returns Returns the number of entities or a promise to get it.
-     * @throws It will always throws an error because it's not implemented yet.
-     */
-    getCountResponse(model, response) {
-        throw new Error(`Method 'getCountResponse' doesn't implemented.`);
-    }
-    /**
-     * Gets a new request path based on the specified route entity.
+     * Get a new request path based on the specified route entity.
      * @param route Route entity.
      * @returns Returns the generated request path.
      */
@@ -164,31 +154,36 @@ let Driver = class Driver extends Class.Null {
             const variable = match.substr(1, match.length - 2);
             const value = route[variable];
             if (value !== void 0) {
-                return (assigned[variable] = true), value;
+                assigned[variable] = true;
+                return value;
             }
             return '';
         });
-        if (!assigned.id && route.id !== void 0 && route.id.length > 0) {
+        if (!assigned.id && route.id) {
             path += `/${route.id}`;
         }
-        if (!assigned.query && route.query !== void 0 && route.query.length > 0) {
+        if (!assigned.query && route.query) {
             path += `/${route.query}`;
         }
-        return Path.normalize(path);
+        return `${this.apiUrl}/${Path.normalize(path)}`;
     }
     /**
      * Send an HTTP request and gets the response.
      * @param method Request method.
      * @param path Request path.
+     * @param auth Determines whether or not authentication is required.
      * @param payload Request payload.
      * @returns Returns a promise to get the response output.
      */
-    getRequestResponse(method, path, payload) {
+    getRequestResponse(method, path, auth, payload) {
         const input = {
-            url: `${this.apiUrl}/${path}`,
-            method: method,
             payload: payload,
-            headers: { ...this.apiHeaders }
+            method: method,
+            url: path,
+            headers: {
+                ...(auth !== false ? this.apiAuthHeaders : void 0),
+                ...this.apiHeaders
+            }
         };
         if (typeof window === typeof void 0) {
             return Requests.Backend.request(input);
@@ -196,35 +191,23 @@ let Driver = class Driver extends Class.Null {
         return Requests.Frontend.request(input);
     }
     /**
-     * Sets a new request header.
+     * Set a new authentication header.
      * @param name Header name.
      * @param value Header value.
-     * @returns Returns its own instance.
+     * @returns Returns the instance itself.
      */
-    setHeader(name, value) {
-        return (this.apiHeaders[name] = value), this;
+    setAuthHeader(name, value) {
+        this.apiAuthHeaders[name] = value;
+        return this;
     }
     /**
-     * Removes the specified header.
+     * Unset the specified authentication header.
      * @param name Header name.
-     * @returns Returns its own instance.
+     * @returns Returns the instance itself.
      */
-    removeHeader(name) {
-        return delete this.apiHeaders[name], this;
-    }
-    /**
-     * Notify an error in the given response entity for all listeners.
-     * @param model Entity model.
-     * @param response Response entity.
-     */
-    async notifyErrorResponse(model, response) {
-        await this.apiErrors.notifyAll(response);
-    }
-    /**
-     * Gets the error subject.
-     */
-    get onError() {
-        return this.apiErrors;
+    unsetAuthHeader(name) {
+        delete this.apiAuthHeaders[name];
+        return this;
     }
     /**
      * Connect to the API.
@@ -234,18 +217,37 @@ let Driver = class Driver extends Class.Null {
         this.apiUrl = url;
     }
     /**
+     * Sets a new request header.
+     * @param name Header name.
+     * @param value Header value.
+     * @returns Returns the instance itself.
+     */
+    setHeader(name, value) {
+        this.apiHeaders[name] = value;
+        return this;
+    }
+    /**
+     * Unset the specified header.
+     * @param name Header name.
+     * @returns Returns the instance itself.
+     */
+    unsetHeader(name) {
+        delete this.apiHeaders[name];
+        return this;
+    }
+    /**
      * Request data from the API using the given details.
      * @param details Request details.
      * @returns Returns a promise to get the payload data.
-     * @throws Throw an error when the status code isn't acceptable.
+     * @throws Throws an error when the status code isn't acceptable.
      */
-    async read(details) {
+    async request(path, options, payload) {
         var _a;
-        const response = await this.getRequestResponse((_a = details.method) !== null && _a !== void 0 ? _a : method_1.Method.GET, details.path);
-        if (Requests.Helper.isAcceptedStatusCode(response.status.code)) {
-            throw new Error(`Unexpected status code: ${response.status.code}`);
+        const response = await this.getRequestResponse((_a = options.method) !== null && _a !== void 0 ? _a : method_1.Method.GET, path, options.auth, payload);
+        if (!Requests.Helper.isAcceptedStatusCode(response.status.code)) {
+            throw new Error(`${response.status.code} ${response.status.message}`);
         }
-        return response.payload;
+        return response;
     }
     /**
      * Insert the specified entity using a POST request.
@@ -253,28 +255,23 @@ let Driver = class Driver extends Class.Null {
      * @param entities Entity list.
      * @param options Insert options.
      * @returns Returns a promise to get the insert results.
-     * @throws Throws an error when the result payload doesn't contains the insertion id.
+     * @throws Throws an error when the server response is invalid.
      */
     async insert(model, entities, options) {
-        var _a;
-        const method = this.getRequestMethod(model, (_a = options.method) !== null && _a !== void 0 ? _a : method_1.Method.POST);
         const path = this.getRequestPath({
-            model: model,
+            query: this.getRequestQuery(model),
             path: options.path,
-            query: this.getRequestQuery(model)
+            model: model
         });
         const list = [];
         for (const entity of entities) {
             const payload = Types.Normalizer.create(model, entity, true, true);
-            const response = await this.getRequestResponse(method, path, payload);
-            if (Requests.Helper.isAcceptedStatusCode(response.status.code)) {
-                const result = await this.getInsertResponse(model, response);
-                if (result !== void 0) {
-                    list.push(result);
-                }
-            }
-            else {
-                await this.notifyErrorResponse(model, response);
+            const response = await this.getInsertResponse(model, await this.request(path, {
+                method: method_1.Method.POST,
+                ...options
+            }, payload));
+            if (response !== void 0) {
+                list.push(response);
             }
         }
         return list;
@@ -286,19 +283,18 @@ let Driver = class Driver extends Class.Null {
      * @param fields Viewed fields.
      * @param options Find options.
      * @returns Returns a promise to get the list of found entities.
-     * @throws Throws an error when the result payload isn't an array.
+     * @throws Throws an error when the server response is invalid.
      */
     async find(model, query, fields, options) {
-        var _a;
-        const response = await this.getRequestResponse(this.getRequestMethod(model, (_a = options.method) !== null && _a !== void 0 ? _a : method_1.Method.GET), this.getRequestPath({
-            model: model,
+        const path = this.getRequestPath({
+            query: this.getRequestQuery(model, query, fields),
             path: options.path,
-            query: this.getRequestQuery(model, query, fields)
+            model: model
+        });
+        return this.getFindResponse(model, await this.request(path, {
+            method: method_1.Method.GET,
+            ...options
         }));
-        if (Requests.Helper.isAcceptedStatusCode(response.status.code)) {
-            return await this.getFindResponse(model, response);
-        }
-        return await this.notifyErrorResponse(model, response), [];
     }
     /**
      * Find the entity that corresponds to the specified Id using a GET request.
@@ -307,19 +303,19 @@ let Driver = class Driver extends Class.Null {
      * @param fields Viewed fields.
      * @param options Find options.
      * @returns Returns a promise to get the found entity or undefined when the entity was not found.
+     * @throws Throws an error when the server response is invalid.
      */
     async findById(model, id, fields, options) {
-        var _a;
-        const response = await this.getRequestResponse(this.getRequestMethod(model, (_a = options.method) !== null && _a !== void 0 ? _a : method_1.Method.GET), this.getRequestPath({
-            model: model,
-            path: options.path,
+        const path = this.getRequestPath({
+            id: this.getRequestId(model, id),
             query: this.getRequestQuery(model, void 0, fields),
-            id: this.getRequestId(model, id)
+            path: options.path,
+            model: model
+        });
+        return this.getFindByIdResponse(model, await this.request(path, {
+            method: method_1.Method.GET,
+            ...options
         }));
-        if (Requests.Helper.isAcceptedStatusCode(response.status.code)) {
-            return await this.getFindByIdResponse(model, response);
-        }
-        return await this.notifyErrorResponse(model, response), void 0;
     }
     /**
      * Update all entities that corresponds to the specified matching fields using a PATCH request.
@@ -328,19 +324,19 @@ let Driver = class Driver extends Class.Null {
      * @param entity Entity data.
      * @param options Update options.
      * @returns Returns a promise to get the number of updated entities.
+     * @throws Throws an error when the server response is invalid.
      */
     async update(model, match, entity, options) {
-        var _a;
         const payload = Types.Normalizer.create(model, entity, true, true);
-        const response = await this.getRequestResponse(this.getRequestMethod(model, (_a = options.method) !== null && _a !== void 0 ? _a : method_1.Method.PATCH), this.getRequestPath({
-            model: model,
+        const path = this.getRequestPath({
+            query: this.getRequestQuery(model, { pre: match }),
             path: options.path,
-            query: this.getRequestQuery(model, { pre: match })
-        }), payload);
-        if (Requests.Helper.isAcceptedStatusCode(response.status.code)) {
-            return await this.getUpdateResponse(model, response);
-        }
-        return await this.notifyErrorResponse(model, response), 0;
+            model: model
+        });
+        return this.getUpdateResponse(model, await this.request(path, {
+            method: method_1.Method.PATCH,
+            ...options
+        }, payload));
     }
     /**
      * Update the entity that corresponds to the specified Id using a PATCH request.
@@ -349,20 +345,20 @@ let Driver = class Driver extends Class.Null {
      * @param entity Entity data.
      * @param options Update options.
      * @returns Returns a promise to get the true when the entity has been updated or false otherwise.
+     * @throws Throws an error when the server response is invalid.
      */
     async updateById(model, id, entity, options) {
-        var _a;
         const payload = Types.Normalizer.create(model, entity, true, true);
-        const response = await this.getRequestResponse(this.getRequestMethod(model, (_a = options.method) !== null && _a !== void 0 ? _a : method_1.Method.PATCH), this.getRequestPath({
-            model: model,
-            path: options.path,
+        const path = this.getRequestPath({
+            id: this.getRequestId(model, id),
             query: this.getRequestQuery(model),
-            id: this.getRequestId(model, id)
-        }), payload);
-        if (Requests.Helper.isAcceptedStatusCode(response.status.code)) {
-            return await this.getUpdateByIdResponse(model, response);
-        }
-        return await this.notifyErrorResponse(model, response), false;
+            path: options.path,
+            model: model
+        });
+        return this.getUpdateByIdResponse(model, await this.request(path, {
+            method: method_1.Method.PATCH,
+            ...options
+        }, payload));
     }
     /**
      * Replace the entity that corresponds to the specified Id using a PUT request.
@@ -371,20 +367,20 @@ let Driver = class Driver extends Class.Null {
      * @param entity Entity data.
      * @param options Replace options.
      * @returns Returns a promise to get the true when the entity has been replaced or false otherwise.
+     * @throws Throws an error when the server response is invalid.
      */
     async replaceById(model, id, entity, options) {
-        var _a;
         const payload = Types.Normalizer.create(model, entity, true, true);
-        const response = await this.getRequestResponse(this.getRequestMethod(model, (_a = options.method) !== null && _a !== void 0 ? _a : method_1.Method.PUT), this.getRequestPath({
-            model: model,
-            path: options.path,
+        const path = this.getRequestPath({
+            id: this.getRequestId(model, id),
             query: this.getRequestQuery(model),
-            id: this.getRequestId(model, id)
-        }), payload);
-        if (Requests.Helper.isAcceptedStatusCode(response.status.code)) {
-            return await this.getReplaceByIdResponse(model, response);
-        }
-        return await this.notifyErrorResponse(model, response), false;
+            path: options.path,
+            model: model
+        });
+        return this.getReplaceByIdResponse(model, await this.request(path, {
+            method: method_1.Method.PUT,
+            ...options
+        }, payload));
     }
     /**
      * Delete all entities that corresponds to the specified matching fields using a DELETE request.
@@ -392,18 +388,18 @@ let Driver = class Driver extends Class.Null {
      * @param match Matching fields.
      * @param options Delete options.
      * @return Returns a promise to get the number of deleted entities.
+     * @throws Throws an error when the server response is invalid.
      */
     async delete(model, match, options) {
-        var _a;
-        const response = await this.getRequestResponse(this.getRequestMethod(model, (_a = options.method) !== null && _a !== void 0 ? _a : method_1.Method.DELETE), this.getRequestPath({
-            model: model,
+        const path = this.getRequestPath({
+            query: this.getRequestQuery(model, { pre: match }),
             path: options.path,
-            query: this.getRequestQuery(model, { pre: match })
+            model: model
+        });
+        return this.getDeleteResponse(model, await this.request(path, {
+            method: method_1.Method.DELETE,
+            ...options
         }));
-        if (Requests.Helper.isAcceptedStatusCode(response.status.code)) {
-            return await this.getDeleteResponse(model, response);
-        }
-        return await this.notifyErrorResponse(model, response), 0;
     }
     /**
      * Delete the entity that corresponds to the specified Id using a DELETE request.
@@ -411,37 +407,37 @@ let Driver = class Driver extends Class.Null {
      * @param id Entity Id.
      * @param options Delete options.
      * @return Returns a promise to get the true when the entity has been deleted or false otherwise.
+     * @throws Throws an error when the server response is invalid.
      */
     async deleteById(model, id, options) {
-        var _a;
-        const response = await this.getRequestResponse(this.getRequestMethod(model, (_a = options.method) !== null && _a !== void 0 ? _a : method_1.Method.DELETE), this.getRequestPath({
-            model: model,
+        const path = this.getRequestPath({
+            id: this.getRequestId(model, id),
             path: options.path,
-            id: this.getRequestId(model, id)
+            model: model
+        });
+        return this.getDeleteByIdResponse(model, await this.request(path, {
+            method: method_1.Method.DELETE,
+            ...options
         }));
-        if (Requests.Helper.isAcceptedStatusCode(response.status.code)) {
-            return await this.getDeleteByIdResponse(model, response);
-        }
-        return await this.notifyErrorResponse(model, response), false;
     }
     /**
      * Count all corresponding entities using the a HEAD request.
      * @param model Model type.
      * @param query Query filter.
      * @param options Count options.
-     * @returns Returns a promise to get the amount of found entities or 0 when there's an error.
+     * @returns Returns a promise to get the amount of entities.
+     * @throws Throws an error when the server response is invalid.
      */
     async count(model, query, options) {
-        var _a;
-        const response = await this.getRequestResponse(this.getRequestMethod(model, (_a = options.method) !== null && _a !== void 0 ? _a : method_1.Method.HEAD), this.getRequestPath({
-            model: model,
+        const path = this.getRequestPath({
+            query: this.getRequestQuery(model, query),
             path: options.path,
-            query: this.getRequestQuery(model, query)
+            model: model
+        });
+        return this.getCountResponse(model, await this.request(path, {
+            method: method_1.Method.HEAD,
+            ...options
         }));
-        if (Requests.Helper.isAcceptedStatusCode(response.status.code)) {
-            return await this.getCountResponse(model, response);
-        }
-        return await this.notifyErrorResponse(model, response), 0;
     }
 };
 __decorate([
@@ -452,16 +448,7 @@ __decorate([
 ], Driver.prototype, "apiHeaders", void 0);
 __decorate([
     Class.Private()
-], Driver.prototype, "apiErrors", void 0);
-__decorate([
-    Class.Protected()
-], Driver.prototype, "getRequestId", null);
-__decorate([
-    Class.Protected()
-], Driver.prototype, "getRequestQuery", null);
-__decorate([
-    Class.Protected()
-], Driver.prototype, "getRequestMethod", null);
+], Driver.prototype, "apiAuthHeaders", void 0);
 __decorate([
     Class.Protected()
 ], Driver.prototype, "getInsertResponse", null);
@@ -490,6 +477,12 @@ __decorate([
     Class.Protected()
 ], Driver.prototype, "getCountResponse", null);
 __decorate([
+    Class.Protected()
+], Driver.prototype, "getRequestQuery", null);
+__decorate([
+    Class.Protected()
+], Driver.prototype, "getRequestId", null);
+__decorate([
     Class.Private()
 ], Driver.prototype, "getRequestPath", null);
 __decorate([
@@ -497,22 +490,22 @@ __decorate([
 ], Driver.prototype, "getRequestResponse", null);
 __decorate([
     Class.Protected()
-], Driver.prototype, "setHeader", null);
+], Driver.prototype, "setAuthHeader", null);
 __decorate([
     Class.Protected()
-], Driver.prototype, "removeHeader", null);
-__decorate([
-    Class.Protected()
-], Driver.prototype, "notifyErrorResponse", null);
-__decorate([
-    Class.Public()
-], Driver.prototype, "onError", null);
+], Driver.prototype, "unsetAuthHeader", null);
 __decorate([
     Class.Public()
 ], Driver.prototype, "connect", null);
 __decorate([
+    Class.Protected()
+], Driver.prototype, "setHeader", null);
+__decorate([
+    Class.Protected()
+], Driver.prototype, "unsetHeader", null);
+__decorate([
     Class.Public()
-], Driver.prototype, "read", null);
+], Driver.prototype, "request", null);
 __decorate([
     Class.Public()
 ], Driver.prototype, "insert", null);

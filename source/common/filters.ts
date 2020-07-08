@@ -1,5 +1,5 @@
 /*!
- * Copyright (C) 2018-2019 Silas B. Domingos
+ * Copyright (C) 2018-2020 Silas B. Domingos
  * This source code is licensed under the MIT License as described in the file LICENSE.
  */
 import * as Class from '@singleware/class';
@@ -93,12 +93,7 @@ export class Filters extends Class.Null {
    * @param value Operation value.
    */
   @Class.Private()
-  private static packOperation(
-    operations: (string | number)[],
-    path: string,
-    operator: Mapping.Filters.Operator,
-    value: any
-  ): void {
+  private static packOperation(operations: (string | number)[], path: string, operator: Mapping.Filters.Operator, value: any): void {
     operations.push(path, operator);
     switch (operator) {
       case Types.Operator.LessThan:
@@ -137,11 +132,7 @@ export class Filters extends Class.Null {
    * @throws Throws an error when there are invalid matching operator codes.
    */
   @Class.Private()
-  private static packMatchRules(
-    prefix: string,
-    model: Types.Model,
-    match: Types.Match | Types.Match[]
-  ): (number | string)[] {
+  private static packMatchRules(prefix: string, model: Types.Model, match: Types.Match | Types.Match[]): (number | string)[] {
     const rulesList = [];
     let rulesCounter = 0;
     for (const expression of match instanceof Array ? match : [match]) {
@@ -177,11 +168,7 @@ export class Filters extends Class.Null {
    * @throws Throws an error when there are invalid serialized data.
    */
   @Class.Private()
-  private static unpackMatchRules(
-    prefix: string,
-    model: Types.Model,
-    array: string[]
-  ): Types.Match | Types.Match[] | undefined {
+  private static unpackMatchRules(prefix: string, model: Types.Model, array: string[]): Types.Match | Types.Match[] | undefined {
     if (prefix !== array.pop()) {
       throw new Error(`Invalid magic prefix for the given array of matching lists.`);
     } else {

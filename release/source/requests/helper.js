@@ -8,7 +8,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Helper = void 0;
 /*!
- * Copyright (C) 2018-2019 Silas B. Domingos
+ * Copyright (C) 2018-2020 Silas B. Domingos
  * This source code is licensed under the MIT License as described in the file LICENSE.
  */
 const Class = require("@singleware/class");
@@ -16,6 +16,14 @@ const Class = require("@singleware/class");
  * Request helper class.
  */
 let Helper = class Helper extends Class.Null {
+    /**
+     * Check whether or not the specified status code is in the acceptable range.
+     * @param status Status code.
+     * @returns Returns true when the specified status code is accepted, false otherwise.
+     */
+    static isAcceptedStatusCode(status) {
+        return (status >= 200 && status <= 299) || (status >= 400 && status <= 499);
+    }
     /**
      * Check if the specified content type is accepted based on the expected content types.
      * @param content Content type.
@@ -27,21 +35,13 @@ let Helper = class Helper extends Class.Null {
         const mime = content.substr(0, index === -1 ? content.length : index);
         return expected.includes(mime.trim());
     }
-    /**
-     * Check if the specified status code is accepted or not.
-     * @param status Status code.
-     * @returns Returns true when the specified status code is accepted, false otherwise.
-     */
-    static isAcceptedStatusCode(status) {
-        return status >= 200 && status <= 299;
-    }
 };
 __decorate([
     Class.Public()
-], Helper, "isAcceptedContentType", null);
+], Helper, "isAcceptedStatusCode", null);
 __decorate([
     Class.Public()
-], Helper, "isAcceptedStatusCode", null);
+], Helper, "isAcceptedContentType", null);
 Helper = __decorate([
     Class.Describe()
 ], Helper);

@@ -33,12 +33,12 @@ let Backend = class Backend extends Class.Null {
      */
     static getRequestOptions(input, url) {
         const options = {
-            method: input.method,
+            path: `${url.pathname}${url.search}`,
             headers: this.getResponseHeaders(input.headers),
+            method: input.method,
             protocol: url.protocol,
             port: url.port,
-            host: url.hostname,
-            path: url.pathname
+            host: url.hostname
         };
         return options;
     }

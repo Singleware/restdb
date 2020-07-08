@@ -6,7 +6,6 @@
     "strict": true,
     "sourceMap": true,
     "incremental": true,
-    "declaration": true,
     "forceConsistentCasingInFileNames": true,
     "experimentalDecorators": true,
     "outDir": "../release/"

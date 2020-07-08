@@ -8,7 +8,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Driver = void 0;
 /*!
- * Copyright (C) 2018-2019 Silas B. Domingos
+ * Copyright (C) 2018-2020 Silas B. Domingos
  * This source code is licensed under the MIT License as described in the file LICENSE.
  */
 const Class = require("@singleware/class");
@@ -30,183 +30,189 @@ let Driver = class Driver extends driver_1.Driver {
         this.apiCountingHeader = 'x-api-count';
     }
     /**
-     * Gets the request query string based on the specified entity model, fields and filters.
-     * @param model Entity model.
-     * @param query Query filter.
-     * @param fields Viewed fields.
-     * @returns Returns the parsed query string.
-     */
-    getRequestQuery(model, query, fields) {
-        return filters_1.Filters.toURL(model, query, fields);
-    }
-    /**
-     * Gets the result Id from the given response entity.
+     * Get the insert result from the given response entity.
      * @param model Entity model.
      * @param response Response entity.
      * @returns Returns the insert result.
-     * @throws Throws an exception when the request ends without success.
+     * @throws Throws an error when the server response is invalid.
      */
     getInsertResponse(model, response) {
-        var _a;
-        if (response.status.code !== 200 && response.status.code !== 201 && response.status.code !== 202) {
-            throw new Error(`Unexpected response status ${response.status.code}`);
+        this.lastPayload = response.payload;
+        if (response.status.code !== 200 && response.status.code !== 201) {
+            throw new Error(`Unexpected insert(${response.input.method}) response status: ${response.status.code}`);
         }
-        else if (!(response.payload instanceof Object) || response.payload.id === void 0) {
-            throw new Error(`Response payload must contains an object with Id property.`);
+        else if (this.lastPayload instanceof Array) {
+            throw new Error(`Response payload must be an object.`);
         }
-        else if (((_a = response.payload) === null || _a === void 0 ? void 0 : _a.id) === void 0) {
-            throw new Error(`Response Id property doesn't found.`);
+        else if (!(this.lastPayload instanceof Object) || this.lastPayload.id === void 0) {
+            throw new Error(`Response payload must contains the Id property.`);
         }
-        return response.payload.id;
+        return this.lastPayload.id;
     }
     /**
-     * Gets the found entity list from the given response entity.
+     * Get the found entity list from the given response entity.
      * @param model Entity model.
      * @param response Response entity.
      * @returns Returns the entity list.
-     * @throws Throws an error when the response payload doesn't contains the entity list.
+     * @throws Throws an error when the server response is invalid.
      */
     getFindResponse(model, response) {
+        this.lastPayload = response.payload;
         if (response.status.code !== 200) {
-            throw new Error(`Unexpected response status ${response.status.code}`);
+            throw new Error(`Unexpected find(${response.input.method}) response status: ${response.status.code}`);
         }
-        else if (!(response.payload instanceof Array)) {
+        else if (!(this.lastPayload instanceof Array)) {
             throw new Error(`Response payload must contains an array.`);
         }
-        return response.payload;
+        return this.lastPayload;
     }
     /**
-     * Gets the found entity from the given response entity.
+     * Get the found entity from the given response entity.
      * @param model Entity model.
      * @param response Response entity.
-     * @returns Returns the entity or undefined when the entity was not found.
+     * @returns Returns the entity or undefined when the entity wasn't found.
+     * @throws Throws an error when the server response is invalid.
      */
     getFindByIdResponse(model, response) {
+        this.lastPayload = response.payload;
         if (response.status.code !== 200) {
-            throw new Error(`Unexpected response status ${response.status.code}`);
+            throw new Error(`Unexpected find(${response.input.method}) response status: ${response.status.code}`);
         }
-        else if (!(response.payload instanceof Object)) {
-            throw new Error(`Response payload contains an object.`);
-        }
-        return response.payload;
+        return this.lastPayload;
     }
     /**
-     * Gets the number of updated entities from the given response entity.
+     * Get the number of updated entities from the given response entity.
      * @param model Entity model.
      * @param response Response entity.
      * @returns Returns the number of updated entities.
-     * @throws Throws an error when the counting header is missing or incorrect in the response.
+     * @throws Throws an error when the server response is invalid.
      */
     getUpdateResponse(model, response) {
-        if (response.status.code !== 200 && response.status.code !== 202 && response.status.code !== 204) {
-            throw new Error(`Unexpected response status ${response.status.code}`);
+        this.lastPayload = response.payload;
+        if (response.status.code !== 200) {
+            throw new Error(`Unexpected update(${response.input.method}) response status: ${response.status.code}`);
         }
-        const amount = parseInt(response.headers[this.apiCountingHeader]);
-        if (isNaN(amount)) {
-            throw new Error(`Header '${this.apiCountingHeader}' is missing in the update response.`);
+        else {
+            const amount = parseInt(response.headers[this.apiCountingHeader]);
+            if (isNaN(amount)) {
+                throw new Error(`Response header '${this.apiCountingHeader}' is missing or incorrect.`);
+            }
+            return amount;
         }
-        return amount;
     }
     /**
-     * Gets the updated entity status from the given response entity.
+     * Get the updated entity status from the given response entity.
      * @param model Entity model.
      * @param response Response entity.
      * @returns Returns the updated entity status.
      */
     getUpdateByIdResponse(model, response) {
-        return response.status.code === 200 || response.status.code === 202 || response.status.code === 204;
+        this.lastPayload = response.payload;
+        return response.status.code === 200 || response.status.code === 204;
     }
     /**
-     * Gets the replaced entity status from the given response entity.
+     * Get the replaced entity status from the given response entity.
      * @param model Entity model.
      * @param response Response entity.
      * @returns Returns the replaced entity status.
-     * @throws It will always throws an error because it's not implemented yet.
      */
     getReplaceByIdResponse(model, response) {
-        return response.status.code === 200 || response.status.code === 202 || response.status.code === 204;
+        this.lastPayload = response.payload;
+        return response.status.code === 200 || response.status.code === 204;
     }
     /**
-     * Gets the number of deleted entities from the given response entity.
+     * Get the number of deleted entities from the given response entity.
      * @param model Entity model.
      * @param response Response entity.
      * @returns Returns the number of deleted entities.
-     * @throws Throws an error when the counting header is missing or incorrect in the response.
+     * @throws Throws an error when the server response is invalid.
      */
     getDeleteResponse(model, response) {
-        if (response.status.code !== 200 && response.status.code !== 202 && response.status.code !== 204) {
-            throw new Error(`Unexpected response status ${response.status.code}`);
+        this.lastPayload = response.payload;
+        if (response.status.code !== 200 && response.status.code !== 204) {
+            throw new Error(`Unexpected delete(${response.input.method}) response status: ${response.status.code}`);
         }
-        const amount = parseInt(response.headers[this.apiCountingHeader]);
-        if (isNaN(amount)) {
-            throw new Error(`Header '${this.apiCountingHeader}' is missing in the delete response.`);
+        else {
+            const amount = parseInt(response.headers[this.apiCountingHeader]);
+            if (isNaN(amount)) {
+                throw new Error(`Response header '${this.apiCountingHeader}' is missing or incorrect.`);
+            }
+            return amount;
         }
-        return amount;
     }
     /**
-     * Gets the deleted entity status from the given response entity.
+     * Get the deleted entity status from the given response entity.
      * @param model Entity model.
      * @param response Response entity.
      * @returns Returns the deleted entity status.
      */
     getDeleteByIdResponse(model, response) {
-        return response.status.code === 200 || response.status.code === 202 || response.status.code === 204;
+        this.lastPayload = response.payload;
+        return response.status.code === 200 || response.status.code === 204;
     }
     /**
-     * Gets the number of entities from the given response entity.
+     * Get the number of entities from the given response entity.
      * @param model Entity model.
      * @param response Response entity.
      * @returns Returns the number of entities.
-     * @throws Throws an error when the counting header is missing or incorrect in the response.
+     * @throws Throws an error when the server response is invalid.
      */
     getCountResponse(model, response) {
+        this.lastPayload = response.payload;
         if (response.status.code !== 200 && response.status.code !== 204) {
-            throw new Error(`Unexpected response status ${response.status.code}`);
+            throw new Error(`Unexpected count(${response.input.method}) response status: ${response.status.code}`);
         }
-        const amount = parseInt(response.headers[this.apiCountingHeader]);
-        if (isNaN(amount)) {
-            throw new Error(`Header '${this.apiCountingHeader}' missing or incorrect in the count response.`);
+        else {
+            const amount = parseInt(response.headers[this.apiCountingHeader]);
+            if (isNaN(amount)) {
+                throw new Error(`Response header '${this.apiCountingHeader}' missing or incorrect.`);
+            }
+            return amount;
         }
-        return amount;
     }
     /**
-     * Notify an error in the given response entity for all listeners.
+     * Get the request query string based on the specified entity model, filters and fields.
      * @param model Entity model.
-     * @param response Response entity.
+     * @param query Query filter.
+     * @param fields Fields to select.
+     * @returns Returns the instance itself.
      */
-    async notifyErrorResponse(model, response) {
-        await super.notifyErrorResponse(model, (this.apiResponseError = response.payload));
+    getRequestQuery(model, query, fields) {
+        return filters_1.Filters.toURL(model, query, fields);
     }
     /**
-     * Sets a new name for the API counting header.
+     * Set a new name for the API counting header.
      * @param name New header name.
-     * @returns Returns its own instance.
+     * @returns Returns the instance itself.
      */
     setCountingHeaderName(name) {
-        return (this.apiCountingHeader = name.toLowerCase()), this;
+        this.apiCountingHeader = name.toLowerCase();
+        return this;
     }
     /**
-     * Sets a new name for the API key header.
+     * Set a new name for the API key header.
      * @param name New header name.
-     * @returns Returns its own instance.
+     * @returns Returns the instance itself.
      */
     setKeyHeaderName(name) {
-        return (this.apiKeyHeader = name.toLowerCase()), this;
+        this.unsetAuthHeader(this.apiKeyHeader);
+        this.apiKeyHeader = name.toLowerCase();
+        return this;
     }
     /**
-     * Sets a new value for the API key header.
+     * Set a new value for the API key header.
      * @param value New header value.
-     * @returns Returns its own instance.
+     * @returns Returns the instance itself.
      */
     setKeyHeaderValue(value) {
-        return this.setHeader(this.apiKeyHeader, value), this;
+        this.setAuthHeader(this.apiKeyHeader, value);
+        return this;
     }
     /**
-     * Gets the request error response.
-     * @returns Returns the error response entity or undefined when there's no error.
+     * Get the last request payload.
      */
-    get errorResponse() {
-        return this.apiResponseError;
+    get payload() {
+        return this.lastPayload;
     }
 };
 __decorate([
@@ -217,10 +223,7 @@ __decorate([
 ], Driver.prototype, "apiCountingHeader", void 0);
 __decorate([
     Class.Private()
-], Driver.prototype, "apiResponseError", void 0);
-__decorate([
-    Class.Protected()
-], Driver.prototype, "getRequestQuery", null);
+], Driver.prototype, "lastPayload", void 0);
 __decorate([
     Class.Protected()
 ], Driver.prototype, "getInsertResponse", null);
@@ -250,7 +253,7 @@ __decorate([
 ], Driver.prototype, "getCountResponse", null);
 __decorate([
     Class.Protected()
-], Driver.prototype, "notifyErrorResponse", null);
+], Driver.prototype, "getRequestQuery", null);
 __decorate([
     Class.Protected()
 ], Driver.prototype, "setCountingHeaderName", null);
@@ -261,8 +264,8 @@ __decorate([
     Class.Protected()
 ], Driver.prototype, "setKeyHeaderValue", null);
 __decorate([
-    Class.Protected()
-], Driver.prototype, "errorResponse", null);
+    Class.Public()
+], Driver.prototype, "payload", null);
 Driver = __decorate([
     Class.Describe()
 ], Driver);
