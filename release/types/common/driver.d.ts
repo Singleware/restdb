@@ -21,71 +21,71 @@ export declare class Driver extends GenericDriver implements Types.Driver {
      * Get the insert result from the given response entity.
      * @param model Entity model.
      * @param response Response entity.
-     * @returns Returns the insert result.
+     * @returns Returns the insertion or undefined when an error occurs.
      * @throws Throws an error when the server response is invalid.
      */
-    protected getInsertResponse<T>(model: Types.Model, response: Responses.Output): T;
+    protected getInsertResponse<R>(model: Types.Model, response: Responses.Output): R | undefined;
     /**
      * Get the found entity list from the given response entity.
      * @param model Entity model.
      * @param response Response entity.
-     * @returns Returns the entity list.
+     * @returns Returns the entity list or undefined when an error occurs.
      * @throws Throws an error when the server response is invalid.
      */
-    protected getFindResponse<T>(model: Types.Model, response: Responses.Output): T[];
+    protected getFindResponse<R>(model: Types.Model, response: Responses.Output): R[] | undefined;
     /**
      * Get the found entity from the given response entity.
      * @param model Entity model.
      * @param response Response entity.
-     * @returns Returns the entity or undefined when the entity wasn't found.
+     * @returns Returns the entity either undefined when the entity wasn't found or an error occurs.
      * @throws Throws an error when the server response is invalid.
      */
-    protected getFindByIdResponse<T>(model: Types.Model, response: Responses.Output): T | undefined;
+    protected getFindByIdResponse<R>(model: Types.Model, response: Responses.Output): R | undefined;
     /**
      * Get the number of updated entities from the given response entity.
      * @param model Entity model.
      * @param response Response entity.
-     * @returns Returns the number of updated entities.
+     * @returns Returns the number of updated entities or undefined when an error occurs.
      * @throws Throws an error when the server response is invalid.
      */
-    protected getUpdateResponse(model: Types.Model, response: Responses.Output): number;
+    protected getUpdateResponse(model: Types.Model, response: Responses.Output): number | undefined;
     /**
      * Get the updated entity status from the given response entity.
      * @param model Entity model.
      * @param response Response entity.
-     * @returns Returns the updated entity status.
+     * @returns Returns the updated entity status or undefined when an error occurs.
      */
-    protected getUpdateByIdResponse(model: Types.Model, response: Responses.Output): boolean;
+    protected getUpdateByIdResponse(model: Types.Model, response: Responses.Output): boolean | undefined;
     /**
      * Get the replaced entity status from the given response entity.
      * @param model Entity model.
      * @param response Response entity.
-     * @returns Returns the replaced entity status.
+     * @returns Returns the replaced entity status or undefined when an error occurs.
      */
-    protected getReplaceByIdResponse(model: Types.Model, response: Responses.Output): boolean;
+    protected getReplaceByIdResponse(model: Types.Model, response: Responses.Output): boolean | undefined;
     /**
      * Get the number of deleted entities from the given response entity.
      * @param model Entity model.
      * @param response Response entity.
-     * @returns Returns the number of deleted entities.
+     * @returns Returns the number of deleted entities or undefined when an error occurs.
      * @throws Throws an error when the server response is invalid.
      */
-    protected getDeleteResponse(model: Types.Model, response: Responses.Output): number;
+    protected getDeleteResponse(model: Types.Model, response: Responses.Output): number | undefined;
     /**
      * Get the deleted entity status from the given response entity.
      * @param model Entity model.
      * @param response Response entity.
-     * @returns Returns the deleted entity status.
+     * @returns Returns the deleted entity status or undefined when an error occurs.
      */
-    protected getDeleteByIdResponse(model: Types.Model, response: Responses.Output): boolean;
+    protected getDeleteByIdResponse(model: Types.Model, response: Responses.Output): boolean | undefined;
     /**
      * Get the number of entities from the given response entity.
      * @param model Entity model.
      * @param response Response entity.
-     * @returns Returns the number of entities.
+     * @returns Returns the number of entities or undefined when an error occurs.
      * @throws Throws an error when the server response is invalid.
      */
-    protected getCountResponse(model: Types.Model, response: Responses.Output): number;
+    protected getCountResponse(model: Types.Model, response: Responses.Output): number | undefined;
     /**
      * Get the request query string based on the specified entity model, filters and fields.
      * @param model Entity model.

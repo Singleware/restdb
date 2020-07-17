@@ -33,7 +33,7 @@ let Driver = class Driver extends driver_1.Driver {
      * Get the insert result from the given response entity.
      * @param model Entity model.
      * @param response Response entity.
-     * @returns Returns the insert result.
+     * @returns Returns the insertion or undefined when an error occurs.
      * @throws Throws an error when the server response is invalid.
      */
     getInsertResponse(model, response) {
@@ -53,7 +53,7 @@ let Driver = class Driver extends driver_1.Driver {
      * Get the found entity list from the given response entity.
      * @param model Entity model.
      * @param response Response entity.
-     * @returns Returns the entity list.
+     * @returns Returns the entity list or undefined when an error occurs.
      * @throws Throws an error when the server response is invalid.
      */
     getFindResponse(model, response) {
@@ -70,7 +70,7 @@ let Driver = class Driver extends driver_1.Driver {
      * Get the found entity from the given response entity.
      * @param model Entity model.
      * @param response Response entity.
-     * @returns Returns the entity or undefined when the entity wasn't found.
+     * @returns Returns the entity either undefined when the entity wasn't found or an error occurs.
      * @throws Throws an error when the server response is invalid.
      */
     getFindByIdResponse(model, response) {
@@ -84,7 +84,7 @@ let Driver = class Driver extends driver_1.Driver {
      * Get the number of updated entities from the given response entity.
      * @param model Entity model.
      * @param response Response entity.
-     * @returns Returns the number of updated entities.
+     * @returns Returns the number of updated entities or undefined when an error occurs.
      * @throws Throws an error when the server response is invalid.
      */
     getUpdateResponse(model, response) {
@@ -104,7 +104,7 @@ let Driver = class Driver extends driver_1.Driver {
      * Get the updated entity status from the given response entity.
      * @param model Entity model.
      * @param response Response entity.
-     * @returns Returns the updated entity status.
+     * @returns Returns the updated entity status or undefined when an error occurs.
      */
     getUpdateByIdResponse(model, response) {
         this.lastPayload = response.payload;
@@ -114,7 +114,7 @@ let Driver = class Driver extends driver_1.Driver {
      * Get the replaced entity status from the given response entity.
      * @param model Entity model.
      * @param response Response entity.
-     * @returns Returns the replaced entity status.
+     * @returns Returns the replaced entity status or undefined when an error occurs.
      */
     getReplaceByIdResponse(model, response) {
         this.lastPayload = response.payload;
@@ -124,7 +124,7 @@ let Driver = class Driver extends driver_1.Driver {
      * Get the number of deleted entities from the given response entity.
      * @param model Entity model.
      * @param response Response entity.
-     * @returns Returns the number of deleted entities.
+     * @returns Returns the number of deleted entities or undefined when an error occurs.
      * @throws Throws an error when the server response is invalid.
      */
     getDeleteResponse(model, response) {
@@ -144,7 +144,7 @@ let Driver = class Driver extends driver_1.Driver {
      * Get the deleted entity status from the given response entity.
      * @param model Entity model.
      * @param response Response entity.
-     * @returns Returns the deleted entity status.
+     * @returns Returns the deleted entity status or undefined when an error occurs.
      */
     getDeleteByIdResponse(model, response) {
         this.lastPayload = response.payload;
@@ -154,7 +154,7 @@ let Driver = class Driver extends driver_1.Driver {
      * Get the number of entities from the given response entity.
      * @param model Entity model.
      * @param response Response entity.
-     * @returns Returns the number of entities.
+     * @returns Returns the number of entities or undefined when an error occurs.
      * @throws Throws an error when the server response is invalid.
      */
     getCountResponse(model, response) {

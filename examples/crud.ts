@@ -47,21 +47,24 @@ class UserEntity extends Class.Null {
  * Database mapper.
  */
 @Class.Describe()
-class UserMapper extends RestDB.Mapper<UserEntity> {
+class UserMapper extends Class.Null {
   /**
-   * Default constructor.
+   * Mapper instance.
    */
-  constructor() {
-    super(driver, UserEntity);
-  }
+  @Class.Private()
+  private mapper = new RestDB.Mapper<UserEntity>(driver, UserEntity);
 
   /**
    * Create a test user.
-   * @returns Returns a promise to get the new user id.
+   * @returns Returns a promise to get the new user Id.
    */
   @Class.Public()
   public async create(): Promise<string> {
-    return await this.insert({ firstName: 'First 1', lastName: 'Last 1' });
+    const id = await this.mapper.insert({ firstName: 'First 1', lastName: 'Last 1' });
+    if (typeof id !== 'string') {
+      throw new Error(`Unable to insert new users.`);
+    }
+    return id;
   }
 
   /**
@@ -71,7 +74,11 @@ class UserMapper extends RestDB.Mapper<UserEntity> {
    */
   @Class.Public()
   public async change(id: string): Promise<number> {
-    return await this.update({ id: { operator: RestDB.Operator.Equal, value: id } }, { firstName: 'Changed!' });
+    const state = await this.mapper.update({ id: { operator: RestDB.Operator.Equal, value: id } }, { firstName: 'Changed!' });
+    if (state === void 0) {
+      throw new Error(`Unable to update the user '${id}'.`);
+    }
+    return state;
   }
 
   /**
@@ -81,7 +88,11 @@ class UserMapper extends RestDB.Mapper<UserEntity> {
    */
   @Class.Public()
   public async replace(id: string): Promise<boolean> {
-    return await this.replaceById(id, { firstName: 'Replaced!' });
+    const state = await this.mapper.replaceById(id, { firstName: 'Replaced!' });
+    if (state === void 0) {
+      throw new Error(`Unable to replace the user '${id}'.`);
+    }
+    return state;
   }
 
   /**
@@ -91,7 +102,7 @@ class UserMapper extends RestDB.Mapper<UserEntity> {
    */
   @Class.Public()
   public async read(id: string): Promise<UserEntity[]> {
-    return await this.find({
+    const users = await this.mapper.find({
       pre: {
         id: { operator: RestDB.Operator.Equal, value: id }
       },
@@ -103,6 +114,10 @@ class UserMapper extends RestDB.Mapper<UserEntity> {
         count: 1
       }
     });
+    if (users === void 0) {
+      throw new Error(`Unable to read the user '${id}'.`);
+    }
+    return users;
   }
 
   /**
@@ -112,7 +127,11 @@ class UserMapper extends RestDB.Mapper<UserEntity> {
    */
   @Class.Public()
   public async remove(id: string): Promise<number> {
-    return await this.delete({ id: { operator: RestDB.Operator.Equal, value: id } });
+    const state = await this.mapper.delete({ id: { operator: RestDB.Operator.Equal, value: id } });
+    if (state === void 0) {
+      throw new Error(`Unable to remove the user '${id}'.`);
+    }
+    return state;
   }
 }
 
@@ -122,6 +141,7 @@ class UserMapper extends RestDB.Mapper<UserEntity> {
 async function crudTest(): Promise<void> {
   // User mapper class.
   const mapper = new UserMapper();
+  let result;
 
   // Connect
   await driver.connect(connection);
@@ -129,18 +149,18 @@ async function crudTest(): Promise<void> {
 
   // Create user
   const id = await mapper.create();
-  const before = await mapper.read(id);
-  console.log('Create:', id, before[0].firstName, before[0].lastName);
+  result = (await mapper.read(id))[0];
+  console.log('Create:', id, result?.firstName, result?.lastName);
 
   // Update user
   const update = await mapper.change(id);
-  const middle = await mapper.read(id);
-  console.log('Update:', update, middle[0].firstName, middle[0].lastName);
+  result = (await mapper.read(id))[0];
+  console.log('Update:', update, result?.firstName, result?.lastName);
 
   // Replace user
   const replace = await mapper.replace(id);
-  const after = await mapper.read(id);
-  console.log('Replace:', replace, after[0].firstName, after[0].lastName);
+  result = (await mapper.read(id))[0];
+  console.log('Replace:', replace, result?.firstName, result?.lastName);
 
   // Delete user
   console.log('Delete:', await mapper.remove(id));

@@ -35,7 +35,7 @@ let Driver = class Driver extends Class.Null {
      * Get the insert result from the given response entity.
      * @param model Entity model.
      * @param response Response entity.
-     * @returns Returns the insert result or a promise to get it.
+     * @returns Returns the insertion result or a promise to get it.
      * @throws It will always throws an error because it's not implemented yet.
      */
     getInsertResponse(model, response) {
@@ -139,7 +139,7 @@ let Driver = class Driver extends Class.Null {
      * @returns Returns the request Id.
      */
     getRequestId(model, id) {
-        return id.toString();
+        return `${id}`;
     }
     /**
      * Get a new request path based on the specified route entity.
@@ -254,7 +254,7 @@ let Driver = class Driver extends Class.Null {
      * @param model Model type.
      * @param entities Entity list.
      * @param options Insert options.
-     * @returns Returns a promise to get the insert results.
+     * @returns Returns a promise to get the insertion results or undefined when an error occurs.
      * @throws Throws an error when the server response is invalid.
      */
     async insert(model, entities, options) {
@@ -282,7 +282,7 @@ let Driver = class Driver extends Class.Null {
      * @param query Query filter.
      * @param fields Viewed fields.
      * @param options Find options.
-     * @returns Returns a promise to get the list of found entities.
+     * @returns Returns a promise to get the list of found entities or undefined when an error occurs.
      * @throws Throws an error when the server response is invalid.
      */
     async find(model, query, fields, options) {
@@ -302,7 +302,7 @@ let Driver = class Driver extends Class.Null {
      * @param id Entity Id.
      * @param fields Viewed fields.
      * @param options Find options.
-     * @returns Returns a promise to get the found entity or undefined when the entity was not found.
+     * @returns Returns a promise to get the entity either undefined when an error occurs or the entity was not found.
      * @throws Throws an error when the server response is invalid.
      */
     async findById(model, id, fields, options) {
@@ -323,7 +323,7 @@ let Driver = class Driver extends Class.Null {
      * @param match Matching fields.
      * @param entity Entity data.
      * @param options Update options.
-     * @returns Returns a promise to get the number of updated entities.
+     * @returns Returns a promise to get the number of updated entities or undefined when an error occurs.
      * @throws Throws an error when the server response is invalid.
      */
     async update(model, match, entity, options) {

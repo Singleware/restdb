@@ -41,11 +41,11 @@ export class Driver extends Class.Null implements Types.Driver {
    * Get the insert result from the given response entity.
    * @param model Entity model.
    * @param response Response entity.
-   * @returns Returns the insert result or a promise to get it.
+   * @returns Returns the insertion result or a promise to get it.
    * @throws It will always throws an error because it's not implemented yet.
    */
   @Class.Protected()
-  protected getInsertResponse<T>(model: Types.Model, response: Responses.Output): never | T | Promise<T | undefined> | undefined {
+  protected getInsertResponse<R>(model: Types.Model, response: Responses.Output): never | R | Promise<R | undefined> | undefined {
     throw new Error(`Method 'getInsertResponse' isn't implemented.`);
   }
 
@@ -57,7 +57,7 @@ export class Driver extends Class.Null implements Types.Driver {
    * @throws It will always throws an error because it's not implemented yet.
    */
   @Class.Protected()
-  protected getFindResponse<T>(model: Types.Model, response: Responses.Output): never | T[] | Promise<T[]> {
+  protected getFindResponse<R>(model: Types.Model, response: Responses.Output): never | R[] | Promise<R[] | undefined> | undefined {
     throw new Error(`Method 'getFindResponse' isn't implemented.`);
   }
 
@@ -69,7 +69,7 @@ export class Driver extends Class.Null implements Types.Driver {
    * @throws It will always throws an error because it's not implemented yet.
    */
   @Class.Protected()
-  protected getFindByIdResponse<T>(model: Types.Model, response: Responses.Output): never | T | Promise<T | undefined> | undefined {
+  protected getFindByIdResponse<R>(model: Types.Model, response: Responses.Output): never | R | Promise<R | undefined> | undefined {
     throw new Error(`Method 'getFindByIdResponse' isn't implemented.`);
   }
 
@@ -81,7 +81,7 @@ export class Driver extends Class.Null implements Types.Driver {
    * @throws It will always throws an error because it's not implemented yet.
    */
   @Class.Protected()
-  protected getUpdateResponse<T>(model: Types.Model, response: Responses.Output): never | number {
+  protected getUpdateResponse(model: Types.Model, response: Responses.Output): never | number | undefined {
     throw new Error(`Method 'getUpdateResponse' isn't implemented.`);
   }
 
@@ -93,7 +93,7 @@ export class Driver extends Class.Null implements Types.Driver {
    * @throws It will always throws an error because it's not implemented yet.
    */
   @Class.Protected()
-  protected getUpdateByIdResponse<T>(model: Types.Model, response: Responses.Output): never | boolean {
+  protected getUpdateByIdResponse(model: Types.Model, response: Responses.Output): never | boolean | undefined {
     throw new Error(`Method 'getUpdateByIdResponse' isn't implemented.`);
   }
 
@@ -105,7 +105,7 @@ export class Driver extends Class.Null implements Types.Driver {
    * @throws It will always throws an error because it's not implemented yet.
    */
   @Class.Protected()
-  protected getReplaceByIdResponse<T>(model: Types.Model, response: Responses.Output): never | boolean {
+  protected getReplaceByIdResponse(model: Types.Model, response: Responses.Output): never | boolean | undefined {
     throw new Error(`Method 'getReplaceByIdResponse' isn't implemented.`);
   }
 
@@ -117,7 +117,7 @@ export class Driver extends Class.Null implements Types.Driver {
    * @throws It will always throws an error because it's not implemented yet.
    */
   @Class.Protected()
-  protected getDeleteResponse<T>(model: Types.Model, response: Responses.Output): never | number {
+  protected getDeleteResponse(model: Types.Model, response: Responses.Output): never | number | undefined {
     throw new Error(`Method 'getDeleteResponse' isn't implemented.`);
   }
 
@@ -129,7 +129,7 @@ export class Driver extends Class.Null implements Types.Driver {
    * @throws It will always throws an error because it's not implemented yet.
    */
   @Class.Protected()
-  protected getDeleteByIdResponse<T>(model: Types.Model, response: Responses.Output): never | boolean {
+  protected getDeleteByIdResponse(model: Types.Model, response: Responses.Output): never | boolean | undefined {
     throw new Error(`Method 'getDeleteByIdResponse' isn't implemented.`);
   }
 
@@ -141,7 +141,7 @@ export class Driver extends Class.Null implements Types.Driver {
    * @throws It will always throws an error because it's not implemented yet.
    */
   @Class.Protected()
-  protected getCountResponse<T>(model: Types.Model, response: Responses.Output): never | number {
+  protected getCountResponse(model: Types.Model, response: Responses.Output): never | number | undefined {
     throw new Error(`Method 'getCountResponse' isn't implemented.`);
   }
 
@@ -165,8 +165,8 @@ export class Driver extends Class.Null implements Types.Driver {
    * @returns Returns the request Id.
    */
   @Class.Protected()
-  protected getRequestId(model: Types.Model, id: any): string {
-    return id.toString();
+  protected getRequestId<I>(model: Types.Model, id: I): string {
+    return `${id}`;
   }
 
   /**
@@ -296,11 +296,11 @@ export class Driver extends Class.Null implements Types.Driver {
    * @param model Model type.
    * @param entities Entity list.
    * @param options Insert options.
-   * @returns Returns a promise to get the insert results.
+   * @returns Returns a promise to get the insertion results or undefined when an error occurs.
    * @throws Throws an error when the server response is invalid.
    */
   @Class.Public()
-  public async insert<T extends Types.Entity, R>(model: Types.Model, entities: T[], options: Options): Promise<R[]> {
+  public async insert<E, R>(model: Types.Model<E>, entities: E[], options: Options): Promise<R[] | undefined> {
     const path = this.getRequestPath({
       query: this.getRequestQuery(model),
       path: options.path,
@@ -333,16 +333,11 @@ export class Driver extends Class.Null implements Types.Driver {
    * @param query Query filter.
    * @param fields Viewed fields.
    * @param options Find options.
-   * @returns Returns a promise to get the list of found entities.
+   * @returns Returns a promise to get the list of found entities or undefined when an error occurs.
    * @throws Throws an error when the server response is invalid.
    */
   @Class.Public()
-  public async find<T extends Types.Entity>(
-    model: Types.Model<T>,
-    query: Types.Query,
-    fields: string[],
-    options: Options
-  ): Promise<T[]> {
+  public async find<E>(model: Types.Model<E>, query: Types.Query, fields: string[], options: Options): Promise<E[] | undefined> {
     const path = this.getRequestPath({
       query: this.getRequestQuery(model, query, fields),
       path: options.path,
@@ -363,16 +358,11 @@ export class Driver extends Class.Null implements Types.Driver {
    * @param id Entity Id.
    * @param fields Viewed fields.
    * @param options Find options.
-   * @returns Returns a promise to get the found entity or undefined when the entity was not found.
+   * @returns Returns a promise to get the entity either undefined when an error occurs or the entity was not found.
    * @throws Throws an error when the server response is invalid.
    */
   @Class.Public()
-  public async findById<T extends Types.Entity>(
-    model: Types.Model<T>,
-    id: any,
-    fields: string[],
-    options: Options
-  ): Promise<T | undefined> {
+  public async findById<E, I>(model: Types.Model<E>, id: I, fields: string[], options: Options): Promise<E | undefined> {
     const path = this.getRequestPath({
       id: this.getRequestId(model, id),
       query: this.getRequestQuery(model, void 0, fields),
@@ -394,11 +384,11 @@ export class Driver extends Class.Null implements Types.Driver {
    * @param match Matching fields.
    * @param entity Entity data.
    * @param options Update options.
-   * @returns Returns a promise to get the number of updated entities.
+   * @returns Returns a promise to get the number of updated entities or undefined when an error occurs.
    * @throws Throws an error when the server response is invalid.
    */
   @Class.Public()
-  public async update(model: Types.Model, match: Types.Match, entity: Types.Entity, options: Options): Promise<number> {
+  public async update<E>(model: Types.Model<E>, match: Types.Match, entity: E, options: Options): Promise<number | undefined> {
     const payload = Types.Normalizer.create(model, entity, true, true);
     const path = this.getRequestPath({
       query: this.getRequestQuery(model, { pre: match }),
@@ -428,7 +418,7 @@ export class Driver extends Class.Null implements Types.Driver {
    * @throws Throws an error when the server response is invalid.
    */
   @Class.Public()
-  public async updateById(model: Types.Model, id: any, entity: Types.Entity, options: Options): Promise<boolean> {
+  public async updateById<E, I>(model: Types.Model<E>, id: I, entity: E, options: Options): Promise<boolean | undefined> {
     const payload = Types.Normalizer.create(model, entity, true, true);
     const path = this.getRequestPath({
       id: this.getRequestId(model, id),
@@ -459,7 +449,7 @@ export class Driver extends Class.Null implements Types.Driver {
    * @throws Throws an error when the server response is invalid.
    */
   @Class.Public()
-  public async replaceById(model: Types.Model, id: any, entity: Types.Entity, options: Options): Promise<boolean> {
+  public async replaceById<E, I>(model: Types.Model<E>, id: I, entity: E, options: Options): Promise<boolean | undefined> {
     const payload = Types.Normalizer.create(model, entity, true, true);
     const path = this.getRequestPath({
       id: this.getRequestId(model, id),
@@ -489,7 +479,7 @@ export class Driver extends Class.Null implements Types.Driver {
    * @throws Throws an error when the server response is invalid.
    */
   @Class.Public()
-  public async delete(model: Types.Model, match: Types.Match, options: Options): Promise<number> {
+  public async delete(model: Types.Model, match: Types.Match, options: Options): Promise<number | undefined> {
     const path = this.getRequestPath({
       query: this.getRequestQuery(model, { pre: match }),
       path: options.path,
@@ -513,7 +503,7 @@ export class Driver extends Class.Null implements Types.Driver {
    * @throws Throws an error when the server response is invalid.
    */
   @Class.Public()
-  public async deleteById(model: Types.Model, id: any, options: Options): Promise<boolean> {
+  public async deleteById<I>(model: Types.Model, id: I, options: Options): Promise<boolean | undefined> {
     const path = this.getRequestPath({
       id: this.getRequestId(model, id),
       path: options.path,
@@ -537,7 +527,7 @@ export class Driver extends Class.Null implements Types.Driver {
    * @throws Throws an error when the server response is invalid.
    */
   @Class.Public()
-  public async count(model: Types.Model, query: Types.Query, options: Options): Promise<number> {
+  public async count(model: Types.Model, query: Types.Query, options: Options): Promise<number | undefined> {
     const path = this.getRequestPath({
       query: this.getRequestQuery(model, query),
       path: options.path,

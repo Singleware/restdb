@@ -37,11 +37,11 @@ export class Driver extends GenericDriver implements Types.Driver {
    * Get the insert result from the given response entity.
    * @param model Entity model.
    * @param response Response entity.
-   * @returns Returns the insert result.
+   * @returns Returns the insertion or undefined when an error occurs.
    * @throws Throws an error when the server response is invalid.
    */
   @Class.Protected()
-  protected getInsertResponse<T>(model: Types.Model, response: Responses.Output): T {
+  protected getInsertResponse<R>(model: Types.Model, response: Responses.Output): R | undefined {
     this.lastPayload = response.payload;
     if (response.status.code !== 200 && response.status.code !== 201) {
       throw new Error(`Unexpected insert(${response.input.method}) response status: ${response.status.code}`);
@@ -57,45 +57,45 @@ export class Driver extends GenericDriver implements Types.Driver {
    * Get the found entity list from the given response entity.
    * @param model Entity model.
    * @param response Response entity.
-   * @returns Returns the entity list.
+   * @returns Returns the entity list or undefined when an error occurs.
    * @throws Throws an error when the server response is invalid.
    */
   @Class.Protected()
-  protected getFindResponse<T>(model: Types.Model, response: Responses.Output): T[] {
+  protected getFindResponse<R>(model: Types.Model, response: Responses.Output): R[] | undefined {
     this.lastPayload = response.payload;
     if (response.status.code !== 200) {
       throw new Error(`Unexpected find(${response.input.method}) response status: ${response.status.code}`);
     } else if (!(this.lastPayload instanceof Array)) {
       throw new Error(`Response payload must contains an array.`);
     }
-    return <T[]>this.lastPayload;
+    return <R[]>this.lastPayload;
   }
 
   /**
    * Get the found entity from the given response entity.
    * @param model Entity model.
    * @param response Response entity.
-   * @returns Returns the entity or undefined when the entity wasn't found.
+   * @returns Returns the entity either undefined when the entity wasn't found or an error occurs.
    * @throws Throws an error when the server response is invalid.
    */
   @Class.Protected()
-  protected getFindByIdResponse<T>(model: Types.Model, response: Responses.Output): T | undefined {
+  protected getFindByIdResponse<R>(model: Types.Model, response: Responses.Output): R | undefined {
     this.lastPayload = response.payload;
     if (response.status.code !== 200) {
       throw new Error(`Unexpected find(${response.input.method}) response status: ${response.status.code}`);
     }
-    return <T>this.lastPayload;
+    return <R>this.lastPayload;
   }
 
   /**
    * Get the number of updated entities from the given response entity.
    * @param model Entity model.
    * @param response Response entity.
-   * @returns Returns the number of updated entities.
+   * @returns Returns the number of updated entities or undefined when an error occurs.
    * @throws Throws an error when the server response is invalid.
    */
   @Class.Protected()
-  protected getUpdateResponse(model: Types.Model, response: Responses.Output): number {
+  protected getUpdateResponse(model: Types.Model, response: Responses.Output): number | undefined {
     this.lastPayload = response.payload;
     if (response.status.code !== 200) {
       throw new Error(`Unexpected update(${response.input.method}) response status: ${response.status.code}`);
@@ -112,10 +112,10 @@ export class Driver extends GenericDriver implements Types.Driver {
    * Get the updated entity status from the given response entity.
    * @param model Entity model.
    * @param response Response entity.
-   * @returns Returns the updated entity status.
+   * @returns Returns the updated entity status or undefined when an error occurs.
    */
   @Class.Protected()
-  protected getUpdateByIdResponse(model: Types.Model, response: Responses.Output): boolean {
+  protected getUpdateByIdResponse(model: Types.Model, response: Responses.Output): boolean | undefined {
     this.lastPayload = response.payload;
     return response.status.code === 200 || response.status.code === 204;
   }
@@ -124,10 +124,10 @@ export class Driver extends GenericDriver implements Types.Driver {
    * Get the replaced entity status from the given response entity.
    * @param model Entity model.
    * @param response Response entity.
-   * @returns Returns the replaced entity status.
+   * @returns Returns the replaced entity status or undefined when an error occurs.
    */
   @Class.Protected()
-  protected getReplaceByIdResponse(model: Types.Model, response: Responses.Output): boolean {
+  protected getReplaceByIdResponse(model: Types.Model, response: Responses.Output): boolean | undefined {
     this.lastPayload = response.payload;
     return response.status.code === 200 || response.status.code === 204;
   }
@@ -136,11 +136,11 @@ export class Driver extends GenericDriver implements Types.Driver {
    * Get the number of deleted entities from the given response entity.
    * @param model Entity model.
    * @param response Response entity.
-   * @returns Returns the number of deleted entities.
+   * @returns Returns the number of deleted entities or undefined when an error occurs.
    * @throws Throws an error when the server response is invalid.
    */
   @Class.Protected()
-  protected getDeleteResponse(model: Types.Model, response: Responses.Output): number {
+  protected getDeleteResponse(model: Types.Model, response: Responses.Output): number | undefined {
     this.lastPayload = response.payload;
     if (response.status.code !== 200 && response.status.code !== 204) {
       throw new Error(`Unexpected delete(${response.input.method}) response status: ${response.status.code}`);
@@ -157,10 +157,10 @@ export class Driver extends GenericDriver implements Types.Driver {
    * Get the deleted entity status from the given response entity.
    * @param model Entity model.
    * @param response Response entity.
-   * @returns Returns the deleted entity status.
+   * @returns Returns the deleted entity status or undefined when an error occurs.
    */
   @Class.Protected()
-  protected getDeleteByIdResponse(model: Types.Model, response: Responses.Output): boolean {
+  protected getDeleteByIdResponse(model: Types.Model, response: Responses.Output): boolean | undefined {
     this.lastPayload = response.payload;
     return response.status.code === 200 || response.status.code === 204;
   }
@@ -169,11 +169,11 @@ export class Driver extends GenericDriver implements Types.Driver {
    * Get the number of entities from the given response entity.
    * @param model Entity model.
    * @param response Response entity.
-   * @returns Returns the number of entities.
+   * @returns Returns the number of entities or undefined when an error occurs.
    * @throws Throws an error when the server response is invalid.
    */
   @Class.Protected()
-  protected getCountResponse(model: Types.Model, response: Responses.Output): number {
+  protected getCountResponse(model: Types.Model, response: Responses.Output): number | undefined {
     this.lastPayload = response.payload;
     if (response.status.code !== 200 && response.status.code !== 204) {
       throw new Error(`Unexpected count(${response.input.method}) response status: ${response.status.code}`);
