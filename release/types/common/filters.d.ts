@@ -47,15 +47,23 @@ export declare class Filters extends Class.Null {
      */
     private static unpackViewedFields;
     /**
-     * Pack a new operation in the given operations list based on the specified path, operator and value.
+     * Pack the specified value based on the given column.
+     * @param column Column schema.
+     * @param value Value to be packed.
+     * @returns Returns the packed value.
+     */
+    private static packValue;
+    /**
+     * Pack a new operation in the given operations list based on the specified parameters.
      * @param operations Operations list.
-     * @param path Operation path.
+     * @param column Column schema.
+     * @param path Column path.
      * @param operator Operator type.
      * @param value Operation value.
      */
     private static packOperation;
     /**
-     * Packs the specified matching rules into a parameterized array of matching rules.
+     * Pack the specified matching rules into a parameterized array of matching rules.
      * @param model Model type.
      * @param match Matching rules.
      * @returns Returns the parameterized array of matching rules.
@@ -63,7 +71,23 @@ export declare class Filters extends Class.Null {
      */
     private static packMatchRules;
     /**
-     * Unpacks the parameterized array of matching rules into the matching rules.
+     * Unpack the specified value based on the given column.
+     * @param column Column schema.
+     * @param value Value.
+     * @returns Returns the unpacked value.
+     */
+    private static unpackValue;
+    /**
+     * Unpack a new operation in the given operations map based on the specified parameters.
+     * @param operations Operations map.
+     * @param column Column schema.
+     * @param path Column path.
+     * @param operator Operator type.
+     * @param array Parameterized array.
+     */
+    private static unpackOperation;
+    /**
+     * Unpack the parameterized array of matching rules into the matching rules.
      * @param model Model type.
      * @param array Parameterized array of matching rules.
      * @returns Returns the generated matching rules or undefined when there's no rules.

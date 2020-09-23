@@ -52,13 +52,32 @@ let Filters = class Filters extends Class.Null {
         }
     }
     /**
-     * Pack a new operation in the given operations list based on the specified path, operator and value.
+     * Pack the specified value based on the given column.
+     * @param column Column schema.
+     * @param value Value to be packed.
+     * @returns Returns the packed value.
+     */
+    static packValue(column, value) {
+        if (value instanceof Date) {
+            return value.getTime().toString();
+        }
+        else if (value === true) {
+            return '1';
+        }
+        else if (value === false || value === null) {
+            return '0';
+        }
+        return value.toString();
+    }
+    /**
+     * Pack a new operation in the given operations list based on the specified parameters.
      * @param operations Operations list.
-     * @param path Operation path.
+     * @param column Column schema.
+     * @param path Column path.
      * @param operator Operator type.
      * @param value Operation value.
      */
-    static packOperation(operations, path, operator, value) {
+    static packOperation(operations, column, path, operator, value) {
         operations.push(path, operator);
         switch (operator) {
             case "lt" /* LessThan */:
@@ -67,7 +86,7 @@ let Filters = class Filters extends Class.Null {
             case "ne" /* NotEqual */:
             case "gte" /* GreaterThanOrEqual */:
             case "gt" /* GreaterThan */:
-                operations.push(encodeURIComponent(value));
+                operations.push(encodeURIComponent(this.packValue(column, value)));
                 break;
             case "bt" /* Between */:
             case "in" /* Contain */:
@@ -75,7 +94,7 @@ let Filters = class Filters extends Class.Null {
                 if (!(value instanceof Array)) {
                     throw new Error(`Match value for the given path '${path}' should be an Array object.`);
                 }
-                operations.push(value.length, ...value.map(item => encodeURIComponent(item)));
+                operations.push(value.length, ...value.map((item) => encodeURIComponent(this.packValue(column, item))));
                 break;
             case "re" /* RegExp */:
                 if (!(value instanceof RegExp)) {
@@ -89,7 +108,7 @@ let Filters = class Filters extends Class.Null {
         }
     }
     /**
-     * Packs the specified matching rules into a parameterized array of matching rules.
+     * Pack the specified matching rules into a parameterized array of matching rules.
      * @param model Model type.
      * @param match Matching rules.
      * @returns Returns the parameterized array of matching rules.
@@ -102,18 +121,20 @@ let Filters = class Filters extends Class.Null {
             const operationsList = [];
             let operationsCounter = 0;
             for (const path in expression) {
-                if (!Mapping.Helper.tryPathColumns(model, path)) {
+                const columns = Mapping.Helper.tryPathColumns(model, path);
+                if (!columns) {
                     throw new Error(`Invalid matching path '${path}' for the given model.`);
                 }
                 else {
                     operationsCounter++;
                     const operation = expression[path];
+                    const schema = columns[columns.length - 1];
                     if (Mapping.Filters.Helper.isOperation(operation)) {
-                        this.packOperation(operationsList, path, operation.operator, operation.value);
+                        this.packOperation(operationsList, schema, path, operation.operator, operation.value);
                     }
                     else {
                         const entry = Object.entries(operation)[0];
-                        this.packOperation(operationsList, path, entry[0], entry[1]);
+                        this.packOperation(operationsList, schema, path, entry[0], entry[1]);
                     }
                 }
             }
@@ -125,7 +146,76 @@ let Filters = class Filters extends Class.Null {
         return [prefix, rulesCounter, ...rulesList];
     }
     /**
-     * Unpacks the parameterized array of matching rules into the matching rules.
+     * Unpack the specified value based on the given column.
+     * @param column Column schema.
+     * @param value Value.
+     * @returns Returns the unpacked value.
+     */
+    static unpackValue(column, value) {
+        if (column.formats.includes(11 /* Date */)) {
+            return new Date(parseInt(value));
+        }
+        else if (column.formats.includes(5 /* Decimal */) || column.formats.includes(6 /* Number */)) {
+            return parseFloat(value);
+        }
+        else if (column.formats.includes(4 /* Integer */) || column.formats.includes(10 /* Timestamp */)) {
+            return parseInt(value);
+        }
+        else if (column.formats.includes(3 /* Boolean */) && (value === '1' || value === '0')) {
+            return value === '1';
+        }
+        else if (column.formats.includes(1 /* Null */) && value === '0') {
+            return null;
+        }
+        return value;
+    }
+    /**
+     * Unpack a new operation in the given operations map based on the specified parameters.
+     * @param operations Operations map.
+     * @param column Column schema.
+     * @param path Column path.
+     * @param operator Operator type.
+     * @param array Parameterized array.
+     */
+    static unpackOperation(operations, column, path, operator, array) {
+        switch (operator) {
+            case "lt" /* LessThan */:
+            case "lte" /* LessThanOrEqual */:
+            case "eq" /* Equal */:
+            case "ne" /* NotEqual */:
+            case "gte" /* GreaterThanOrEqual */:
+            case "gt" /* GreaterThan */:
+                operations[path] = {
+                    operator: operator,
+                    value: this.unpackValue(column, decodeURIComponent(array.pop()))
+                };
+                break;
+            case "bt" /* Between */:
+            case "in" /* Contain */:
+            case "nin" /* NotContain */:
+                const values = [];
+                for (let total = parseInt(array.pop()); total > 0; --total) {
+                    values.push(this.unpackValue(column, decodeURIComponent(array.pop())));
+                }
+                operations[path] = {
+                    operator: operator,
+                    value: values
+                };
+                break;
+            case "re" /* RegExp */:
+                const regexp = decodeURIComponent(array.pop());
+                const flags = decodeURIComponent(array.pop());
+                operations[path] = {
+                    operator: operator,
+                    value: new RegExp(regexp, flags)
+                };
+                break;
+            default:
+                throw new TypeError(`Invalid operator '${operator}' for the given path '${path}'.`);
+        }
+    }
+    /**
+     * Unpack the parameterized array of matching rules into the matching rules.
      * @param model Model type.
      * @param array Parameterized array of matching rules.
      * @returns Returns the generated matching rules or undefined when there's no rules.
@@ -141,46 +231,14 @@ let Filters = class Filters extends Class.Null {
                 const operationsMap = {};
                 for (let operationsCounter = parseInt(array.pop()); operationsCounter > 0; --operationsCounter) {
                     const path = array.pop();
-                    if (!Mapping.Helper.tryPathColumns(model, path)) {
+                    const columns = Mapping.Helper.tryPathColumns(model, path);
+                    if (!columns) {
                         throw new Error(`Invalid matching path '${path}' for the given model.`);
                     }
                     else {
                         const operator = array.pop();
-                        switch (operator) {
-                            case "lt" /* LessThan */:
-                            case "lte" /* LessThanOrEqual */:
-                            case "eq" /* Equal */:
-                            case "ne" /* NotEqual */:
-                            case "gte" /* GreaterThanOrEqual */:
-                            case "gt" /* GreaterThan */:
-                                operationsMap[path] = {
-                                    operator: operator,
-                                    value: decodeURIComponent(array.pop())
-                                };
-                                break;
-                            case "bt" /* Between */:
-                            case "in" /* Contain */:
-                            case "nin" /* NotContain */:
-                                const values = [];
-                                for (let total = parseInt(array.pop()); total > 0; --total) {
-                                    values.push(decodeURIComponent(array.pop()));
-                                }
-                                operationsMap[path] = {
-                                    operator: operator,
-                                    value: values
-                                };
-                                break;
-                            case "re" /* RegExp */:
-                                const regexp = decodeURIComponent(array.pop());
-                                const flags = decodeURIComponent(array.pop());
-                                operationsMap[path] = {
-                                    operator: operator,
-                                    value: new RegExp(regexp, flags)
-                                };
-                                break;
-                            default:
-                                throw new TypeError(`Invalid operator '${operator}' for the given path '${path}'.`);
-                        }
+                        const schema = columns[columns.length - 1];
+                        this.unpackOperation(operationsMap, schema, path, operator, array);
                     }
                 }
                 rulesList.push(operationsMap);
@@ -381,10 +439,19 @@ __decorate([
 ], Filters, "unpackViewedFields", null);
 __decorate([
     Class.Private()
+], Filters, "packValue", null);
+__decorate([
+    Class.Private()
 ], Filters, "packOperation", null);
 __decorate([
     Class.Private()
 ], Filters, "packMatchRules", null);
+__decorate([
+    Class.Private()
+], Filters, "unpackValue", null);
+__decorate([
+    Class.Private()
+], Filters, "unpackOperation", null);
 __decorate([
     Class.Private()
 ], Filters, "unpackMatchRules", null);
